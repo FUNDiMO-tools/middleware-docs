@@ -7,6 +7,29 @@
 
 
         <!-- Custom HTML head -->
+        <link rel="stylesheet" href="../theme/fonts.css">
+        <script>
+            (function () {
+                var nearer = { rust: 'light', navy: 'coal', ayu: 'coal' };
+                function remap() {
+                    try {
+                        var saved = (localStorage.getItem('mdbook-theme') || '').replace(/"/g, '');
+                        if (nearer[saved]) { localStorage.setItem('mdbook-theme', nearer[saved]); }
+                    } catch (e) { }
+                }
+                remap();
+                window.addEventListener('storage', remap);
+                window.addEventListener('pageshow', remap);
+                document.addEventListener('DOMContentLoaded', function () {
+                    var dark = document.getElementById('mdbook-theme-coal');
+                    if (dark) { dark.textContent = 'Dark'; }
+                    Object.keys(nearer).forEach(function (name) {
+                        var button = document.getElementById('mdbook-theme-' + name);
+                        if (button) { button.parentNode.remove(); }
+                    });
+                });
+            })();
+        </script>
 
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,15 +50,15 @@
         <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
-        <link rel="stylesheet" href="../theme/site-0ff7cf6d.css">
+        <link rel="stylesheet" href="../theme/site-acfedb15.css">
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
             const path_to_root = "../";
             const default_light_theme = "light";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c69b63ad.js";
+            const default_dark_theme = "coal";
+            window.path_to_searchindex_js = "../searchindex-a7e42865.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f470377e.js"></script>
@@ -115,6 +138,10 @@
         <div id="mdbook-page-wrapper" class="page-wrapper">
 
             <div class="page">
+                <div class="mw-brand">
+                    <a class="mw-wordmark" href="https://fundimo.com.au/"><img class="mw-on-light" src="../theme/fundimo.png" alt="FUNDiMO" width="1142" height="277"><img class="mw-on-dark" src="../theme/fundimo-on-dark.png" alt="FUNDiMO" width="1200" height="290"></a>
+                    <span class="mw-product">Middleware API</span>
+                </div>
                 <div id="mdbook-menu-bar-hover-placeholder"></div>
                 <div id="mdbook-menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
@@ -171,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.3.1, 21-Nov-2026 · <a href="../../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.3.2, 21-Nov-2026 · <a href="../../versions.html">all releases</a></p>
 
 <p>This guide is also a PDF, to print or keep: <a href="fundimo-middleware-integration-guide-fleet.pdf">fundimo-middleware-integration-guide-fleet.pdf</a>.</p>
 <div class="mw-guide">

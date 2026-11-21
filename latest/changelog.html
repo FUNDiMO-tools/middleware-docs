@@ -7,6 +7,29 @@
 
 
         <!-- Custom HTML head -->
+        <link rel="stylesheet" href="theme/fonts.css">
+        <script>
+            (function () {
+                var nearer = { rust: 'light', navy: 'coal', ayu: 'coal' };
+                function remap() {
+                    try {
+                        var saved = (localStorage.getItem('mdbook-theme') || '').replace(/"/g, '');
+                        if (nearer[saved]) { localStorage.setItem('mdbook-theme', nearer[saved]); }
+                    } catch (e) { }
+                }
+                remap();
+                window.addEventListener('storage', remap);
+                window.addEventListener('pageshow', remap);
+                document.addEventListener('DOMContentLoaded', function () {
+                    var dark = document.getElementById('mdbook-theme-coal');
+                    if (dark) { dark.textContent = 'Dark'; }
+                    Object.keys(nearer).forEach(function (name) {
+                        var button = document.getElementById('mdbook-theme-' + name);
+                        if (button) { button.parentNode.remove(); }
+                    });
+                });
+            })();
+        </script>
 
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,15 +50,15 @@
         <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
-        <link rel="stylesheet" href="theme/site-0ff7cf6d.css">
+        <link rel="stylesheet" href="theme/site-acfedb15.css">
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
             const path_to_root = "";
             const default_light_theme = "light";
-            const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c69b63ad.js";
+            const default_dark_theme = "coal";
+            window.path_to_searchindex_js = "searchindex-a7e42865.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f470377e.js"></script>
@@ -115,6 +138,10 @@
         <div id="mdbook-page-wrapper" class="page-wrapper">
 
             <div class="page">
+                <div class="mw-brand">
+                    <a class="mw-wordmark" href="https://fundimo.com.au/"><img class="mw-on-light" src="theme/fundimo.png" alt="FUNDiMO" width="1142" height="277"><img class="mw-on-dark" src="theme/fundimo-on-dark.png" alt="FUNDiMO" width="1200" height="290"></a>
+                    <span class="mw-product">Middleware API</span>
+                </div>
                 <div id="mdbook-menu-bar-hover-placeholder"></div>
                 <div id="mdbook-menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
@@ -171,9 +198,19 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.3.1, 21-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.3.2, 21-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="what-changed"><a class="header" href="#what-changed">What changed</a></h1>
+<h2 id="v032-21-nov-2026"><a class="header" href="#v032-21-nov-2026">v0.3.2 (21-Nov-2026)</a></h2>
+<p>The published docs site’s build now gives the site the look of FUNDiMO’s main site, in a light
+theme and a dark one. The device walk now says that other makers’ devices are intended. No route,
+body, setting, job or migration changed.</p>
+<h3 id="changed"><a class="header" href="#changed">Changed</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: The device walk, <code>mw://onboarding/device</code>, now says it is written for one
+maker’s devices today (21-Nov-2026). Other makers’ devices are intended, each with a walk of
+its own. The sandbox serves the new text, also at <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>.</li>
+</ul>
 <h2 id="v031-21-nov-2026"><a class="header" href="#v031-21-nov-2026">v0.3.1 (21-Nov-2026)</a></h2>
 <p>This is the first release of what v0.3.0 holds: v0.3.0 was tagged and deployed nowhere. A release
 tag’s build now reads the tag it was started for, and no longer refuses before it builds.</p>
@@ -199,7 +236,7 @@ middleware checks its shape and sends it on in the <code>Instruction</code>. A t
 passes it on, or ignores it, and one that checks frames against the published field list takes
 the new list.</li>
 </ul>
-<h3 id="changed"><a class="header" href="#changed">Changed</a></h3>
+<h3 id="changed-1"><a class="header" href="#changed-1">Changed</a></h3>
 <ul>
 <li><strong>POS</strong>: A POS’s rules stay in the OpenAPI document, each said once, on the operation, answer
 or field it governs (19-Nov-2026). ISO 20022’s definitions are in <a href="fields.json"><code>/docs/api/fields.json</code></a> and
@@ -363,7 +400,7 @@ was opened, so there is no <code>LoginReference</code> to name.</li>
 terminal spends one answer, and so does each restart of it. <code>sign_in_limited</code> still answers an
 ask within 60 seconds of the last answer.</li>
 </ul>
-<h3 id="changed-1"><a class="header" href="#changed-1">Changed</a></h3>
+<h3 id="changed-2"><a class="header" href="#changed-2">Changed</a></h3>
 <ul>
 <li><strong>Terminal</strong>: A terminal that does not know whether a payment was taken must find out
 (16-Nov-2026). It asks its host for the payment by the reference it stored, or reverses it and
@@ -487,7 +524,7 @@ screen.</li>
 in <code>serverInfo.version</code> and the first sentence of its <code>instructions</code>. Each host states it in
 <code>GET /v1/health</code>, as <code>Version</code>, and a report in <code>SandboxVersion</code>.</li>
 </ul>
-<h3 id="changed-2"><a class="header" href="#changed-2">Changed</a></h3>
+<h3 id="changed-3"><a class="header" href="#changed-3">Changed</a></h3>
 <ul>
 <li><strong>POS</strong>: A sale outlives a restart of the middleware (08-Nov-2026). The same <code>IdempotencyKey</code>
 after a restart answers the sale as it stands. <code>503 at_capacity</code> is gone, and

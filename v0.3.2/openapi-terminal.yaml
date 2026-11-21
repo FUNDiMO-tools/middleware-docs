@@ -1,0 +1,726 @@
+openapi: '3.1.0'
+info:
+  title: 'Middleware v0.3.2: what a terminal calls'
+  version: '1.0.0'
+  summary: The relay between a point of sale, a payment terminal and FUNDiMO.
+  description: |-
+    The routes a terminal calls: the WebSocket it holds, enrolling for a certificate, its daily check, its challenge and its renewal, and the health check. The frames that travel over the WebSocket are in the terminal contract, `terminal.md`, which walks each one. Each property's `x-sent-by` names who sends it. `servers` holds the base URL of the sandbox, then of staging. This release publishes this document as `openapi-terminal.yaml`.
+servers:
+  - url: https://mw.sandbox.fundimo.com.au
+    description: The sandbox
+  - url: https://mw.staging.fundimo.com.au
+    description: Staging
+security:
+  - mutualTLS: []
+  - sandboxKey: []
+tags:
+  - name: terminals
+    description: Where a terminal holds its connection.
+  - name: certificates
+    description: >-
+      A principal's client certificate: enrolment with a pairing code, the daily check, and renewal with a new key.
+  - name: health
+    description: Whether the middleware is serving.
+paths:
+  /v1/health:
+    get:
+      tags: [health]
+      operationId: health
+      summary: Whether the middleware is serving.
+      security: []
+      responses:
+        '200':
+          description: The middleware is serving.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              examples:
+                ok:
+                  value: {"Status": "ok", "Version": "0.0.0"}
+  /v1/terminals/{POIIdentification}/connect:
+    get:
+      tags: [terminals]
+      operationId: connectTerminal
+      summary: A terminal's WebSocket connection to the middleware.
+      description: >-
+        A terminal's WebSocket connection, which it holds while it is on: the middleware sends `TerminalInstruction`, `TerminalRefusal`, `TerminalLinkWord`, `TerminalLinkEnded`, `TerminalStatusRequest`, `TerminalAbort` and `TerminalLoginRequest` on it, and the terminal sends `TerminalOutcome`, `TerminalLoginNeeded` and `TerminalLoginResponse`. `/docs/api/terminal.md` § Connect states its credential, its headers and its answers, and the page how to hold, reconnect, take a payment and report it.
+      parameters:
+        - name: POIIdentification
+          in: path
+          required: true
+          x-sent-by: terminal
+          description: The terminal's id, which the POS names in its sale.
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9_-]{1,64}$'
+        - name: Mw-Transaction-Types
+          in: header
+          required: false
+          x-sent-by: terminal
+          description: >-
+            The transaction types the terminal takes, separated by commas with optional spaces: `CRDP` is a sale and `RFND` a refund, so `CRDP, RFND` is a terminal that takes both. Absent means `CRDP` alone, and so do an empty value, one over 256 bytes, and one naming no code the middleware knows.
+          schema:
+            type: string
+            maxLength: 256
+          example: 'CRDP, RFND'
+        - name: Mw-Message-Functions
+          in: header
+          required: false
+          x-sent-by: terminal
+          description: >-
+            The requests the terminal answers, and the one it asks by, as codes separated by commas with optional spaces: `SSMQ` lets the middleware send it a `TerminalStatusRequest`, `SSAB` a `TerminalAbort`, and `SASQ` answer its `TerminalLoginNeeded` with a `TerminalLoginRequest`. Absent means none, and so do an empty value, one over 256 bytes, and one naming no code the middleware knows, and without `SSAB` a POS's request to cancel a sale on the terminal is refused `409 terminal_cannot_abort`.
+          schema:
+            type: string
+            maxLength: 256
+          example: 'SASQ, SSAB, SSMQ'
+      responses:
+        '101':
+          description: Switching Protocols; the WebSocket is open.
+        '400':
+          description: |
+            - `invalid_field`: `POIIdentification` fails its pattern, and `Error.Fields` is
+              `["POIIdentification"]`. Fix the id: retrying will not help.
+            - `invalid_upgrade`: a bad WebSocket version or key. Fix the client.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_field:
+                  value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["POIIdentification"]}}
+                invalid_upgrade:
+                  value: {"Error": {"Code": "invalid_upgrade", "Message": "The WebSocket upgrade is not valid.", "Fields": []}}
+        '401':
+          description: |
+            The credential is missing or not acceptable, and nothing is upgraded.
+
+            - `certificate_required`: no credential came. A terminal with no certificate enrols
+              first, with `POST /v1/enrol`.
+            - `certificate_invalid`: an `Authorization` header of another scheme, a token of no form
+              the middleware issues, two `Authorization` headers, a certificate beside an
+              `Authorization` header, or a certificate no row holds. On a certificate, back off an
+              hour, and after three refusals an hour apart tell the installer the terminal needs a
+              new code, and keep trying hourly.
+            - `certificate_expired`: the certificate is past its `NotAfter`. The same as
+              `certificate_invalid`: back off an hour, and after three tell the installer the
+              terminal needs a new code.
+            - `sandbox_key_on_live`: a sandbox key sent to a `live` middleware, which refuses every
+              one before any lookup. Wait one hour before the next connect.
+            - `sandbox_key_invalid`: the sandbox key is malformed, unknown or retired. Wait one hour
+              before the next connect.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                certificate_required:
+                  value: {"Error": {"Code": "certificate_required", "Message": "This route needs a credential, and none came.", "Fields": []}}
+                certificate_invalid:
+                  value: {"Error": {"Code": "certificate_invalid", "Message": "The credential presented is not acceptable.", "Fields": []}}
+                certificate_expired:
+                  value: {"Error": {"Code": "certificate_expired", "Message": "The certificate presented has expired.", "Fields": []}}
+                sandbox_key_on_live:
+                  value: {"Error": {"Code": "sandbox_key_on_live", "Message": "A sandbox key is accepted in the sandbox alone.", "Fields": []}}
+                sandbox_key_invalid:
+                  value: {"Error": {"Code": "sandbox_key_invalid", "Message": "The sandbox key is malformed, unknown or retired.", "Fields": []}}
+        '403':
+          description: |
+            The credential is good, and may not hold this terminal's connection.
+
+            - `not_permitted`: it is not this terminal's certificate, nor in the sandbox a `pos` key
+              of the terminal's vendor, or the terminal is not `paired`, which is what a removal or
+              a re-pair reads as. Back off to one hour before the next connect.
+            - `certificate_retired`: the certificate presented is retired. Holding a newer one,
+              connect on it, and on the terminal's newest, stop and tell a person.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_permitted:
+                  value: {"Error": {"Code": "not_permitted", "Message": "The caller is not permitted to do this.", "Fields": []}}
+                certificate_retired:
+                  value: {"Error": {"Code": "certificate_retired", "Message": "The certificate presented is retired: a newer one of this identity is in use.", "Fields": []}}
+        '426':
+          description: >-
+            `upgrade_required`: a `GET` with no WebSocket upgrade. Fix the client.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                upgrade_required:
+                  value: {"Error": {"Code": "upgrade_required", "Message": "This path takes a WebSocket upgrade.", "Fields": []}}
+        '503':
+          description: |
+            No verdict on the credential or the terminal: reconnect on the normal backoff.
+
+            - `store_unavailable`: the middleware's store did not answer while it checked the
+              credential or the terminal.
+            - `edge_not_trusted`: behind the load balancer, the upgrade did not come through a
+              trusted edge. It is an edge fault, and the terminal's certificate is not in question.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                store_unavailable:
+                  value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+                edge_not_trusted:
+                  value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+  /v1/enrol:
+    post:
+      tags: [certificates]
+      operationId: enrol
+      summary: Spend a pairing code for a first certificate.
+      security: []
+      description: >-
+        No credential: the code is the credential, spent here by a terminal, a register's device or a vendor's server listed with a `PairingCode` for its first client certificate. `/docs/api/onboarding-device.md` § 6 walks a device's enrolment, and § The challenge, worked says how to compute the challenge its key is made with.
+      requestBody:
+        required: true
+        description: The enrolment. At most 65,536 bytes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Enrolment'
+      responses:
+        '200':
+          description: The same certificate, to a repeat of an enrolment with the same code and key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '201':
+          description: >-
+            The certificate, the principal's id, and when to renew it. The code is spent, and the principal is now `paired`, `active` or `enrolled`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '400':
+          description: |
+            The body is refused, and each code means what it means on `POST /v1/sales`.
+
+            - `invalid_json`: the body is not a JSON object.
+            - `unknown_field`: the body holds a field this operation does not name, or a server's
+              enrolment sends `AttestationChain`.
+            - `missing_field`: a required field is absent. A device's five words sent with no
+              `SerialNumber`, or with it `null`, are this, naming `SerialNumber`.
+            - `invalid_field`: a field breaks its rule, or, behind a good code, the CSR's signature
+              does not verify or its key is not P-256, which counts an attempt. A `SerialNumber`
+              sent reads the code as a device's five words, so a server's code sent with a
+              `SerialNumber` is this, naming `PairingCode`, before any row is read and with no
+              attempt counted.
+            - `body_unreadable`: the body could not be read to its end.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_json:
+                  value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+                unknown_field:
+                  value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["AttestationChain"]}}
+                missing_field:
+                  value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["CertificateSigningRequest"]}}
+                invalid_field:
+                  value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["CertificateSigningRequest"]}}
+                body_unreadable:
+                  value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+        '403':
+          description: |
+            Refused, and nothing is issued.
+
+            - `code_not_valid`: the code is wrong, unknown, expired or spent, the serial is not the
+              listing's, the principal is not `listed`, or its vendor is suspended, one code for
+              every reason. A code no row holds counts nothing: a device's wrong serial or first
+              word, or a server's wrong first 6 characters, finds no row.
+            - `attestation_failed`: the device's chain fails a check of the chain, its root, its
+              dates, revocation, the extension, the key, the hardware, the challenge or the boot
+              state, or does not parse, or a device on a `live` middleware sent none. A middleware
+              set to mark admits a device whose chain fails only checks it records, and one that
+              sent none, and marks its certificate with those checks, or `chain_missing`
+              (`DeviceAttestation`).
+            - `app_identity_unknown`: the app the chain names is not registered for the vendor and
+              the principal's role, or more than one app shares the key.
+            - `model_not_allowed`: no row of the allowed list admits what the device attests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                code_not_valid:
+                  value: {"Error": {"Code": "code_not_valid", "Message": "The pairing code is not valid.", "Fields": []}}
+                attestation_failed:
+                  value: {"Error": {"Code": "attestation_failed", "Message": "The device's key attestation does not pass.", "Fields": []}}
+                app_identity_unknown:
+                  value: {"Error": {"Code": "app_identity_unknown", "Message": "The app holding the key is not one registered for this device.", "Fields": []}}
+                model_not_allowed:
+                  value: {"Error": {"Code": "model_not_allowed", "Message": "The device is not of a model the allowed list admits.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429':
+          description: >-
+            Sent by the edge in front of a hosted middleware, never by the middleware itself: more enrolments came from your address in a minute than the edge allows, and its body is the edge's, not an `Error`. The code was not read and no attempt is counted, so wait a minute, then send the same request again.
+        '503':
+          description: |
+            No verdict on the code: nothing is written, no attempt is counted, and the code stays
+            live, so retry on the normal backoff with the same code and the same key.
+
+            - `store_unavailable`: the middleware's store did not answer.
+            - `ca_unavailable`: the middleware could not sign the certificate.
+            - `attestation_status_unavailable`: a device's enrolment on a `live` middleware, which
+              holds no attestation status list fresh enough to check the chain for revocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                store_unavailable:
+                  value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+                ca_unavailable:
+                  value: {"Error": {"Code": "ca_unavailable", "Message": "The certificate authority could not sign. Retry.", "Fields": []}}
+                attestation_status_unavailable:
+                  value: {"Error": {"Code": "attestation_status_unavailable", "Message": "The attestation status list is not current. Retry.", "Fields": []}}
+  /v1/certificates/self:
+    get:
+      tags: [certificates]
+      operationId: readOwnCertificate
+      summary: The daily check of the certificate presented.
+      security:
+        - mutualTLS: []
+      description: >-
+        Any certificate, on itself, once a day: the middleware answers the certificate's `NotAfter`, its `RenewFrom`, day 15 of its life, and `RenewNow`, so a holder's own clock decides nothing. `/docs/api/onboarding-device.md` § 9 says when to renew, and how a refusal of the check is read.
+      responses:
+        '200':
+          description: The certificate's dates, and whether to renew it now.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/certificates/challenge:
+    post:
+      tags: [certificates]
+      operationId: issueRenewalChallenge
+      summary: A challenge for a device's next key.
+      security:
+        - mutualTLS: []
+      description: >-
+        A challenge for a device's next key, a terminal's or a register's, valid 10 minutes and for one renewal: a server renews without one, and asking is `403 not_permitted`. `/docs/api/onboarding-device.md` § 10 says how to make the key with it and renew.
+      responses:
+        '201':
+          description: The challenge, and how long it is valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeIssued'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '411': {$ref: '#/components/responses/EdgeLengthRequired'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/certificates/renew:
+    post:
+      tags: [certificates]
+      operationId: renewCertificate
+      summary: Renew the certificate presented, with a new key.
+      security:
+        - mutualTLS: []
+      description: >-
+        Any certificate, from its `RenewFrom`, with a new key: the middleware runs enrolment's checks with the caller's certificate where the code was, and answers as enrolment does. `/docs/api/onboarding-device.md` § 10 says when to use the new certificate and delete the old key, and how long the old one stays good.
+      requestBody:
+        required: true
+        description: The renewal. At most 65,536 bytes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Renewal'
+      responses:
+        '200':
+          description: The same certificate, to a repeat of a renewal with the same key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '201':
+          description: The new certificate, the principal's id, and when to renew it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '400':
+          description: |
+            The body is refused, nothing is issued, and each code means what it means on
+            `POST /v1/sales`.
+
+            - `invalid_json`: the body is not a JSON object.
+            - `unknown_field`: the body holds a field this operation does not name, or a server's
+              renewal sends `AttestationChain`.
+            - `missing_field`: a required field is absent.
+            - `invalid_field`: a field breaks its rule, the CSR's signature does not verify or its
+              key is not P-256, or its key is one the principal has used before.
+            - `body_unreadable`: the body could not be read to its end.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_json:
+                  value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+                unknown_field:
+                  value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["AttestationChain"]}}
+                missing_field:
+                  value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["CertificateSigningRequest"]}}
+                invalid_field:
+                  value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["CertificateSigningRequest"]}}
+                body_unreadable:
+                  value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          description: |
+            Refused, and nothing is issued: the current certificate stays as it was.
+
+            - `not_permitted`: the principal is not `paired`, `active` or `enrolled`, or its vendor
+              is not `active`, so a suspended vendor's certificate cannot renew.
+            - `certificate_retired`: the certificate presented is retired, or set to retire at the
+              end of an overlap, because a newer one of the identity is in use. Renew on the newer
+              one, or on the holder's newest, stop and tell a person: something else holds a newer
+              certificate of this identity.
+            - `challenge_not_valid`: a device's chain was made with no challenge of this
+              certificate's that is live: ask a new challenge, and make a new key with it.
+            - `attestation_failed`, `app_identity_unknown` and `model_not_allowed`: the device's
+              chain is refused as at enrolment. The current certificate stays good until its
+              `NotAfter`, and the middleware writes a `WARNING` naming the device.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_permitted:
+                  value: {"Error": {"Code": "not_permitted", "Message": "The caller is not permitted to do this.", "Fields": []}}
+                certificate_retired:
+                  value: {"Error": {"Code": "certificate_retired", "Message": "The certificate presented is retired: a newer one of this identity is in use.", "Fields": []}}
+                challenge_not_valid:
+                  value: {"Error": {"Code": "challenge_not_valid", "Message": "The key was not made with a live challenge of this certificate's. Ask a new one.", "Fields": []}}
+                attestation_failed:
+                  value: {"Error": {"Code": "attestation_failed", "Message": "The device's key attestation does not pass.", "Fields": []}}
+                app_identity_unknown:
+                  value: {"Error": {"Code": "app_identity_unknown", "Message": "The app holding the key is not one registered for this device.", "Fields": []}}
+                model_not_allowed:
+                  value: {"Error": {"Code": "model_not_allowed", "Message": "The device is not of a model the allowed list admits.", "Fields": []}}
+        '409':
+          description: >-
+            `renewal_not_due`: the certificate is before its `RenewFrom`, and nothing is issued. Keep using it, and renew once the daily check answers `RenewNow` `true`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                renewal_not_due:
+                  value: {"Error": {"Code": "renewal_not_due", "Message": "The certificate is not due for renewal yet: its daily check says from when.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429':
+          description: >-
+            `renewal_rate`: this identity was issued 5 certificates in the last 24 hours, so the middleware writes a `WARNING`: a second renewer is the best sign of a fork. Keep the current certificate and renew later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                renewal_rate:
+                  value: {"Error": {"Code": "renewal_rate", "Message": "This identity was issued 5 certificates in the last 24 hours. Retry later.", "Fields": []}}
+        '503':
+          description: |
+            No verdict on the certificate: nothing is issued and a challenge is not spent, so retry
+            on the normal backoff with the same key.
+
+            - `store_unavailable`: the middleware's store did not answer.
+            - `ca_unavailable`: the middleware could not sign the certificate.
+            - `attestation_status_unavailable`: a device's renewal on a `live` middleware, which
+              holds no attestation status list fresh enough to check the chain for revocation.
+            - `edge_not_trusted`: behind the load balancer, the request did not come through a
+              trusted edge. It is an edge fault, and the certificate is not in question.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                store_unavailable:
+                  value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+                ca_unavailable:
+                  value: {"Error": {"Code": "ca_unavailable", "Message": "The certificate authority could not sign. Retry.", "Fields": []}}
+                attestation_status_unavailable:
+                  value: {"Error": {"Code": "attestation_status_unavailable", "Message": "The attestation status list is not current. Retry.", "Fields": []}}
+                edge_not_trusted:
+                  value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+components:
+  securitySchemes:
+    sandboxKey:
+      type: http
+      scheme: bearer
+      description: >-
+        A sandbox key, `sbx_` then 43 base64url characters, sent as `Authorization: Bearer`. It works in the sandbox alone, and its scope decides what it reaches: `pos` a register's sales and reads and its vendor's terminal connections, `admin` the Operator API inside its own vendor, `operator` FUNDiMO's routes, and `onboarding` the onboarding routes for every vendor, FUNDiMO's onboarding team's.
+    mutualTLS:
+      type: mutualTLS
+      description: >-
+        A client certificate from the middleware's own CA, presented at the TLS handshake with the issuing certificate beside it, as `CertificateChain` gave them, and never with an `Authorization` header. Its one SAN, a SPIFFE URI, names the environment, the role, `terminal`, `register`, `server` or `operator`, and the id, and a `server` certificate's scope decides what it reaches as a sandbox key's does.
+  responses:
+    Unauthorised:
+      description: |
+        The credential is missing or not acceptable, refused before the body is read or a key
+        looked up, so this request did nothing and its refusal says nothing of a sale an earlier
+        send made: if the request retried a sale whose answer was lost, fix the credential and send
+        the sale again with the same `IdempotencyKey` from the same register, never a new one.
+
+        - `certificate_required`: no credential came. A holder with no certificate for the
+          route enrols first, with `POST /v1/enrol`.
+        - `certificate_invalid`: an `Authorization` header of another scheme, a token of no
+          form the middleware issues, two `Authorization` headers, a client certificate beside an
+          `Authorization` header, or a client certificate no row holds.
+        - `certificate_expired`: the client certificate is past its `NotAfter`. A holder that
+          meets it re-enrols with a new code.
+        - `sandbox_key_on_live`: a sandbox key sent to a `live` middleware, which refuses every
+          one before any lookup.
+        - `sandbox_key_invalid`: the sandbox key is malformed, unknown or retired.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            certificate_required:
+              value: {"Error": {"Code": "certificate_required", "Message": "This route needs a credential, and none came.", "Fields": []}}
+            certificate_invalid:
+              value: {"Error": {"Code": "certificate_invalid", "Message": "The credential presented is not acceptable.", "Fields": []}}
+            sandbox_key_on_live:
+              value: {"Error": {"Code": "sandbox_key_on_live", "Message": "A sandbox key is accepted in the sandbox alone.", "Fields": []}}
+            sandbox_key_invalid:
+              value: {"Error": {"Code": "sandbox_key_invalid", "Message": "The sandbox key is malformed, unknown or retired.", "Fields": []}}
+            certificate_expired:
+              value: {"Error": {"Code": "certificate_expired", "Message": "The certificate presented has expired.", "Fields": []}}
+    NotPermitted:
+      description: |
+        Nothing was done.
+
+        - `not_permitted`: the credential is good, and this route refuses it: a credential of a
+          scope or a role the route does not take, `operator` asked for by anyone but the operator,
+          a write by a suspended vendor, a role the vendor does not hold, a move the object's state
+          does not allow, or an act held back from `onboarding`: a terminal's removal, or a code for
+          a device that is not `listed`, has held a certificate or holds a binding. One code answers
+          every reason.
+        - `certificate_retired`: the client certificate presented is retired, because a newer one of
+          the identity is in use. Retry on the newer one, and on the holder's newest, stop and tell
+          a person: something else holds a newer certificate of this identity.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            not_permitted:
+              value: {"Error": {"Code": "not_permitted", "Message": "The caller is not permitted to do this.", "Fields": []}}
+            certificate_retired:
+              value: {"Error": {"Code": "certificate_retired", "Message": "The certificate presented is retired: a newer one of this identity is in use.", "Fields": []}}
+    OperatorBodyTooLarge:
+      description: >-
+        `body_too_large`: the body is over 65,536 bytes. Nothing was done, and no part of the body is logged.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    EdgeLengthRequired:
+      description: 'Sent by the edge in front of a hosted middleware, never by the middleware itself, to a `POST` with no body and no `Content-Length` over HTTP/1.1: its body is the edge''s, not an `Error`, and nothing was read. Send the same request again with `Content-Length: 0`.'
+    OperatorStoreUnavailable:
+      description: |
+        No verdict on the caller.
+
+        - `store_unavailable`: the middleware's store did not answer, while it looked up the
+          credential or did the work. A write's commit may have landed with its answer lost,
+          so read the object back before doing it again.
+        - `edge_not_trusted`: behind the load balancer, the request did not come through a
+          trusted edge. It is an edge fault, and the caller's certificate is not in
+          question: retry on the normal backoff.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            store_unavailable:
+              value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+            edge_not_trusted:
+              value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+  schemas:
+    Error:
+      type: object
+      required: [Error]
+      description: The body of every non-2xx answer the middleware gives. Every field is present.
+      properties:
+        Error:
+          type: object
+          required: [Code, Message, Fields]
+          x-sent-by: mw
+          description: What was refused, and why.
+          properties:
+            Code:
+              type: string
+              x-sent-by: mw
+              description: The reason's code, one per case, named under its answer. Branch on this.
+            Message:
+              type: string
+              x-sent-by: mw
+              description: A fixed sentence per code for a person, holding nothing the request sent.
+            Fields:
+              type: array
+              maxItems: 32
+              items:
+                type: string
+              x-sent-by: mw
+              description: >-
+                The fields the refusal is about, sorted, at most 32, as paths such as `TransactionDetails.SaleItem[0].ProductDescription`, and empty when the refusal is about no field. A name the sender chose is shown as sent only when it has at most 64 characters, only ASCII letters, digits, `_`, `.` and `-`, and at most 2 digits, and as `<unprintable>` otherwise.
+      examples:
+        - {"Error": {"Code": "terminal_offline", "Message": "The terminal is not connected.", "Fields": []}}
+    Health:
+      type: object
+      required: [Status, Version]
+      description: Whether the middleware is serving.
+      properties:
+        Status:
+          type: string
+          x-sent-by: mw
+          description: '`ok`.'
+        Version:
+          type: string
+          x-sent-by: mw
+          description: The release of the middleware answering, not this document's `info.version`.
+      examples:
+        - {"Status": "ok", "Version": "0.0.0"}
+    Enrolment:
+      type: object
+      additionalProperties: false
+      required: [PairingCode, CertificateSigningRequest]
+      description: >-
+        What `POST /v1/enrol` takes. A device sends its `SerialNumber` and, on `live`, its `AttestationChain`, and a server sends neither.
+      properties:
+        PairingCode:
+          type: string
+          maxLength: 64
+          pattern: '^[0-9A-Za-z .-]{1,64}$'
+          x-sent-by: vendor
+          description: >-
+            The code as its listing showed it, at most 64 characters, read by the `SerialNumber` beside it. With a `SerialNumber` that is not `null`, a device's five different words of `docs/api/words.txt`, in any case, with one or more dots, spaces or hyphens between two words; with none, absent or `null`, a server's 16 characters in Crockford base32, spaces and hyphens dropped, either case read, and `I` and `L` read as `1` and `O` as `0`.
+        CertificateSigningRequest:
+          type: string
+          maxLength: 4096
+          x-sent-by: vendor
+          description: >-
+            A PKCS 10 request in PEM, one `CERTIFICATE REQUEST` block, for a P-256 key the principal never used. The middleware reads its public key and nothing else, and never logs it.
+        SerialNumber:
+          type: [string, 'null']
+          pattern: '^[A-Za-z0-9._-]{1,64}$'
+          x-sent-by: vendor
+          description: Optional. A device's serial, as its listing names it.
+        AttestationChain:
+          type: [string, 'null']
+          maxLength: 49152
+          x-sent-by: vendor
+          description: >-
+            A device's Android Key Attestation chain for the key of the CSR, as `KeyStore` gives it, in PEM, leaf first. Required of a device on a `live` middleware, and checked when a sandbox is offered one.
+    Renewal:
+      type: object
+      additionalProperties: false
+      required: [CertificateSigningRequest]
+      description: What renewal takes. A device on `live` sends `AttestationChain`; a server none.
+      properties:
+        CertificateSigningRequest:
+          type: string
+          maxLength: 4096
+          x-sent-by: vendor
+          description: >-
+            A PKCS 10 request in PEM, one `CERTIFICATE REQUEST` block, for a new P-256 key the principal has never used. The middleware reads its public key and nothing else.
+        AttestationChain:
+          type: [string, 'null']
+          maxLength: 49152
+          x-sent-by: vendor
+          description: >-
+            A device's Android Key Attestation chain for the new key, made with the challenge of `POST /v1/certificates/challenge`, in PEM, leaf first.
+    EnrolmentIssued:
+      type: object
+      required: [CertificateChain, SpiffeId, NotAfter, RenewFrom]
+      oneOf:
+        - required: [POIIdentification]
+        - required: [RegisterIdentification]
+        - required: [ServerIdentification]
+      description: >-
+        A certificate just issued, by enrolment or renewal, and the principal it names, by exactly one of its ids. A certificate is public.
+      properties:
+        CertificateChain:
+          type: string
+          x-sent-by: mw
+          description: The certificate then its issuer's, PEM. Present both at the TLS handshake.
+        POIIdentification:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: A terminal's id, when the certificate is a terminal's.
+        RegisterIdentification:
+          type: [string, 'null']
+          pattern: '^reg_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: A register's id, when the certificate is a register's.
+        ServerIdentification:
+          type: [string, 'null']
+          pattern: '^srv_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: A vendor's server's id, when the certificate is a server's.
+        SpiffeId:
+          type: string
+          x-sent-by: mw
+          description: >-
+            The certificate's one SAN, `spiffe://`, the middleware's trust domain, then the environment, the role and the id, each after a `/`.
+        NotAfter:
+          type: string
+          x-sent-by: mw
+          description: When the certificate expires, in RFC 3339.
+        RenewFrom:
+          type: string
+          x-sent-by: mw
+          description: When it may renew, day 15 of its life, in RFC 3339.
+    CertificateStatus:
+      type: object
+      required: [NotAfter, RenewFrom, RenewNow]
+      description: The certificate presented, as its daily check reads it.
+      properties:
+        NotAfter:
+          type: string
+          x-sent-by: mw
+          description: When it expires, in RFC 3339.
+        RenewFrom:
+          type: string
+          x-sent-by: mw
+          description: When it may renew, day 15 of its life, in RFC 3339.
+        RenewNow:
+          type: boolean
+          x-sent-by: mw
+          description: Whether to renew it now, by the middleware's clock.
+    ChallengeIssued:
+      type: object
+      required: [Challenge, ExpiresInSeconds]
+      description: A challenge for a device's next key.
+      properties:
+        Challenge:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          x-sent-by: mw
+          description: 32 random bytes, for the new key's attestation. Keep it out of every log.
+        ExpiresInSeconds:
+          type: integer
+          x-sent-by: mw
+          description: How long it is valid, in whole seconds.
