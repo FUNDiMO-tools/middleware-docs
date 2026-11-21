@@ -1,0 +1,995 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>The sandbox - FUNDiMO middleware API</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/site-0ff7cf6d.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-c69b63ad.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-f470377e.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">FUNDiMO middleware API</h1>
+
+                    <div class="right-buttons">
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <p class="mw-release">Release v0.3.1, 21-Nov-2026 · <a href="../versions.html">all releases</a></p>
+
+<h1 id="middleware-the-sandbox"><a class="header" href="#middleware-the-sandbox">Middleware: the sandbox</a></h1>
+<p>13-Nov-2026.</p>
+<p>The sandbox is a middleware of its own for testing a point of sale (POS) or a payment terminal
+against the middleware’s one schema, with no one from FUNDiMO in the room. It runs the same relay as
+<code>live</code>, beside simulated terminals, an MCP server for an agent, and conformance runs whose
+report is signed. You can go from nothing to a signed report from this document alone. An agent
+reads the same bytes through the sandbox’s MCP server as <code>mw://start</code>, and over HTTP as
+<a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>.</p>
+<p>Nothing in the sandbox is a record. No card is charged and no money moves, and a world lasts 30
+days. A <code>live</code> middleware refuses every sandbox key and every sandbox certificate, and the sandbox
+refuses every live credential.</p>
+<p>Never send card, bank or personal data, here or on <code>live</code>: no card number, expiry, track data,
+card verification value, BSB, account number, cardholder name or other detail of a person.
+The middleware cannot detect one in a string you choose, and every message that passes through it is
+logged, with the ids that tie it to one sale. A key, a pairing code and a header value never
+reach a line.</p>
+<h2 id="in-short"><a class="header" href="#in-short">In short</a></h2>
+<ol>
+<li>Read <code>/llms.txt</code>, also served at <code>/</code>: the index of the middleware’s contracts, walks, field
+catalogue and conformance scenarios, which lists this page first.</li>
+<li>Read <code>mw://environments</code>, also served as <a href="environments.html"><code>/docs/api/environments.md</code></a>: the two environments,
+the sandbox and staging, and each one’s base URL. Keep the base URL a setting from your first
+line of code.</li>
+<li>Take a key with <code>POST /sandbox/v1/keys</code>. It opens a world of your own (step 1).</li>
+<li>Add the sandbox’s MCP server with that key, then start a new session, or call it with
+<code>curl</code> in the session you are in (step 3).</li>
+<li>Learn the fields: <code>mw://world</code>, the <code>describe_field</code> tool and <code>mw://fields</code>.</li>
+<li>From your own code, send sales and refunds to your world’s simulated terminals as a POS
+(step 4), or take them on <code>&lt;tester&gt;-yours</code> as a terminal (step 5), and read both sides with
+<code>read_log</code>.</li>
+<li>Enrol for a certificate, run your side’s conformance scenarios, and keep the signed report
+(step 6).</li>
+</ol>
+<p>The commands here read the sandbox’s address from <code>$SANDBOX</code>: the address this document was
+served from, with no path.</p>
+<pre><code class="language-sh"># The sandbox's address: /docs/api/environments.md gives its base URL. A name under `.invalid`
+# never resolves: put the real one here.
+SANDBOX=https://sandbox.mw.invalid
+</code></pre>
+<p>Every body the sandbox takes or gives is one JSON object in UTF-8, and every refusal it gives
+over HTTP has the body <code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>. The
+<code>404</code> the sandbox’s gate gives for a path off its routes, and its <code>503 ca_unavailable</code> when it
+has no CA, add <code>"Next"</code> beside <code>Error</code>, saying what to do, as a tool’s failure does. On
+enrolment, the edge in front of the sandbox, where it runs behind one, may also refuse, with a
+<code>429</code> of its own whose body is not an <code>Error</code> (Codes the sandbox adds). Where a table here says
+the normal backoff, wait 1 second, double the wait after each failure up to 30 seconds, and add
+a little randomness.</p>
+<h2 id="1-a-key-and-a-world"><a class="header" href="#1-a-key-and-a-world">1. A key and a world</a></h2>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/sandbox/v1/keys"
+</code></pre>
+<p>No credential and no body are needed, and no contact detail is asked for or kept. The answer is
+<code>201</code>:</p>
+<pre><code class="language-json">{
+  "SandboxKey": "sbx_...",
+  "TesterIdentification": "sbx-3f9a1c2e7b10",
+  "ExpiryDateTime": "2026-12-10T04:12:33Z",
+  "MerchantIdentification": "sbx-3f9a1c2e7b10-M1",
+  "RegisterIdentification": "reg_...",
+  "Terminals": { "approve": "sbx-3f9a1c2e7b10-approve", "decline": "sbx-3f9a1c2e7b10-decline", "technical": "...", "slow": "...", "late": "...", "silent": "...", "card": "...", "manual": "...", "yours": "sbx-3f9a1c2e7b10-yours" },
+  "McpEndpoint": "https://sandbox.mw.invalid/mcp",
+  "Enrolment": { "Role": "server", "PairingCode": "...", "Next": "Read mw://onboarding/server. This code lasts 15 minutes. POST /sandbox/v1/codes gives another." },
+  "Next": "Add the MCP server with this key, then read mw://start. This key is shown once."
+}
+</code></pre>
+<ul>
+<li><code>SandboxKey</code> is your key, a <code>pos</code> key of your world’s register. It is shown this once, and
+the sandbox keeps only its digest, so a lost key is a new key and a new world. Send it as
+<code>Authorization: Bearer sbx_...</code>, and keep it out of logs and repositories, as any credential.</li>
+<li><code>TesterIdentification</code> names you, and is no secret. Your world’s store and terminals are
+named after it.</li>
+<li><code>ExpiryDateTime</code> is when the key and the world end, 30 days on. After it the key is refused,
+and a new key is a new world.</li>
+<li><code>MerchantIdentification</code> is your world’s one store: every sale of yours names it.</li>
+<li><code>RegisterIdentification</code> is your world’s one register, which your key acts for and which
+a server’s certificate names in <code>Mw-Register</code>.</li>
+<li><code>Terminals</code> are your world’s nine terminals (step 2).</li>
+<li><code>Enrolment</code> holds a pairing code for a <code>pos</code> server on your world, good 15 minutes (step 6).
+It is a secret, as the key is.</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status</th><th><code>Error.Code</code></th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>201</code></td><td></td><td>A key and a world exist</td><td>Keep the key</td></tr>
+<tr><td><code>429</code></td><td><code>sandbox_key_rate</code></td><td>The sandbox has issued as many keys as it may this hour, counted across every caller</td><td>Try again in an hour</td></tr>
+<tr><td><code>503</code></td><td><code>sandbox_full</code></td><td>The sandbox holds as many testers as it may</td><td>Keys free up as they expire. Try again in an hour</td></tr>
+<tr><td><code>503</code></td><td><code>store_unavailable</code></td><td>The sandbox’s store did not answer, and no key was made</td><td>Retry with the normal backoff</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>The sandbox’s TLS mode.</strong> <code>mw://world</code>’s <code>TlsMode</code> states which this sandbox runs. In
+<code>direct</code>, the mode of a sandbox with a CA on your own machine, the sandbox ends TLS itself, so a
+certificate it does not take can end the handshake with a TLS alert. In <code>forwarded</code>, the mode of
+a sandbox behind a load balancer, the load balancer ends TLS, no handshake fails on the
+certificate, and the refusal comes on the upgrade or the request instead. In <code>off</code>, plain HTTP,
+no handshake carries a certificate, and a sandbox with no CA issues none (step 6). The terminal
+contract’s table for a refused connection reads by it (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, What a holder of
+a dead certificate does).</p>
+<h2 id="2-your-world"><a class="header" href="#2-your-world">2. Your world</a></h2>
+<p>Each terminal’s id is your <code>TesterIdentification</code>, a <code>-</code>, and a suffix. All nine terminals
+exist from the moment the key is issued, each is bound to your register, and your key may send
+a sale to any of them and read it. Another tester’s ids answer as if they did not exist.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Terminal</th><th>Held by</th><th>On an instruction</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-approve</code></td><td>A simulator</td><td>After 500 ms: <code>TransactionStatus</code> <code>ACSP</code>, <code>ResponseCode</code> <code>00</code>, <code>AdditionalInformation</code> <code>APPROVED</code>, <code>TransactionDetails.AuthorisedAmount</code> equal to the instruction’s <code>TotalAmount</code>, and a <code>PaymentReference</code> holding three card references under <code>Card</code></td></tr>
+<tr><td><code>-decline</code></td><td>A simulator</td><td>After 500 ms: <code>RJCT</code> with <code>StatusReasonInformation.Reason</code> <code>AG07</code>, <code>ResponseCode</code> <code>05</code>, <code>AdditionalInformation</code> <code>DECLINED</code></td></tr>
+<tr><td><code>-technical</code></td><td>A simulator</td><td>After 500 ms: <code>RJCT</code> with <code>Reason</code> <code>AB11</code>: the terminal gave up and took no payment</td></tr>
+<tr><td><code>-slow</code></td><td>A simulator</td><td>After 8 seconds: as <code>-approve</code></td></tr>
+<tr><td><code>-late</code></td><td>A simulator</td><td>After the sale’s deadline plus 15 seconds: as <code>-approve</code>, so the sale reads <code>UNKN</code>, then <code>ACSP</code></td></tr>
+<tr><td><code>-silent</code></td><td>A simulator</td><td>Never answers. The sale reads <code>UNKN</code>, and the terminal stays claimed for the hold. It declares neither <code>SSAB</code> nor <code>SSMQ</code>, so it is sent no <code>StatusRequest</code>, and an abort of its sale is <code>409 terminal_cannot_abort</code> while the sale waits and through the hold; once the hold has ended, <code>409 sale_not_abortable</code></td></tr>
+<tr><td><code>-card</code></td><td>A simulator</td><td>After 500 ms: as <code>-approve</code>, plus four fields a terminal must never send, a card number, an expiry, track data and a cardholder name, each a fixed test value. The middleware drops them before anything is logged or answered, and a <code>fields_dropped</code> line names each</td></tr>
+<tr><td><code>-manual</code></td><td>You, through the MCP server</td><td>The instruction waits for <code>terminal_next_instruction</code>, and you answer it with <code>terminal_send_outcome</code>. A <code>StatusRequest</code> and an <code>Abort</code> wait there too. Eight wait at most, of the three kinds together: a ninth is not kept, and a sale whose instruction was not kept ends <code>UNKN</code></td></tr>
+<tr><td><code>-yours</code></td><td>Your own terminal</td><td>Whatever your terminal and its own host do: the sandbox simulates no card host behind it (step 5). A sale to it while it is not connected is <code>409 terminal_offline</code>. A <code>LoginNeeded</code> from it is answered under your store’s sign-in stand-in, below</td></tr>
+</tbody>
+</table>
+</div>
+<p>A POS reads a sale’s <code>TransactionStatus</code>: <code>PDNG</code> while it waits, then <code>ACSP</code>, <code>RJCT</code> with its
+<code>StatusReasonInformation</code>, or <code>UNKN</code> when no outcome came by the deadline. An <code>UNKN</code> sale may
+still settle, so keep reading it. <code>mw://world</code> states the timers in force: how long a sale
+waits for its outcome, how long a terminal whose sale went <code>UNKN</code> stays claimed, how long a sale
+is kept, and how often the middleware sends a connected terminal a WebSocket Ping.</p>
+<p><strong>Every simulated <code>ACSP</code> states the amount.</strong> A simulator that approves sends
+<code>TransactionDetails.AuthorisedAmount</code>, the instruction’s <code>TotalAmount</code> as it came, as the
+terminal contract asks (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Outcome), so the sale reads it back beside
+<code>TotalAmount</code>, equal to it. A bill of <code>50.00</code> with a store’s 15% public holiday surcharge on it
+is a sale of <code>57.50</code>, and <code>-approve</code> approves it with <code>"AuthorisedAmount": "57.50"</code>. An <code>RJCT</code>
+states none, since no payment was taken. An outcome sent again, after a reconnect or as the
+answer to a <code>StatusRequest</code>, states the same amount. <code>-manual</code> sends the outcome you write, so
+state the amount in it yourself.</p>
+<p><strong>Every simulated terminal takes refunds.</strong> Each says so on its upgrade,
+<code>Mw-Transaction-Types: CRDP, RFND</code>, and answers a refund as the table says it answers a sale,
+after the same wait: <code>-approve</code> refunds it, <code>ACSP</code> with <code>TransactionDetails.AuthorisedAmount</code>
+equal to the refund’s own <code>TotalAmount</code> and card references of the refund’s own, never the
+sale’s; <code>-decline</code> declines it, <code>RJCT</code> with <code>AG07</code>; <code>-technical</code> gives up, <code>RJCT</code> with
+<code>AB11</code>, and no refund is made; <code>-silent</code> never answers, so the refund reads <code>UNKN</code>; <code>-card</code> adds
+its four fields, which the middleware drops; and <code>-manual</code> queues the instruction, with
+<code>TransactionType</code> <code>RFND</code> and the sale under <code>OriginalTransaction</code>, for
+<code>terminal_next_instruction</code>. <code>-yours</code> takes a refund only once your terminal declares <code>RFND</code> on
+its upgrade (step 5). <code>mw://world</code>’s <code>Refunds</code> says the same of each of your terminals.</p>
+<p><strong>Every simulated terminal but <code>-silent</code> answers a <code>StatusRequest</code>.</strong> Each says so on its
+upgrade, with <code>SSMQ</code> in <code>Mw-Message-Functions: SSAB, SSMQ</code>, keeps the outcome of each sale and
+refund for 24 hours, its last 64, and answers as the terminal contract says
+(<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, StatusRequest). Asked about a sale whose outcome it keeps, it sends
+that outcome, at most once on a connection. Asked while the payment runs, it sends nothing, and the outcome once the payment
+ends. Asked about a sale it never received, it sends <code>RJCT</code> with <code>AB11</code> when what it keeps
+reaches back further than <code>SecondsSinceInstruction</code>, keeps that as the sale’s outcome, and
+answers an instruction of the sale that comes later with it; when it does not reach back that
+far, it sends nothing. A second instruction while a payment runs starts nothing: it gets <code>RJCT</code>
+with <code>AB11</code>, and the payment running finishes as before. <code>-manual</code> keeps a <code>StatusRequest</code> for
+<code>terminal_next_instruction</code>, and you answer it with <code>terminal_send_outcome</code>, or not at all.
+<code>-silent</code> declares nothing, so it is never asked. <code>mw://world</code>’s <code>StatusRequests</code> says the same
+of each of your terminals.</p>
+<p><strong>Every simulated terminal but <code>-silent</code> answers an <code>Abort</code>.</strong> Each says so on its upgrade, with
+<code>SSAB</code> in the same header, and answers as the terminal contract says (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>,
+Abort), when your POS cancels a sale or a refund with
+<code>POST /v1/sales/{TransactionReference}/abort</code>. An <code>Abort</code> of a payment still waiting stops it:
+the terminal sends <code>RJCT</code> with <code>StatusReasonInformation.Reason</code> <code>DS02</code>, once, and never the
+outcome its wait would have ended in, so the sale reads <code>RJCT</code> with <code>DS02</code>. <code>-slow</code>’s 8 seconds
+leave the time to try it, and so does <code>-late</code>’s wait, past the deadline too until the hold after
+it ends, where the <code>DS02</code> replaces the <code>UNKN</code> the sale reads. <code>-late</code> answers 15 seconds after
+the deadline, so with a hold shorter than that, an abort once the hold has ended is
+<code>409 sale_not_abortable</code>; <code>mw://world</code> states both timers. A payment whose wait has ended is
+with its host and is not stopped: the terminal sends the outcome it keeps for the sale, at most
+once on a connection, and never <code>DS02</code>. For a sale it never received, it sends nothing. An
+<code>Abort</code> stops only the payment it names. <code>-manual</code> keeps an <code>Abort</code> for
+<code>terminal_next_instruction</code>, and you answer it with <code>terminal_send_outcome</code>: <code>RJCT</code> with <code>DS02</code>
+if you stop the payment. <code>-silent</code> declares neither, so an abort of its sale is
+<code>409 terminal_cannot_abort</code> while the sale still holds the terminal, as it waits and through the
+hold. The middleware reads the sale’s state before the terminal’s connection, so once the hold
+has ended the abort is <code>409 sale_not_abortable</code>. <code>mw://world</code>’s <code>Aborts</code> says the same of each
+of your terminals.</p>
+<p><strong>Your store holds a sign-in credential: the sandbox’s stand-in.</strong> A terminal that needs a
+session at its fleet’s own payment system asks the middleware for what that system takes for a
+sign-in (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Signing in). Your world’s store holds, from the moment the key
+is issued, the sandbox’s stand-in for a fleet’s credential: <code>Adapter</code> <code>sandbox_signed_value</code>,
+<code>KeyIdentification</code> <code>sandbox-signin-1</code>, and the profile <code>Algorithm</code> <code>HMAC-SHA256</code>,
+<code>ChallengeLength</code> 32, <code>ChallengeEncoding</code> <code>hex</code> and <code>SignatureEncoding</code> <code>hex</code>. It signs with the
+sandbox’s own secret, which is published here and in <code>mw://world</code> and so proves nothing to any
+fleet: <code>mw-sandbox-signin-secret-published-not-secret</code>, its bytes as written (<code>SecretEncoding</code>
+<code>text</code>). So your terminal can verify the <code>Signature</code> of the group it opens: the HMAC-SHA256 of
+the <code>Challenge</code>’s ASCII bytes, keyed with those bytes, in lowercase hex (step 5). No fleet’s
+secret is ever set in the sandbox. <code>mw://world</code>’s <code>SignIn</code> states what your store holds now, each
+read counted among your tool calls a minute: a
+world opened before the sandbox gave each world its stand-in holds none, and a new key opens a
+world that does. The simulated terminals never ask.</p>
+<p>The simulators connect on your world’s first request, which waits up to 2 seconds for them. A
+world with no call for 30 minutes has them closed, and the next request connects them again,
+keeping nothing: asked about a sale made before, they send nothing.</p>
+<h2 id="3-the-mcp-server"><a class="header" href="#3-the-mcp-server">3. The MCP server</a></h2>
+<pre><code class="language-sh">claude mcp add --transport http mw-sandbox "$SANDBOX/mcp" --header "Authorization: Bearer sbx_..."
+</code></pre>
+<p>Then start a new session: a client reads its servers when a session starts, so an agent cannot
+give itself the key in the session it is in. Any MCP client on revision <code>2026-07-28</code> or
+<code>2025-11-25</code> will do, over Streamable HTTP at <code>POST /mcp</code>, with the key on every request. There
+is no session and no OAuth.</p>
+<p>Or call it over plain HTTP, which needs no new session and puts the key in no client’s config.
+Keep the one line <code>Authorization: Bearer sbx_...</code>, with your key, in a file only you can read,
+here <code>~/.mw-sandbox-auth</code>, and send each request on its own, with no <code>initialize</code> before it.
+In bash or zsh, the first line makes the file yours alone, at the second paste the key and press
+Enter, and the <code>curl</code> is any request, here your world:</p>
+<pre><code class="language-sh">touch ~/.mw-sandbox-auth &amp;&amp; chmod 600 ~/.mw-sandbox-auth
+(read -rs key &amp;&amp; printf 'Authorization: Bearer %s\n' "$key" &gt; ~/.mw-sandbox-auth)
+curl -s "$SANDBOX/mcp" -H @"$HOME/.mw-sandbox-auth" \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"resources/read","params":{"uri":"mw://world"}}'
+</code></pre>
+<p>The key is not shown as you paste it. <code>read</code> and <code>printf</code> are the shell’s own, and <code>curl</code> reads
+the header from the file, so the key is in no argument a process list shows and no line of your
+shell’s history.</p>
+<ul>
+<li>With no key, every resource but <code>mw://world</code> can be read, and <code>describe_field</code>,
+<code>validate_message</code> and <code>explain_refusal</code> answer. Every other tool answers <code>key_required</code>,
+with the <code>curl</code> line in <code>Next</code>.</li>
+<li>A key of the <code>sbx_</code> shape that is unknown or past its expiry is answered <code>key_not_recognised</code>
+by every tool that needs a key, with how to get a new one in <code>Next</code>.</li>
+<li>Any other credential, a token, <code>Basic</code>, or a live credential, is <code>401 credential_not_for_sandbox</code> on every request. If it was a live credential, rotate it.</li>
+</ul>
+<p><strong>The release the sandbox runs.</strong> The answer to <code>initialize</code> names the release of the
+middleware this sandbox runs, in <code>serverInfo.version</code> and in the first sentence of
+<code>instructions</code>. <code>GET /v1/health</code> names it too, in <code>Version</code>, and needs no key. The MCP server
+states its own release and reads no other: it never calls staging. Staging’s own
+<code>GET /v1/health</code> names the release staging runs, at the base URL <code>mw://environments</code> gives.</p>
+<h3 id="resources"><a class="header" href="#resources">Resources</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>URI</th><th>Type</th><th>Key</th><th>Holds</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mw://start</code></td><td><code>text/markdown</code></td><td>No</td><td>This document</td></tr>
+<tr><td><code>mw://environments</code></td><td><code>text/markdown</code></td><td>No</td><td>The two environments, the sandbox and staging, and each one’s base URL</td></tr>
+<tr><td><code>mw://fields</code></td><td><code>application/json</code></td><td>No</td><td>The field catalogue: one row for each field of each message</td></tr>
+<tr><td><code>mw://fields/{Message}/{Path}</code></td><td><code>application/json</code></td><td>No</td><td>One row, such as <code>mw://fields/Sale/TransactionDetails.TotalAmount</code>. A resource template</td></tr>
+<tr><td><code>mw://refusals</code></td><td><code>application/json</code></td><td>No</td><td>Every code the middleware and the sandbox answer with, and <code>sandbox_fault</code>, which a log line alone carries: what it means, and what to do next</td></tr>
+<tr><td><code>mw://conformance</code></td><td><code>application/json</code></td><td>No</td><td>The conformance scenarios, and the assertions each is judged by</td></tr>
+<tr><td><code>mw://docs/openapi.yaml</code></td><td><code>application/yaml</code></td><td>No</td><td>The OpenAPI document</td></tr>
+<tr><td><code>mw://docs/terminal.md</code></td><td><code>text/markdown</code></td><td>No</td><td>The terminal contract</td></tr>
+<tr><td><code>mw://docs/llms.txt</code></td><td><code>text/plain</code></td><td>No</td><td>The index of these documents</td></tr>
+<tr><td><code>mw://docs/words.txt</code></td><td><code>text/plain</code></td><td>No</td><td>The word list, one word a line: a device’s pairing code is five of its words, and a terminal’s word when linking a pair of them</td></tr>
+<tr><td><code>mw://onboarding/device</code></td><td><code>text/markdown</code></td><td>No</td><td>Enrolling an app on a device for its certificate, and the requirements of its enrolment screen</td></tr>
+<tr><td><code>mw://onboarding/server</code></td><td><code>text/markdown</code></td><td>No</td><td>Enrolling a server for its certificate</td></tr>
+<tr><td><code>mw://onboarding/linking</code></td><td><code>text/markdown</code></td><td>No</td><td>Linking a register to a terminal at the counter</td></tr>
+<tr><td><code>mw://report-key</code></td><td><code>application/json</code></td><td>No</td><td>The public key a report’s signature verifies with</td></tr>
+<tr><td><code>mw://world</code></td><td><code>application/json</code></td><td>Yes</td><td>Your world’s ids, its expiry, how each terminal takes a refund and answers a <code>StatusRequest</code> and an <code>Abort</code>, the timers in force, the TLS mode, and in <code>SignIn</code> the sign-in credential your store holds, with the published secret it signs with</td></tr>
+</tbody>
+</table>
+</div>
+<p>A row’s <code>Reference</code> says which kind of payment reference a field carries, <code>card</code>, <code>bank</code>,
+<code>wallet</code> or <code>npp</code>, when it is sent and what a POS does with it, and is <code>null</code> on a field that
+is no reference. A URI no resource has is JSON-RPC <code>-32602</code>, <code>Resource not found</code>.</p>
+<p>The same files are served over plain HTTP, for a reader with no MCP client: <code>/llms.txt</code>, also
+at <code>/</code>, <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a> (this document), <a href="environments.html"><code>/docs/api/environments.md</code></a>,
+<code>/docs/api/openapi.yaml</code>, <a href="terminal.html"><code>/docs/api/terminal.md</code></a>, <a href="fields.json"><code>/docs/api/fields.json</code></a>,
+<a href="conformance.json"><code>/docs/api/conformance.json</code></a>, <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>,
+<a href="linking.html"><code>/docs/api/linking.md</code></a> and <a href="words.txt"><code>/docs/api/words.txt</code></a>.</p>
+<h3 id="tools"><a class="header" href="#tools">Tools</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tool</th><th>Key</th><th>Arguments</th><th>What it does</th></tr>
+</thead>
+<tbody>
+<tr><td><code>describe_field</code></td><td>No</td><td><code>Path</code>, optional <code>Message</code></td><td>The catalogue’s rows for a field</td></tr>
+<tr><td><code>validate_message</code></td><td>No</td><td><code>Kind</code>, <code>Sale</code> or <code>Outcome</code>, and <code>Message</code></td><td>Checks a message as the relay checks it: <code>Accepted</code>, the <code>Refusal</code> with its code and fields, what would be <code>Dropped</code>, and <code>Next</code>. It keeps nothing. A <code>LoginNeeded</code> given as an <code>Outcome</code> is refused as one, and <code>Next</code> names it the frame a terminal sends once it declares <code>SASQ</code>, and says whether its key has its shape. A <code>LoginResponse</code> is refused as one too, and <code>Next</code> names it the report a terminal sends once it declares <code>SASQ</code>, and says whether such a connection takes it or refuses it <code>missing_field</code>, <code>invalid_result</code> or <code>invalid_reference</code>, naming the fields</td></tr>
+<tr><td><code>explain_refusal</code></td><td>No</td><td><code>Code</code></td><td>What a code means, what to do next, and which side gives it</td></tr>
+<tr><td><code>send_sale</code></td><td>Yes</td><td><code>Message</code>, optional <code>WaitSeconds</code> from 0 to 25</td><td>Sends a sale as your world’s POS, and optionally waits for its result</td></tr>
+<tr><td><code>read_sale</code></td><td>Yes</td><td><code>TransactionReference</code>, optional <code>WaitSeconds</code></td><td>Reads one of your sales, optionally waiting for it to change</td></tr>
+<tr><td><code>terminal_next_instruction</code></td><td>Yes</td><td>Optional <code>WaitSeconds</code></td><td>The next instruction, <code>StatusRequest</code> or <code>Abort</code> sent to your <code>-manual</code> terminal</td></tr>
+<tr><td><code>terminal_send_outcome</code></td><td>Yes</td><td><code>Outcome</code></td><td>Sends an outcome frame as your <code>-manual</code> terminal, and says whether it was <code>Sent</code>, any <code>Refusal</code>, and what was <code>Dropped</code></td></tr>
+<tr><td><code>read_log</code></td><td>Yes</td><td><code>Reference</code></td><td>The log lines of your sales a <code>TransactionReference</code> or a <code>SaleReferenceIdentification</code> names: the newest five, each with its lines in <code>seq</code> order. A <code>sale_state</code> line names the state in the middleware’s words, and <code>timed_out</code> is its word for <code>RJCT</code> with <code>AB11</code>, after ISO’s name for that code, whatever stopped the payment</td></tr>
+<tr><td><code>conformance_start</code></td><td>Yes</td><td><code>Side</code>, <code>ProductName</code>, <code>ProductVersion</code>, optional <code>Only</code></td><td>Starts a conformance run of your side (step 6)</td></tr>
+<tr><td><code>conformance_status</code></td><td>Yes</td><td><code>RunIdentification</code>, optional <code>WaitSeconds</code></td><td>Judges the current step and reads the run, with its verdicts so far. A step not yet met stays waiting (step 6)</td></tr>
+<tr><td><code>conformance_report</code></td><td>Yes</td><td><code>RunIdentification</code></td><td>The signed report of a finished run</td></tr>
+</tbody>
+</table>
+</div>
+<p>A tool’s failure is a result with <code>isError: true</code> and
+<code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] }, "Next": "..." }</code>, the same JSON
+in a text block. An argument absent, or of the wrong type, is <code>invalid_argument</code>, naming the
+argument and never its value. A message <code>validate_message</code> refuses is not a failure:
+<code>Accepted: false</code> is its answer. A tool’s arguments are never logged.</p>
+<h2 id="4-the-pos-journey"><a class="header" href="#4-the-pos-journey">4. The POS journey</a></h2>
+<p>For any POS: a cloud POS on its own server, or an app on a till. A POS sends nothing for a
+terminal’s sign-in, which the terminal journey walks, and a sale to a terminal that signs in
+reads as any sale.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>#</th><th>Step</th><th>Command or tool</th><th>Its first failure says</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>Read what this is</td><td><code>GET /llms.txt</code></td><td>Nothing can fail but the network</td></tr>
+<tr><td>2</td><td>Take a key</td><td><code>curl -s -X POST "$SANDBOX/sandbox/v1/keys"</code></td><td><code>503 sandbox_full</code>: try again in an hour</td></tr>
+<tr><td>3</td><td>Add the server, then start a new session, or call it with <code>curl</code></td><td><code>claude mcp add</code> or <code>curl</code>, as in step 3</td><td>A mistyped key connects, and the first tool that needs a key answers <code>key_not_recognised</code>, with the <code>curl</code> line</td></tr>
+<tr><td>4</td><td>Learn the fields</td><td><code>mw://world</code>, <code>describe_field</code>, <code>mw://fields</code></td><td><code>describe_field</code> on a path no message has: <code>invalid_argument</code>, and <code>Next</code> names <code>mw://fields</code></td></tr>
+<tr><td>5</td><td>Check a first sale</td><td><code>validate_message</code> with <code>Kind: "Sale"</code></td><td><code>Accepted: false</code>, the code, the fields, and <code>Next</code></td></tr>
+<tr><td>6</td><td>Send one from your own code</td><td><code>POST /v1/sales</code> to <code>-approve</code>, then the held read, with the key as bearer</td><td><code>401 sandbox_key_invalid</code> on a wrong key, <code>403 not_permitted</code> on an id outside your world, <code>400</code> naming the fields</td></tr>
+<tr><td>7</td><td>See both sides</td><td><code>read_log</code></td><td><code>sale_not_found</code>: check the reference, and that it came from this key. By a <code>SaleReferenceIdentification</code> it is also the answer for a sale whose lines have left the index, a restart among the ways: read by its <code>TransactionReference</code> to tell, which answers <code>log_not_held</code> for a sale that exists</td></tr>
+<tr><td>8</td><td>Enrol, then run the scenarios</td><td><code>POST /v1/enrol</code> with the code, then <code>conformance_start</code> with <code>Side: "pos"</code>, each step from your own code with the certificate, and <code>conformance_status</code></td><td>The step’s failing assertion, its <code>seq</code>, and what to change</td></tr>
+<tr><td>9</td><td>Keep the report</td><td><code>conformance_report</code>, saved</td><td><code>run_not_finished</code>, naming the state</td></tr>
+</tbody>
+</table>
+</div>
+<p>Step 6, from your own code, with your key in place of <code>sbx_...</code>, your <code>TesterIdentification</code>
+in place of <code>sbx-3f9a1c2e7b10</code>, and a new <code>IdempotencyKey</code> for each sale:</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/v1/sales" \
+  -H 'Authorization: Bearer sbx_...' \
+  -H 'Content-Type: application/json' \
+  -d '{"MerchantIdentification":"sbx-3f9a1c2e7b10-M1","POIIdentification":"sbx-3f9a1c2e7b10-approve","SaleReferenceIdentification":"INV-1001","IdempotencyKey":"7d0c6f4e-2b1a-4c3d-8e9f-0a1b2c3d4e5f","TransactionDetails":{"Currency":"AUD","TotalAmount":"12.50","SaleItem":[{"ProductDescription":"Flat white","ProductQuantity":2,"UnitPrice":"6.25","ProductAmount":"12.50"}]}}'
+</code></pre>
+<p>The answer is <code>202</code>, holding the sale’s <code>TransactionReference</code>. Read the sale under the same
+key, holding the read up to 25 seconds for a change, until it settles:</p>
+<pre><code class="language-sh">curl -s -H 'Authorization: Bearer sbx_...' \
+  "$SANDBOX/v1/sales/sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a?wait_seconds=25"
+</code></pre>
+<p>with the <code>TransactionReference</code> from the <code>202</code> in place of the one here. If an answer is lost,
+send the same sale again with the same <code>IdempotencyKey</code>: a repeat is answered <code>200</code> with the
+sale as it stands, and never makes a second sale. <code>mw://docs/openapi.yaml</code>, also served as
+<code>/docs/api/openapi.yaml</code>, holds every route, field and refusal.</p>
+<p><strong>A refund.</strong> Once a sale reads <code>ACSP</code>, a refund of it, the whole amount or a part, is a
+<code>POST /v1/sales</code> of its own: <code>TransactionType</code> <code>RFND</code>, the sale’s <code>TransactionReference</code> in
+<code>OriginalTransaction</code>, the amount to refund in <code>TotalAmount</code>, your own reference for the refund,
+such as a credit note number, in <code>SaleReferenceIdentification</code>, a terminal of your world, and a
+new <code>IdempotencyKey</code>. The refund’s terminal need not be the sale’s. With the sale’s
+<code>TransactionReference</code> in place of the one here:</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/v1/sales" \
+  -H 'Authorization: Bearer sbx_...' \
+  -H 'Content-Type: application/json' \
+  -d '{"TransactionType":"RFND","OriginalTransaction":{"TransactionReference":"sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a"},"MerchantIdentification":"sbx-3f9a1c2e7b10-M1","POIIdentification":"sbx-3f9a1c2e7b10-approve","SaleReferenceIdentification":"CN-1001","IdempotencyKey":"0b6e2f4a-9c1d-4e7f-8a3b-5c6d7e8f9a0b","TransactionDetails":{"Currency":"AUD","TotalAmount":"6.25","SaleItem":[{"ProductDescription":"Flat white","ProductQuantity":1,"UnitPrice":"6.25","ProductAmount":"6.25"}]}}'
+</code></pre>
+<p>The answer is <code>202</code>, holding the refund’s own <code>TransactionReference</code>, with <code>TransactionType</code>
+<code>RFND</code> and the sale in <code>OriginalTransaction</code>. Read it as a sale, by its own reference, until
+<code>ACSP</code>, refunded, or <code>RJCT</code>, not refunded, whatever its <code>Reason</code>. <code>UNKN</code> means no one knows yet
+whether it was refunded: tell the cashier to check the terminal before refunding another way,
+keep reading, and never send the refund again under a new key. The middleware keeps no total of
+a sale’s refunds and does not compare a refund’s amount with the sale’s, so your POS shows the
+cashier what it has refunded already, from its own records. Two refusals leave the key unspent
+and create nothing: <code>409 sale_not_refundable</code>, a sale the middleware cannot refund here, so
+refund at the terminal or another way; and <code>409 terminal_cannot_refund</code>, a terminal that has not
+declared refunds, so choose one that has.</p>
+<p>Step 8: your POS enrols as your world’s <code>pos</code> server. The code is the <code>201</code>’s <code>Enrolment</code>, or
+<code>POST /sandbox/v1/codes</code> with <code>{"Role":"server"}</code> under your key gives a fresh one, good 15
+minutes, up to 6 an hour. <code>mw://onboarding/server</code>, also served as
+<a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, walks it from the key to the certificate. A POS app on a
+device enrols on a <code>server</code> code too.</p>
+<p>A conformance run of a working POS takes under 3 minutes.</p>
+<h2 id="5-the-terminal-journey"><a class="header" href="#5-the-terminal-journey">5. The terminal journey</a></h2>
+<p>For any terminal. Steps 1 to 4 of the POS journey come first, then:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>#</th><th>Step</th><th>Command or tool</th><th>Its first failure says</th></tr>
+</thead>
+<tbody>
+<tr><td>5</td><td>Connect</td><td><code>$SANDBOX</code> with its scheme made WebSocket’s, <code>ws://</code> for <code>http://</code> and <code>wss://</code> for <code>https://</code>, then <code>/v1/terminals/&lt;tester&gt;-yours/connect</code>, with <code>Authorization: Bearer sbx_...</code> on the upgrade</td><td><code>401 certificate_required</code> with no credential or <code>sandbox_key_invalid</code> on a wrong key, <code>403 not_permitted</code> for an id outside your world, <code>426 upgrade_required</code> for a plain <code>GET</code></td></tr>
+<tr><td>6</td><td>Sign in</td><td>With <code>SASQ</code> in <code>Mw-Message-Functions</code> on the upgrade, send a <code>LoginNeeded</code> holding a fresh P-256 key, then open the <code>LoginRequest</code>, verify its group and report it in a <code>LoginResponse</code>, as Step 6, below, walks</td><td><code>unknown_frame_type</code>: the upgrade did not declare <code>SASQ</code>. <code>recipient_key_invalid</code>: the fresh key, or on a certificate its signature. <code>sign_in_limited</code>: asked again within 60 seconds of an answer, or after the day’s 1440 answers. On the report, <code>missing_field</code>, <code>invalid_result</code> or <code>invalid_reference</code>: a key of it, as Step 6 writes them</td></tr>
+<tr><td>7</td><td>Take an instruction</td><td><code>send_sale</code> naming <code>&lt;tester&gt;-yours</code>: the sandbox is the POS</td><td><code>409 terminal_offline</code>: your terminal is not connected to <code>&lt;tester&gt;-yours</code></td></tr>
+<tr><td>8</td><td>Return an outcome</td><td>From your own code</td><td>A <code>Refusal</code> frame with its code. <code>explain_refusal</code> gives its meaning and <code>Next</code></td></tr>
+<tr><td>9</td><td>See both sides</td><td><code>read_log</code></td><td>A <code>fields_dropped</code> line names anything your terminal should not send</td></tr>
+<tr><td>10</td><td>Enrol, then run the scenarios</td><td><code>POST /sandbox/v1/codes</code> with <code>{"Role":"terminal"}</code>, <code>POST /v1/enrol</code>, then connect with the certificate. Then <code>conformance_start</code> with <code>Side: "terminal"</code></td><td>The step’s failing assertion, such as <code>card_field.no_drop</code> when your terminal sent a field the middleware does not take</td></tr>
+<tr><td>11</td><td>Keep the report</td><td><code>conformance_report</code>, saved</td><td><code>run_not_finished</code>, naming the state</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>This sandbox’s sale deadline is 30 seconds</strong>, as <code>mw://world</code> states, where the contract’s
+default is 120 (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Deadline). A sale your terminal takes longer over, a
+card with PIN entry among them, reads <code>UNKN</code> at 30 seconds, and the outcome it then sends
+replaces <code>UNKN</code>, as on <code>live</code>.</p>
+<p><strong>Declare refunds on every upgrade.</strong> A terminal that takes refunds says so on each upgrade,
+beside its credential: <code>Mw-Transaction-Types: CRDP, RFND</code>. The middleware keeps what a
+connection declared for that connection alone. Without it, <code>-yours</code> is sent sales alone, and a
+refund to it is refused <code>409 terminal_cannot_refund</code>. On an <code>Instruction</code>, read
+<code>TransactionType</code> first: <code>RFND</code> is a refund of <code>TotalAmount</code> against the sale
+<code>OriginalTransaction</code> names, answered in an <code>Outcome</code> under the refund’s own
+<code>TransactionReference</code>, as a sale’s is, with the refund’s own references
+(<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, A refund). To be sent one, approve a sale on <code>-yours</code>, then send a
+refund of it naming <code>&lt;tester&gt;-yours</code>, with <code>send_sale</code> or from your own POS code, as step 4
+shows. <code>-manual</code> shows the instruction a refund sends before you write any code for it.</p>
+<p><strong>No card host stands behind <code>-yours</code>.</strong> The simulated terminals play their host’s answer as
+well, but the sandbox plays no card host for your terminal: your terminal and its own host
+decide each outcome, on the host’s test environment or a stand-in of yours. In a run, whoever
+drives your terminal, a person at it or your test code standing in for one, presents the test
+card, or cancels before anything reaches the host, as the step’s <code>Instruction</code> asks, and your
+terminal sends what it and its host did (step 6).</p>
+<p><code>mw://docs/terminal.md</code>, also served as <a href="terminal.html"><code>/docs/api/terminal.md</code></a>, is the terminal’s
+contract: the connection, the frames, the deadline and what to resend. Before writing any
+terminal code, an agent can walk the same frames with <code>terminal_next_instruction</code> and
+<code>terminal_send_outcome</code> on <code>-manual</code>.</p>
+<p>Step 6, signing in, is for a terminal that needs a session at its fleet’s own payment system
+before it takes a payment. One that needs none declares no <code>SASQ</code>, sends no <code>LoginNeeded</code>, and
+goes on to step 7, Take an instruction. <a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Signing in, is the contract;
+here it is walked against your store’s stand-in (step 2):</p>
+<ol>
+<li>Declare it: <code>SASQ</code> in <code>Mw-Message-Functions</code> on every upgrade, as
+<code>Mw-Message-Functions: SASQ, SSAB, SSMQ</code> for a terminal that does all three. Without it, a
+<code>LoginNeeded</code> is refused <code>unknown_frame_type</code>.</li>
+<li>Make a fresh P-256 key pair in memory for this one asking. <code>RecipientKey.PublicKey</code> is its
+65 bytes, uncompressed, <code>0x04</code> then X and Y, in base64url with no padding: 87 characters. On
+a certificate’s connection, sign it with the key of the certificate the connection presented,
+DER ECDSA P-256 SHA-256, over <code>mw-signin-recipient-v1</code>, a zero byte, the
+<code>POIIdentification</code>’s bytes, a zero byte and the 65 bytes of the public key, the
+<code>POIIdentification</code> here being <code>&lt;tester&gt;-yours</code>, and send that in <code>RecipientKey.Signature</code>,
+in base64url with no padding. On your sandbox key’s connection send no <code>Signature</code>.</li>
+<li>Send <code>{"MessageType":"LoginNeeded","RecipientKey":{"PublicKey":"...","Signature":"..."}}</code>,
+and read its answer before your next frame.</li>
+<li>Open the <code>LoginRequest</code>’s <code>Sealed.Ciphertext</code> by RFC 9180’s base mode, single-shot, with the
+fresh key’s private part and <code>Sealed.EncapsulatedKey</code> as <code>enc</code>, under the suite
+<code>Sealed.Suite</code> names: <code>Kem</code> <code>0x0010</code>, DHKEM(P-256, HKDF-SHA256), <code>Kdf</code> <code>0x0001</code>,
+HKDF-SHA256, and <code>Aead</code> <code>0x0001</code>, AES-128-GCM. <code>info</code> is 58 bytes: <code>mw-signin-v1</code>, a zero
+byte, <code>LoginRequest</code>, a zero byte, and the SHA-256 of the <code>POIIdentification</code>’s bytes, a zero
+byte and the 32 bytes of the connection’s credential id. On your sandbox key’s connection the
+credential id is the SHA-256 of the key’s whole text, <code>sbx_</code> included; on a certificate’s,
+the SHA-256 of its DER. <code>aad</code> is empty: zero bytes. Check your opening against the worked
+vector first (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, The worked vector), then drop the private key.</li>
+<li>Verify the opened group under the stand-in’s profile: <code>Adapter</code> <code>sandbox_signed_value</code>,
+<code>KeyIdentification</code> <code>sandbox-signin-1</code>, and <code>Signature</code> the HMAC-SHA256 of the <code>Challenge</code>’s
+ASCII bytes, keyed with the bytes of the published secret
+<code>mw-sandbox-signin-secret-published-not-secret</code>, in lowercase hex, as <code>mw://world</code>’s
+<code>SignIn</code> states it. A fleet’s own payment system checks what its terminals bring it; here
+your terminal checks the stand-in’s itself, and still treats the group as input, not proof of
+its sender.</li>
+<li>Once the opened <code>Signature</code> verifies, send one <code>LoginResponse</code> naming the group’s
+<code>LoginReference</code>, before your next frame of sign-in:
+<code>{"MessageType":"LoginResponse","LoginReference":"lgn_...","Response":"SUCC"}</code>, its
+<code>LoginReference</code> the opened group’s, as the group held it. Your terminal’s check stands in
+here for its fleet’s payment system, so a <code>Signature</code> that verifies is a <code>SUCC</code>. A report
+the middleware takes gets no frame back, so read none before your next frame
+(<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, The report).</li>
+</ol>
+<p>The group may also hold <code>AcceptorIdentification</code>, <code>UserName</code> and <code>ApplicationIdentification</code>,
+each where the store, its attachment or its credential holds it, for your terminal to send its
+fleet’s payment system as that system needs them (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, The answer). Your
+world’s store, its attachment and its credential hold none of <code>AcceptorIdentification</code>,
+<code>UserName</code> and <code>ApplicationIdentification</code>, so the group holds its four keys and its
+<code>LoginReference</code> alone. This sandbox serves no route that sets them. A fleet sets them with
+three operations <code>/docs/api/openapi.yaml</code> tags <code>operator</code>: the store’s own number at its
+fleet’s payment system with <code>PUT /v1/merchant-stores/{StoreIdentification}/acceptor</code>,
+<code>ApplicationIdentification</code> on the credential
+<code>POST /v1/vendors/{VendorIdentification}/signin-credentials</code> sets, and <code>UserName</code> on its
+attachment to the store, <code>PUT /v1/merchant-stores/{StoreIdentification}/signin-credential</code>.</p>
+<p>Both cases hold. <strong>A credential attached</strong>, as your store holds one: the terminal is answered a
+<code>LoginRequest</code>, signs in with what it is sent, reports it, and takes the sale. <strong>No credential
+at the store</strong>: the ask is refused <code>sign_in_not_available</code>, a terminal signed out is normal, and
+it answers the sale <code>RJCT</code> with <code>AB11</code> and asks no more on that connection. A conformance run’s
+<code>sign_in_none</code> step shows the second: the run ends your store’s attachment for the step and
+restores it after.</p>
+<p>Step 10: <code>POST /sandbox/v1/codes</code> with <code>{"Role":"terminal"}</code> under your key answers a
+<code>PairingCode</code>, five different words of <a href="words.txt"><code>/docs/api/words.txt</code></a> joined by dots, such as
+<code>bronze.farm.loop.prism.tempo</code>, and the <code>SerialNumber</code> to enrol with, <code>&lt;tester&gt;-yours</code>. It
+re-pairs <code>-yours</code>, so its key is refused on the upgrade until the terminal enrols, within 15
+minutes. Once it has, connect on the certificate at once, whatever wait the key’s refusal set
+(<a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, step 7).
+<code>mw://onboarding/device</code>, also served as <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, walks the
+enrolment on an Android device. No attestation is required here, so an emulator or a debug
+build can enrol. Build the screen a person enrols on to its section The enrolment screen, which
+says how a person reaches that screen and what it must be. A run sees your terminal’s
+connection, never that screen.</p>
+<p>A conformance run of a working terminal takes under 3 minutes.</p>
+<h2 id="6-conformance"><a class="header" href="#6-conformance">6. Conformance</a></h2>
+<p>A run walks its side’s scenarios in order, ten for a POS and twelve for a terminal, one step at
+a time, and judges each from the log alone. Each step has 300 seconds. <code>conformance_start</code> and
+<code>conformance_status</code> answer the current <code>Step</code>: its <code>Instruction</code>, the <code>Terminal</code> it names, which
+assertions it is <code>Waiting</code> for, and a <code>Note</code> of what the sandbox can see. <code>conformance_status</code>
+with <code>WaitSeconds</code> holds up to 25 seconds for a change.</p>
+<p><code>conformance_start</code> answers the run’s <code>RunIdentification</code> and the <code>Step</code> it is on, and nothing
+else: it has no <code>Result</code> and no <code>Done</code>, which only a status read gives, so a missing <code>Result</code>
+here does not mean the run ended. Keep the id and read <code>conformance_status</code> with it. Starting a
+POS run:</p>
+<pre><code class="language-json">{
+  "RunIdentification": "run_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+  "Step": {
+    "Scenario": "approved",
+    "Number": 1,
+    "Of": 10,
+    "Instruction": "From your own POS code, send one sale to sbx-3f9a1c2e7b10-approve, and read it until it settles.",
+    "Terminal": "sbx-3f9a1c2e7b10-approve",
+    "DeadlineSeconds": 300,
+    "Waiting": ["approved.one_sale", "approved.no_refusal", "approved.result_seen"],
+    "Note": null
+  }
+}
+</code></pre>
+<p><code>Step</code> is <code>null</code> only when the run ended as it started, and a status read then gives its
+<code>Result</code>.</p>
+<p>A status read judges the current step and reads the run. A step not yet met stays waiting, and
+reading again changes nothing your integration has not done. Mid-run, on the first step of a
+POS run:</p>
+<pre><code class="language-json">{
+  "Result": "running",
+  "Step": {
+    "Scenario": "approved",
+    "Number": 1,
+    "Of": 10,
+    "Instruction": "From your own POS code, send one sale to sbx-3f9a1c2e7b10-approve, and read it until it settles.",
+    "Terminal": "sbx-3f9a1c2e7b10-approve",
+    "DeadlineSeconds": 300,
+    "Waiting": ["approved.one_sale", "approved.no_refusal", "approved.result_seen"],
+    "Note": null
+  },
+  "Done": [],
+  "Note": null
+}
+</code></pre>
+<p><code>Result</code> is <code>running</code> until the run ends. Then <code>Step</code> is <code>null</code>, <code>Result</code> is <code>green</code>, <code>red</code>,
+<code>undetermined</code> or <code>partial</code>, and <code>Done</code> holds every step judged, in the order walked:</p>
+<pre><code class="language-json">{
+  "Result": "green",
+  "Step": null,
+  "Done": [
+    { "Scenario": "approved", "Verdict": "pass" },
+    { "Scenario": "declined", "Verdict": "pass" },
+    { "Scenario": "timed_out", "Verdict": "pass" },
+    { "Scenario": "unknown", "Verdict": "pass" },
+    { "Scenario": "card_field", "Verdict": "pass" },
+    { "Scenario": "duplicate_key", "Verdict": "pass" },
+    { "Scenario": "resend", "Verdict": "pass" },
+    { "Scenario": "restart", "Verdict": "pass" },
+    { "Scenario": "lost_instruction", "Verdict": "not_applicable" },
+    { "Scenario": "cancel", "Verdict": "not_applicable" }
+  ],
+  "Note": null
+}
+</code></pre>
+<p>The top-level <code>Note</code> is <code>null</code> but on a run that could not be judged in full, where it says how
+many lines were lost or evicted and to run it again. On a terminal run whose terminal did not
+declare <code>SASQ</code>, it says once, green or not, that sign-in was not tested (below). It also speaks when the sandbox loses its
+race in <code>lost_instruction</code>: your terminal connected again before the sandbox’s sale was made,
+so the instruction reached it. The sandbox tries once more when that sale has settled, or at
+the latest when the sale’s deadline and the hold after it have passed, the times <code>mw://world</code>
+states. If it loses again, the step is <code>undetermined</code>, never <code>fail</code>, because this is not your
+terminal’s fault, and the <code>Note</code> says to run it again. It speaks too when the sandbox’s own abort
+in <code>cancel</code> was not admitted and the step did not pass: it says what the abort was answered, or
+that no answer came, and whether an <code>Abort</code> went, as the step’s <code>Note</code> does from the moment the
+abort is answered. When such an abort sent your terminal no <code>Abort</code>, which is not your
+terminal’s fault, the step is <code>undetermined</code>, never <code>fail</code>, as a race lost twice leaves one, with
+no <code>step.no_traffic</code>. The one exception is an outcome your terminal sent for the sale before the
+abort reached the middleware: your terminal did not hold the payment, so <code>cancel.outcome</code> fails
+on it, and <code>cancel.declared</code> is <code>undetermined</code> unless your terminal connected during the step,
+since nothing else in the step shows what it declared. When the abort left no line in your log,
+as an abort refused before the middleware could check the sandbox’s key leaves none, nothing in
+the log places an outcome before the abort: <code>cancel.outcome</code> does not fail on one, and a step
+that has not failed by its deadline ends <code>undetermined</code>. The <code>Note</code> says nothing of a
+<code>409 terminal_cannot_abort</code>: it means your terminal did not declare <code>SSAB</code>, and <code>cancel.declared</code>
+fails on it. On <code>Side: terminal</code>, a step your terminal has met stays open 3 seconds before the
+next opens, with <code>Waiting</code> empty and the step’s <code>Note</code> saying so: a second outcome of that sale
+on the same connection in that time fails the step on <code>&lt;scenario&gt;.one_outcome</code>. A read with
+<code>WaitSeconds</code> made while a step holds answers as the hold ends, and a terminal run takes 3
+seconds longer for each step your terminal meets.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Scenario</th><th>POS side, its terminal</th><th>Terminal side, what you do, on your terminal’s own host</th></tr>
+</thead>
+<tbody>
+<tr><td><code>approved</code></td><td><code>-approve</code></td><td>Approve it</td></tr>
+<tr><td><code>declined</code></td><td><code>-decline</code></td><td>Decline it: <code>RJCT</code> with <code>AG07</code></td></tr>
+<tr><td><code>timed_out</code></td><td><code>-technical</code></td><td>Give up with no payment: <code>RJCT</code> with <code>AB11</code></td></tr>
+<tr><td><code>unknown</code></td><td><code>-late</code>: read <code>UNKN</code>, then keep reading to <code>ACSP</code></td><td>Send nothing until <code>Note</code> says <code>Now send it.</code>, then approve</td></tr>
+<tr><td><code>card_field</code></td><td><code>-card</code>: see the drop</td><td>Send the fullest outcome your terminal builds, with every reference it has</td></tr>
+<tr><td><code>duplicate_key</code></td><td><code>-approve</code>: repeat a create with the same key, then with another body</td><td>Not run: the middleware never sends a terminal one key twice</td></tr>
+<tr><td><code>resend</code></td><td><code>-approve</code>: the answer to your first create is lost on purpose, after the sale is made. Where a front end stands before the sandbox, a load balancer ending TLS, it comes as a <code>503</code> whose body is text and not an <code>Error</code>; on a sandbox you reach with nothing in front, the connection closes with no status. Treat either as an unknown outcome, and send the same body with the same <code>IdempotencyKey</code></td><td>Hold the outcome 2 seconds, so the connection drops first, then reconnect and send it</td></tr>
+<tr><td><code>restart</code></td><td><code>-slow</code>: a 5 second outage from your first read</td><td>Reconnect with the contract’s backoff, and send the outcome</td></tr>
+<tr><td><code>lost_instruction</code></td><td>Not run: nothing changes for a POS, which reads the terminal’s answer as any late outcome</td><td>The sandbox takes your terminal’s place for the sale, so its instruction never reaches you: reconnect with <code>Mw-Message-Functions: SSMQ</code> declared, and when a <code>StatusRequest</code> asks about the sale, answer <code>RJCT</code> with <code>AB11</code></td></tr>
+<tr><td><code>cancel</code></td><td>Not run: a POS need not offer a cancel, and one that does reads the abort’s answers in <code>/docs/api/openapi.yaml</code></td><td>With <code>SSAB</code> declared in <code>Mw-Message-Functions</code>, take the sale and hold its payment, no card presented: 3 seconds after the instruction the sandbox cancels the sale, as a POS does with <code>POST /v1/sales/{TransactionReference}/abort</code>, and your terminal is sent an <code>Abort</code>. Stop the payment and answer <code>RJCT</code> with <code>DS02</code></td></tr>
+<tr><td><code>sign_in</code></td><td>Not run: nothing changes for a POS, since the terminal signs in by itself</td><td>With <code>SASQ</code> declared in <code>Mw-Message-Functions</code>, start your terminal holding no session at its fleet’s payment system, asleep, its screen off and its app not in front. The sale’s instruction wakes it: send one <code>LoginNeeded</code>, open the <code>LoginRequest</code> and verify its group as step 5 walks, report the outcome of your sign-in at your fleet’s system with <code>LoginResponse</code>, naming the answer’s <code>LoginReference</code>, then answer the sale</td></tr>
+<tr><td><code>sign_in_none</code></td><td>Not run: nothing changes for a POS, since the terminal signs in by itself</td><td>With <code>SASQ</code> declared and no session held, take the sale: the sandbox ends your store’s sign-in attachment for the step and restores it after, so your <code>LoginNeeded</code> is refused <code>sign_in_not_available</code>. Ask no more on that connection, and answer the sale <code>RJCT</code> with <code>AB11</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>On the terminal side no card host is simulated: your terminal and its own host decide each
+outcome. Whoever drives the terminal presents the test card, cancels, or holds the payment with
+no card presented, as the step’s <code>Instruction</code> asks, and your terminal sends what it and its host
+did (step 5).</p>
+<p><code>sign_in</code> and <code>sign_in_none</code> apply only to a terminal that declares <code>SASQ</code>. Each reads what your
+terminal’s connection declared as the step opened, or, if it had not connected, its first connect
+in the step, when no line of the step was lost. Where that did not name <code>SASQ</code>, the step is
+<code>not_applicable</code>. Read as the step opened, that is at once: no sale is sent and nothing waits for
+its deadline. Read from a first connect in the step, it is at the next reading, the step’s sale
+already sent. Either way a run that passes every other step still reads <code>green</code>.
+Its row in the report holds <code>NotTested</code>, and the ended run’s <code>Note</code> says the same, once: “Sign-in
+was not tested: your terminal did not declare SASQ in Mw-Message-Functions. A terminal that needs
+the middleware to sign it in must declare SASQ on every upgrade and run again.” A sign-in step that
+runs first gives your store its stand-in again if it holds none. A terminal that
+declared <code>SASQ</code> and reconnects during the step without it fails <code>sign_in.login_declared</code>. A run
+sees frames alone, never your terminal’s screen.</p>
+<p><code>mw://conformance</code>, also served as <a href="conformance.json"><code>/docs/api/conformance.json</code></a>, holds every assertion and
+what to change when one fails.</p>
+<ul>
+<li><strong>A run needs a certificate.</strong> A sandbox key cannot start one: <code>conformance_start</code> answers
+<code>certificate_required</code> until your side has enrolled (step 4 or 5). So a run needs a sandbox
+that issues certificates: one with a CA, in TLS mode <code>direct</code> or <code>forwarded</code>, as one behind a
+load balancer is. A sandbox started with TLS <code>off</code> and no CA, as a local one may be, issues
+none: its <code>POST /v1/enrol</code> answers <code>503 ca_unavailable</code> with a <code>Next</code> saying so, and no run
+can start on it. Everything else here works on a key alone.</li>
+<li><strong>A run judges your world’s log.</strong> Your world’s log holds at most its newest 2,000 lines,
+and at most 1 MiB of them, the oldest out first, and a step reads only the lines that came
+after it opened. Older lines leaving it change nothing. A step whose own lines left it before they
+were judged, because your key wrote more than that during the step, is <code>undetermined</code>, and
+the ended run’s <code>Note</code> says how many lines and to run it again with less traffic. A new key
+is a new, empty log, and so is 30 minutes with no request of yours.</li>
+<li><strong>Only your own integration counts.</strong> A line counts only when it bears your certificate, so
+traffic from this MCP server, <code>send_sale</code> among it, does not.</li>
+<li><strong>A terminal run’s sales are yours.</strong> On <code>Side: terminal</code> the sandbox sends each step’s sale as
+your POS, and it counts as one of your sales a minute, beside your own and <code>send_sale</code>’s. While
+the minute is full, <code>Note</code> says so and the sale waits. A resend of it is not counted again.</li>
+<li><strong>Verdicts.</strong> Each assertion is <code>pass</code>, <code>fail</code> or <code>undetermined</code>, and one the log cannot
+decide, because lines were lost or a word is unknown, is <code>undetermined</code>, never <code>pass</code>. A run
+is <code>green</code> only when it is complete, every scenario is <code>pass</code> or <code>not_applicable</code>, no
+line was lost while it ran, and none of a step’s own lines was evicted.</li>
+</ul>
+<p><code>conformance_report</code> gives <code>{ "Report": "&lt;JSON text&gt;", "Signature": "&lt;base64&gt;", "KeyIdentification": "&lt;16 hex&gt;" }</code>. The signature is Ed25519 over the exact bytes of <code>Report</code>,
+in standard base64 with padding, and <code>mw://report-key</code> holds the public key it verifies
+with, and its <code>KeyIdentification</code>, the key’s first 8 bytes in lowercase hex. <code>PublicKey</code> is the
+raw 32-byte Ed25519 key in standard base64, not a PEM or DER structure. To check a report kept
+in <code>report.json</code> with OpenSSL 3 or later, put the key in a PEM file first: its DER is the fixed
+12 bytes <code>302a300506032b6570032100</code> and then the key, and since 12 bytes are exactly 16 base64
+characters, <code>MCowBQYDK2VwAyEA</code>, the PEM is that text and then <code>PublicKey</code>:</p>
+<pre><code class="language-sh">KEY='...'  # mw://report-key's PublicKey
+printf -- '-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA%s\n-----END PUBLIC KEY-----\n' "$KEY" &gt; report-key.pem
+jq -j .Report report.json &gt; report.txt
+jq -r .Signature report.json | base64 -d &gt; report.sig
+openssl pkeyutl -verify -pubin -inkey report-key.pem -rawin -in report.txt -sigfile report.sig
+</code></pre>
+<p>It prints <code>Signature Verified Successfully</code> and exits 0 when the report is the sandbox’s, and
+exits 1 when one byte of <code>Report</code> differs. <code>jq -j</code> writes the text of <code>Report</code> with no newline
+after it, so the bytes are the ones signed. As with any check of a signature, a pass says the
+report is the sandbox’s, not that the run was green: read <code>Result</code> in <code>Report</code> for that.</p>
+<p>A report shows what a holder of your certificate sent. It does not identify a product or a
+vendor, <code>ProductName</code> and <code>ProductVersion</code> are as declared, the far side was simulated, a
+restart was simulated for you alone, and no card, host or acquirer took part: it is not a card
+scheme’s certification.</p>
+<p><code>ContractVersion</code> in a report is the family of paths the run’s routes were under: <code>v1</code>, as in
+<code>/v1/sales</code> on the relay and <code>/sandbox/v1/keys</code> on the sandbox. It is not the release. It moves
+only when the middleware serves a new family of paths, so many releases may share one
+<code>ContractVersion</code>. To compare two reports, compare their <code>SandboxVersion</code>.</p>
+<p><code>SandboxVersion</code> is the release of the middleware that ran the run. A run lives in one process
+of the sandbox and is lost when the sandbox restarts, so one run never spans two releases.</p>
+<p><code>ReportVersion</code> counts the report’s own shape, not the release.</p>
+<h3 id="what-a-green-run-does-not-check"><a class="header" href="#what-a-green-run-does-not-check">What a green run does not check</a></h3>
+<p>A green run proves your integration did what each step asked, once. It cannot see what your
+code would do on a day no step stages, so each rule below binds you and no scenario checks it.
+Each is stated where the link says.</p>
+<p>For a POS:</p>
+<ul>
+<li><strong><code>UNKN</code> tells the cashier to check the terminal before another tender</strong>, as soon as the
+sale reads <code>UNKN</code>, while it keeps reading: not only once reading gives up. <code>UNKN</code> means a
+payment may have been taken (<code>/docs/api/openapi.yaml</code>, <code>Sale</code>’s <code>TransactionStatus</code>).</li>
+<li><strong>A <code>404 sale_not_found</code> on an id the middleware gave you reads as unknown</strong>, not as no sale
+(<code>/docs/api/openapi.yaml</code>, <code>readSale</code>’s <code>404</code>).</li>
+<li><strong><code>409 idempotency_conflict</code> after a lost answer reads as unknown</strong>: a sale may exist under
+that key, so the cashier checks the terminal before another tender
+(<code>/docs/api/openapi.yaml</code>, <code>createSale</code>’s <code>409</code>).</li>
+<li><strong>A field you do not know is ignored, and a <code>TransactionStatus</code> you do not know reads as
+<code>UNKN</code></strong> (<code>/docs/api/openapi.yaml</code>, <code>Sale</code>).</li>
+<li><strong>No card, bank or personal data in any string you choose</strong>, an item’s description or an
+invoice reference among them (the top of this page, and <code>/llms.txt</code>).</li>
+<li><strong>The people who use your POS are your responsibility.</strong> The middleware takes it that a user of
+your POS was authenticated to make each sale and refund, and judges nothing about that user
+(<code>/docs/api/openapi.yaml</code>, <code>info</code>).</li>
+</ul>
+<p>For a terminal:</p>
+<ul>
+<li><strong>Store the <code>TransactionReference</code> before taking the card, and the <code>Outcome</code> before sending
+it</strong>, somewhere a crash or a reboot does not lose (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, In short, and
+Resending is safe).</li>
+<li><strong>One payment at a time.</strong> An <code>Instruction</code> that arrives while a payment is open is not
+started and not queued: it is answered <code>RJCT</code> with <code>AB11</code>, and the payment that is open
+finishes as before (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, One payment at a time).</li>
+<li><strong>A repeated <code>Instruction</code> never charges twice</strong>, after a restart of the terminal as well
+as within one run of its code (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, The paths, step by step).</li>
+<li><strong><code>RJCT</code> with <code>AB11</code> only when no payment was taken</strong>: decided from what the terminal and
+its host did, never from what a step is called (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Which
+<code>TransactionStatus</code> to send).</li>
+<li><strong>A frame the middleware refused is kept aside and not sent again</strong> but as the Refusal section
+says, across reconnects as well (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Refusal).</li>
+<li><strong>An <code>Abort</code> stops only a payment not yet with its host.</strong> A green run does not prove the rest
+of the contract’s abort: that a terminal whose payment is already with its host carries on and
+sends the host’s outcome, never <code>DS02</code>; that an <code>Abort</code> for a reference whose payment ended is
+answered with that outcome, unless the terminal already sent it on this connection; that one
+for a reference the terminal holds no record of is answered with nothing; that it sends <code>DS02</code>
+only in answer to an <code>Abort</code>, and <code>AB11</code> for a cancel at the terminal; and that an <code>Abort</code> never
+stops a payment for another reference (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Abort). <code>cancel</code> stages one
+case, a payment held with no card presented, and judges that the terminal declared <code>SSAB</code> and
+answered the <code>Abort</code> with <code>RJCT</code> and <code>DS02</code>, once.</li>
+<li><strong>A sale’s outcome goes at most once on each connection</strong>, and again only after a
+reconnect, never on a timer (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Resending is safe). A run fails a
+repeat it sees inside a step’s 3-second hold, <code>&lt;scenario&gt;.one_outcome</code>, and does not see a
+slower one. The log names no connection, so a run cuts your terminal’s lines into
+connections at each connect and disconnect: a repeat that straddles one of those lines as
+one connection replaces another goes unseen, and an outcome your old connection was still
+sending as your new one connected can read as a repeat on the new one, which ends a run
+<code>red</code> that should not be, never <code>green</code>, and can pass when run again. Under a lost or evicted
+line a repeat reads <code>undetermined</code>.</li>
+<li><strong>A person reaches your app’s enrolment screen from the app’s own menu or settings</strong>, with
+the device alone and again after the first enrolment, and the screen meets the rest of its
+requirements (<a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, The enrolment screen). A run sees the connection your
+terminal holds on its certificate, never the screen it was enrolled on.</li>
+<li><strong>Check the sandbox’s server certificate</strong>, and the middleware’s in <code>live</code>, against your trust
+store, as any HTTPS or WSS client does. Never turn the check off: a terminal that does would
+send its outcomes to whoever answers at the address. A local sandbox may present a
+certificate under a root of its own, which you add to your trust store; one behind a load
+balancer presents a public certificate. Whoever started a local sandbox has its root
+certificate and gives it to you; the sandbox does not serve it, since a root fetched over the
+connection it vouches for proves nothing.</li>
+</ul>
+<h2 id="7-codes-the-sandbox-adds"><a class="header" href="#7-codes-the-sandbox-adds">7. Codes the sandbox adds</a></h2>
+<p>The middleware’s own codes are in the OpenAPI document and the terminal contract. The table holds the
+codes only the sandbox answers, and five of the middleware’s as the sandbox gives them:
+<code>sale_not_found</code> from a tool, <code>not_found</code> from its gate, <code>terminal_offline</code>, whose <code>Next</code> here
+names your own terminal, <code>code_not_valid</code>, whose <code>Next</code> here names the route that gives a
+fresh code, and <code>ca_unavailable</code>, which a sandbox with no CA answers itself. <code>mw://refusals</code> holds every code of both, with its meaning and <code>Next</code>.
+One row has no code: the <code>429</code> an edge in front of the sandbox gives on <code>POST /v1/enrol</code>, whose
+body is the edge’s own.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Code</th><th>Where</th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>key_required</code></td><td>A tool</td><td>No <code>Authorization</code> came</td><td>Get a key: <code>curl -X POST "$SANDBOX/sandbox/v1/keys"</code></td></tr>
+<tr><td><code>key_not_recognised</code></td><td>A tool</td><td>A key of the <code>sbx_</code> shape, unknown or expired. The two read the same</td><td>Get a new key. A key lasts until its <code>ExpiryDateTime</code></td></tr>
+<tr><td><code>credential_not_for_sandbox</code></td><td><code>/mcp</code>, <code>401</code></td><td>A bearer not beginning <code>sbx_</code>, or another scheme</td><td>The sandbox takes only keys beginning <code>sbx_</code>. If it was a live credential, rotate it</td></tr>
+<tr><td><code>invalid_argument</code></td><td>A tool</td><td>An argument is absent, or not of its type, range or words</td><td>Fix each argument <code>Fields</code> names. A field’s <code>Path</code> and its <code>Message</code> are as <code>mw://fields</code> lists them</td></tr>
+<tr><td><code>sale_not_found</code></td><td>A tool</td><td>No such sale in your world. From <code>read_log</code> by a <code>SaleReferenceIdentification</code>, also a sale whose lines have left the index: only a <code>TransactionReference</code> is asked of the middleware</td><td>On an id the middleware gave you, treat the sale as unknown: tell the cashier to check the terminal before another tender</td></tr>
+<tr><td><code>answer_lost</code></td><td><code>send_sale</code>, <code>read_sale</code> or <code>read_log</code></td><td>The tool’s request reached the relay and no answer it could read came back, so whether it took effect is not known</td><td>Call <code>send_sale</code> again with the same sale and the same <code>IdempotencyKey</code>, never a new one: if the sale was made, the relay answers <code>200</code> with it as it stands and makes no second one, and if not, the key is unspent. A read changes nothing: call <code>read_sale</code> or <code>read_log</code> again as it was</td></tr>
+<tr><td><code>log_not_held</code></td><td>A tool</td><td>By <code>TransactionReference</code>: the sale exists, and its lines have left the sandbox’s index. By a <code>SaleReferenceIdentification</code> the same sale reads <code>sale_not_found</code></td><td>Lines are kept until 30 minutes pass with no request of yours, within the bounds of the sandbox’s index, which a restart empties. Read a sale’s log soon after it settles</td></tr>
+<tr><td><code>no_instruction</code></td><td>A tool</td><td>Nothing reached <code>-manual</code> in <code>WaitSeconds</code></td><td>Send a sale to your <code>-manual</code> terminal</td></tr>
+<tr><td><code>run_not_found</code></td><td>A tool</td><td>No such run in your world, or one lost to a restart of the sandbox</td><td>Runs live in memory, as the index does: start again. Every line <code>read_log</code> gives carries <code>boot_id</code>, one for each start of the sandbox, and its <code>seq</code> begins again at a restart. A <code>boot_id</code> other than the one on the lines you read while the run went says the sandbox restarted, and your code did not lose the run</td></tr>
+<tr><td><code>run_in_progress</code></td><td>A tool</td><td>A run of yours is running</td><td>Finish it, or wait for its deadline</td></tr>
+<tr><td><code>run_not_finished</code></td><td>A tool</td><td><code>conformance_report</code> before the run ended</td><td>Read <code>conformance_status</code></td></tr>
+<tr><td><code>sandbox_rate</code></td><td>A tool, or <code>429</code> with this code at <code>/v1/*</code>, <code>/sandbox/v1/codes</code> and <code>/sandbox/v1/app-identities</code>. A <code>429</code> at <code>POST /v1/enrol</code> whose body is not an <code>Error</code> is the edge’s: the next row</td><td>Past a bound of yours: sales or tool calls a minute, requests in flight, codes or app identities an hour</td><td>Wait a minute, and retry with the same <code>IdempotencyKey</code>. If an earlier answer was lost, the sale may exist</td></tr>
+<tr><td>None: the body is the edge’s own, not an <code>Error</code></td><td><code>429</code> at <code>POST /v1/enrol</code></td><td>Sent by the edge in front of the sandbox, where it runs behind one, never by the sandbox itself: more enrolments came from this address in a minute than the edge allows. The code was not read, and no attempt is counted against it</td><td>Wait a minute, then try again with the same body. Do not read the body as an <code>Error</code></td></tr>
+<tr><td><code>sandbox_busy</code></td><td>A tool, or <code>503</code></td><td>As many worlds are connected as the sandbox holds</td><td>Try again shortly</td></tr>
+<tr><td><code>sandbox_restarting</code></td><td><code>503</code> at <code>/v1/*</code></td><td>A conformance step’s outage, for you alone</td><td>Retry with the normal backoff: a restart keeps the sale</td></tr>
+<tr><td><code>sandbox_key_rate</code></td><td><code>429</code> at the key route</td><td>Past the keys the sandbox issues an hour</td><td>Try again in an hour</td></tr>
+<tr><td><code>sandbox_full</code></td><td><code>503</code> at the key route</td><td>The sandbox holds as many testers as it may</td><td>Try again in an hour</td></tr>
+<tr><td><code>not_found</code></td><td><code>404</code> at any path the sandbox does not serve</td><td>A path off the sandbox’s routes, <code>/v1</code> routes of the middleware’s that a sandbox does not serve among them</td><td>Start at <code>GET /llms.txt</code> or <code>POST /mcp</code>, and take a key with <code>POST /sandbox/v1/keys</code>. Under <code>/v1</code> only sales, the connect route, health, enrolment, a holder’s own certificate, the link routes and <code>/v1/register/terminals</code> are served here. The gate’s answer for a path off its routes says so in <code>Next</code>; a <code>404</code> the relay gives on a path the gate passes, such as one deep under <code>/v1/links/</code>, has no <code>Next</code></td></tr>
+<tr><td><code>terminal_offline</code></td><td><code>409</code> at <code>/v1/sales</code> and at <code>/v1/sales/{TransactionReference}/abort</code>, and <code>send_sale</code></td><td>Nothing holds the terminal the sale names, or its queue of frames is full</td><td>If it is <code>&lt;tester&gt;-yours</code>, your terminal is not connected to it: connect it, as the terminal contract says. A simulated terminal connects again by itself. Then send the same sale with the same <code>IdempotencyKey</code>: it is unspent. On an abort, the terminal was sent nothing: abort again once it is connected, or have the cashier cancel at the terminal</td></tr>
+<tr><td><code>code_not_valid</code></td><td><code>403</code> at <code>/v1/enrol</code></td><td>The pairing code is wrong, unknown, expired or spent, or the serial is not the one it names</td><td>Check the code and send again inside its 15 minutes. Past that, <code>POST /sandbox/v1/codes</code> with <code>{"Role":"server"}</code> or <code>{"Role":"terminal"}</code> under your key gives a fresh one. In live, ask whoever listed the principal</td></tr>
+<tr><td><code>ca_unavailable</code></td><td><code>503</code> at <code>/v1/enrol</code></td><td>This sandbox has no CA, so it issues no certificate, or its CA could not sign this once</td><td>With no CA, the answer’s <code>Next</code> says so: no certificate is issued and no conformance run can start here, and a sandbox in <code>direct</code> or <code>forwarded</code> with a CA issues one. Otherwise retry on the normal backoff with the same code and the same key: the code is not spent</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="what-the-sandbox-never-does"><a class="header" href="#what-the-sandbox-never-does">What the sandbox never does</a></h2>
+<ul>
+<li><strong>Show one tester’s data to another.</strong> Every tool and route reads your world alone, from your
+key or your certificate, and another tester’s sale answers as one that never existed.</li>
+<li><strong>Accept a live credential.</strong> Its store holds no live row, a live certificate is refused, and
+a non-<code>sbx_</code> bearer at <code>/mcp</code> is <code>401</code>.</li>
+<li><strong>Keep a card or personal field.</strong> The allow-list drops what a terminal must not send before
+any line is written, and no tool keeps what it checks.</li>
+<li><strong>Let a tool change a credential.</strong> Keys and codes come from the plain routes under
+<code>/sandbox/v1/</code> alone, never from a tool.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="guides/fleet.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="environments.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="guides/fleet.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="environments.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

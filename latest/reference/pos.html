@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API reference for a POS, v0.3.1</title>
+</head>
+<body style="margin: 0">
+<!-- The template of each reference page: docs/site/build.sh writes it as
+     <rel>/reference/pos.html and terminal.html. It loads the view and Scalar from the site
+     itself and nothing from another host. The top line takes Scalar's colours where Scalar
+     sets them, light or dark, and its own where it does not. -->
+<p style="margin: 0; padding: 0.375rem 1rem; font: 0.8125rem/1.5 system-ui, sans-serif;
+   background: var(--scalar-background-2, #f6f6f6); color: var(--scalar-color-1, #1b1b1b);
+   border-bottom: 1px solid var(--scalar-border-color, #dfdfdf)">
+<a href="../pos/index.html" target="_top" style="color: inherit">Back to your path</a> · API reference for a POS, v0.3.1
+</p>
+<div id="app"></div>
+<script src="openapi-pos.js"></script>
+<script src="../../assets/scalar/1.76.4/standalone.js"></script>
+<!-- Every switch that would reach one of Scalar's hosts is off. withDefaultFonts would load
+     fonts from fonts.scalar.com. agent would send the document to Scalar's AI agent, and mcp
+     offers Scalar's MCP services. The developer tools share and deploy to Scalar. The client
+     button and the test-request button would send requests from the reader's browser to the
+     sandbox across origins, through Scalar's proxy, proxy.scalar.com. telemetry is read by
+     nothing in Scalar 1.76.4 and is off for a release that reads it. hideModels: no reference
+     shows its models (Thomas, 20-Nov-2026: "let's not publish reference models"); a reader reads
+     each schema inside its operation, and a terminal its frames in the terminal contract. -->
+<script>
+Scalar.createApiReference("#app", {
+  content: window.MW_OPENAPI,
+  withDefaultFonts: false,
+  telemetry: false,
+  agent: { disabled: true },
+  mcp: { disabled: true },
+  showDeveloperTools: "never",
+  hideClientButton: true,
+  hideTestRequestButton: true,
+  hideModels: true
+});
+</script>
+</body>
+</html>

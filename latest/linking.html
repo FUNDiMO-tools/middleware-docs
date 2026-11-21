@@ -1,0 +1,489 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Linking a register to a terminal - FUNDiMO middleware API</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/site-0ff7cf6d.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-c69b63ad.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-f470377e.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">FUNDiMO middleware API</h1>
+
+                    <div class="right-buttons">
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <p class="mw-release">Release v0.3.1, 21-Nov-2026 · <a href="../versions.html">all releases</a></p>
+
+<h1 id="middleware-linking-a-register-to-a-terminal"><a class="header" href="#middleware-linking-a-register-to-a-terminal">Middleware: linking a register to a terminal</a></h1>
+<p>11-Nov-2026.</p>
+<p>This is the walk for a POS vendor linking a register to a payment terminal at the counter, and
+for whoever writes the screen staff see while they do it. A register is one till of a POS: an
+app on a device, or a name a vendor’s server gives. Linking binds it to a terminal of the store
+it is in, so its sales can name that terminal. You can build the register’s side from this
+document alone. An agent reads the same bytes through <code>llms.txt</code>, and through the sandbox’s MCP
+server as <code>mw://onboarding/linking</code>.</p>
+<p>Linking comes after onboarding, and needs no one but the staff member at the counter. The
+register asks, each unbound terminal of the store shows a different word, and the staff member
+types the word on the terminal in their hand. Each terminal’s word is a pair: two words of
+the middleware’s list joined by a dot, such as <code>rabbit.lamp</code>. The middleware binds the register to that terminal
+and keeps the binding, so the POS keeps nothing but the terminal’s id, and a sale names its
+<code>POIIdentification</code> as before.</p>
+<p><strong>A POS never sees a word.</strong> No answer the middleware gives a POS holds one, at any step, and that is
+the whole proof: the person at the register typed what only someone holding that terminal could
+read. If you also write the terminal’s app, never pass its word to the POS by any other path.</p>
+<p>Read it beside <a href="terminal.html"><code>docs/api/terminal.md</code></a>, which says what a terminal shows (Linking to a register),
+and <code>docs/api/openapi.yaml</code>, which holds the schema of every route named here, tagged <code>links</code>.</p>
+<h2 id="in-short"><a class="header" href="#in-short">In short</a></h2>
+<ol>
+<li>The register asks to link at its store: <code>POST /v1/links</code> with the store’s
+<code>MerchantIdentification</code> (step 1).</li>
+<li>The middleware gives each paired, unbound terminal of the store a different pair of words, and
+answers with the request’s id (step 2).</li>
+<li>Each of those terminals shows its pair, for two minutes by default, and the register may
+read how many do (step 3).</li>
+<li>The staff member types the pair on the terminal in their hand, with a dot or a space between
+the two words: <code>POST /v1/links/{LinkIdentification}/word</code> (step 4).</li>
+<li>The middleware binds the register to that terminal, and answers with its <code>POIIdentification</code>
+(step 5).</li>
+</ol>
+<p>What the POS shows staff at each answer is a table of its own, below the steps. Beside them: the
+register’s own terminals, unlinking, and what a store’s fleet owner can do.</p>
+<h2 id="before-you-start"><a class="header" href="#before-you-start">Before you start</a></h2>
+<ul>
+<li><strong>The register is onboarded.</strong> A register that is an app on a device presents its own
+certificate (<a href="onboarding-device.html"><code>docs/api/onboarding-device.md</code></a>), and sends no <code>Mw-Register</code>, or one
+naming itself. A vendor’s <code>pos</code> server presents its certificate and names the register in
+<code>Mw-Register</code> on every call here (<a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a>, step 6).</li>
+<li><strong>The terminal is paired at the store, and bound to no register.</strong> Its fleet owner listed it
+at the store, and it enrolled. It is shown a word only while it is connected.</li>
+<li><strong>The store is <code>onboarding</code> or <code>live</code>, and accepts the register’s vendor.</strong> A store accepts
+the register of any onboarded vendor until its fleet owner says otherwise (What a store’s
+fleet owner can do, below).</li>
+<li><strong>The POS holds the store’s <code>MerchantIdentification</code>.</strong> The fleet owner gives the merchant the
+store’s own, <code>mid_</code> then 8 characters, and a POS needs it for every sale anyway. An alias of
+it that your vendor accepted works as well.</li>
+</ul>
+<p>The commands here read the middleware’s base URL from <code>$MW</code>, one of those
+<a href="environments.html"><code>/docs/api/environments.md</code></a> names, and present a <code>pos</code> server’s certificate, <code>chain.pem</code> and
+<code>server.key</code>, as <a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a> makes them. The Kotlin is for a register on a
+device, and uses the helpers of <a href="onboarding-device.html"><code>docs/api/onboarding-device.md</code></a> (What you need), its <code>MW</code> among
+them, and the client of its step 8, which presents the register’s own certificate.</p>
+<h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
+<p>The link routes are served in the sandbox as on <code>live</code>, on a certificate or on your tester’s
+<code>pos</code> key, which names your world’s register already. That register starts bound to every
+terminal of your world, so asking answers <code>409 no_terminal_to_link</code> until one is unbound. To try
+the step with your own terminal, unlink <code>-yours</code> (Unlinking, below), connect it, and ask at your
+world’s <code>MerchantIdentification</code>: your terminal shows the word.</p>
+<h2 id="1-the-register-asks-post-v1links"><a class="header" href="#1-the-register-asks-post-v1links">1. The register asks: <code>POST /v1/links</code></a></h2>
+<p>The register names the store with <code>MerchantIdentification</code>, and a <code>pos</code> server names the
+register in <code>Mw-Register</code>:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/links" \
+  --cert chain.pem --key server.key \
+  -H 'Mw-Register: reg_...' \
+  -H 'Content-Type: application/json' \
+  -d '{"MerchantIdentification":"mid_..."}'
+</code></pre>
+<p>On a device:</p>
+<pre><code class="language-kotlin">import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+
+/** Asks to link this register at the store [merchantId] names. A `201` holds the request. */
+fun askToLink(client: OkHttpClient, merchantId: String): Answer {
+    val body = JSONObject().put("MerchantIdentification", merchantId).toString().toRequestBody(JSON)
+    return call(client, Request.Builder().url("$MW/v1/links").post(body).build())
+}
+</code></pre>
+<p>One request is open at a store, and one for a register, at a time. The caller’s vendor and
+register must be <code>active</code>, the store <code>onboarding</code> or <code>live</code> with an <code>active</code> owner, and the
+store must accept the caller’s vendor. Any other case is <code>403 not_permitted</code>, the same answer as
+a store that does not exist, so a POS cannot tell which. A <code>409</code> here writes nothing and counts
+toward no limit. Each answer, and what to show, is in What the POS shows at each answer, below.</p>
+<h2 id="2-the-middleware-picks-the-words"><a class="header" href="#2-the-middleware-picks-the-words">2. The middleware picks the words</a></h2>
+<p>The middleware gives each <code>paired</code> terminal of the store with no binding a different pair of two words
+from its list, and answers <code>201</code>:</p>
+<pre><code class="language-json">{ "LinkIdentification": "lnk_...", "ExpiresInSeconds": 120 }
+</code></pre>
+<p><code>LinkIdentification</code> is the request’s id: keep it for steps 3 and 4. <code>ExpiresInSeconds</code> is how
+long the terminals show their words, 120 seconds by default. The answer holds no word. Only an
+unbound terminal is asked, so a terminal already linked is never disturbed, and a guess can
+never take one.</p>
+<p>A pair is two different words of the middleware’s list, in order, joined by a dot, such as <code>rabbit.lamp</code>.
+The list holds 1,024 words of common English, each 3 to 6 lowercase letters, and no two of them
+are within one edit of each other. Each pair is drawn uniformly, and no request holds a pair and
+its reverse, so a staff member who reads the two words the wrong way round is refused, never
+bound to another terminal. A guess is one of 1,047,552 ordered pairs, so with N terminals asked
+it has N chances in 1,047,552 to match one: at 40 terminals, 1 in 26,189.</p>
+<p>One request asks at most 523,776 terminals, the pairs of two different words of the list counted
+once whichever way round. A store with more <code>paired</code> terminals unbound than that is refused
+<code>409 too_many_terminals</code>, and nothing is written.</p>
+<h2 id="3-each-terminal-shows-its-word"><a class="header" href="#3-each-terminal-shows-its-word">3. Each terminal shows its word</a></h2>
+<p>Each terminal asked shows its word, large enough to read across the counter, until it links, a
+word is refused, or <code>ExpiresInSeconds</code> pass (<a href="terminal.html"><code>docs/api/terminal.md</code></a>, Linking to a register). A
+word reaches a terminal connected to the same instance of the middleware at once, and one connected to
+another instance within a ping interval, 30 seconds by default.</p>
+<p>Meanwhile the POS asks the staff member to read the two words on the terminal in their hand,
+and may read <code>GET /v1/links/{LinkIdentification}</code> to know how many terminals show a pair:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/links/lnk_..." \
+  --cert chain.pem --key server.key \
+  -H 'Mw-Register: reg_...'
+</code></pre>
+<pre><code class="language-json">{ "Asked": 2, "Shown": 1 }
+</code></pre>
+<p><code>Asked</code> counts the terminals given a word, and <code>Shown</code> those whose word has reached them. So the
+screen can say that no terminal is showing a word yet while <code>Shown</code> is <code>0</code>, and the POS never
+learns a word. A word not yet shown cannot link. Only the register that asked may read the
+request: any other is answered <code>404 not_found</code>.</p>
+<h2 id="4-the-staff-member-types-the-word-post-v1linkslinkidentificationword"><a class="header" href="#4-the-staff-member-types-the-word-post-v1linkslinkidentificationword">4. The staff member types the word: <code>POST /v1/links/{LinkIdentification}/word</code></a></h2>
+<p>The staff member types what they see on the device in their hand, both words in the order
+shown, with a dot or a space between the two words, and the register sends it as <code>Word</code>:
+<code>rabbit.lamp</code> and <code>rabbit lamp</code> are the same pair. Case and surrounding spaces are ignored. Never log
+the word and never keep it: it is the proof while it is shown.</p>
+<p>A <code>Word</code> that is not a pair is refused <code>400 invalid_field</code> naming <code>Word</code> before the store is
+asked, so the request stays open and nothing is counted: one word alone, the same word twice, no
+dot or space between the words, two spaces, a dot with a space beside it, a third word, a digit,
+a word outside 3 to 6 letters, or more than 64 characters.</p>
+<pre><code class="language-bash"># Read the two words as typed, so they stay out of the shell's history.
+read -r -p 'Words on the terminal: ' WORD
+jq -n --arg word "$WORD" '{Word: $word}' \
+  | curl -s -X POST "$MW/v1/links/lnk_.../word" \
+      --cert chain.pem --key server.key \
+      -H 'Mw-Register: reg_...' \
+      -H 'Content-Type: application/json' \
+      --data-binary @-
+</code></pre>
+<p>On a device:</p>
+<pre><code class="language-kotlin">/** Sends the word the staff member typed. Never log it, and never keep it. */
+fun sendWord(client: OkHttpClient, linkId: String, typed: String): Answer {
+    val body = JSONObject().put("Word", typed).toString().toRequestBody(JSON)
+    return call(client, Request.Builder().url("$MW/v1/links/$linkId/word").post(body).build())
+}
+</code></pre>
+<p>One attempt: a pair no terminal of this request showed, in that order, ends the request, clears
+every terminal, and counts toward your vendor’s limit at the store. A pair typed the wrong way
+round is such a pair. Only the register that opened the request may send its word, and any
+other is answered <code>404 not_found</code>, so a word read over a staff member’s shoulder gains a
+bystander nothing. If an answer is lost, send the same word again: a word that bound answers the
+same <code>200</code>, and a request that has ended answers <code>410 link_expired</code>.</p>
+<h2 id="5-the-middleware-binds"><a class="header" href="#5-the-middleware-binds">5. The middleware binds</a></h2>
+<p>A pair a terminal of this request showed, in the order shown, binds the register to that
+terminal, and sets the register at the store if it sat at none. The <code>200</code> names both:</p>
+<pre><code class="language-json">{ "POIIdentification": "poi_...", "MerchantIdentification": "mid_..." }
+</code></pre>
+<p>The bound terminal shows that it linked, and every other terminal asked clears. From then on
+the register’s sales name that terminal by <code>POIIdentification</code>, beside the store’s
+<code>MerchantIdentification</code>. Keep the <code>POIIdentification</code> with the register: its sales, its list of
+terminals and its unlink button all name it.</p>
+<p>A register may bind several terminals of one store, one request each, and a terminal binds one
+register. A register bound at one store cannot link at another until its bindings there end.</p>
+<h2 id="what-the-pos-shows-at-each-answer"><a class="header" href="#what-the-pos-shows-at-each-answer">What the POS shows at each answer</a></h2>
+<p>The POS never shows a word, because it never has one. At each answer it tells the staff member
+what happened and what to do next, in its own words.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status</th><th><code>Error.Code</code></th><th>When</th><th>What the POS shows</th></tr>
+</thead>
+<tbody>
+<tr><td><code>201</code></td><td></td><td>The ask opened a request</td><td>Read the two words on the terminal in your hand and type them here, with a dot or a space between them, beside the time left from <code>ExpiresInSeconds</code>. While <code>GET /v1/links/{LinkIdentification}</code> reads <code>Shown</code> <code>0</code>, that no terminal shows a word yet</td></tr>
+<tr><td><code>200</code></td><td></td><td>The word bound the register to the terminal</td><td>That the register is linked to the terminal, which shows the same</td></tr>
+<tr><td><code>400</code></td><td><code>invalid_field</code></td><td>At the word: <code>Word</code> is not a pair of two different words with a dot or one space between them. The request stays open, and nothing is counted</td><td>That the terminal shows two words, and to type both, in the order shown, with a dot or a space between them</td></tr>
+<tr><td><code>403</code></td><td><code>link_word_unknown</code></td><td>No terminal of the request showed the pair, in that order. The request has ended, every terminal has cleared, and the wrong pair counts toward your vendor’s limit at the store</td><td>That the words did not match, and a button to ask again, which opens a new request with new words</td></tr>
+<tr><td><code>409</code></td><td><code>link_in_progress</code></td><td>Another request is open at this store, or for this register</td><td>That another register at the store is linking now: try again in a minute</td></tr>
+<tr><td><code>409</code></td><td><code>no_terminal_to_link</code></td><td>No terminal of the store is paired and unbound</td><td>That no terminal here is waiting to link: check the terminal is switched on, paired at this store and connected, and not already linked to another register</td></tr>
+<tr><td><code>409</code></td><td><code>too_many_terminals</code></td><td>More terminals of the store are paired and unbound than one request can ask, 523,776. Nothing was written</td><td>That too many terminals here are waiting to link: have the store’s fleet owner bind or remove terminals of the store, then ask again</td></tr>
+<tr><td><code>410</code></td><td><code>link_expired</code></td><td>The request has ended: its time passed, it was closed by a wrong pair or a refusal, or the terminal it bound has been unlinked since</td><td>That the words have timed out, and a button to ask again</td></tr>
+<tr><td><code>429</code></td><td><code>link_rate</code></td><td>Your vendor asked 10 times at this store in the last hour, or sent 3 wrong pairs there in the last 24 hours, whichever of its registers asked</td><td>That linking is paused at this store: wait an hour, or after three wrong pairs until tomorrow</td></tr>
+<tr><td><code>409</code></td><td><code>register_in_other_store</code></td><td>The register is bound at another store, when it asked or since. At the word, the request has ended</td><td>That this register is linked at another store, and to unlink it there first: <code>DELETE /v1/links/{POIIdentification}</code> for each terminal <code>GET /v1/register/terminals</code> lists, then ask again</td></tr>
+<tr><td><code>404</code></td><td><code>not_found</code></td><td>The request is another register’s, or no request has that id</td><td>A bug of the POS: a word goes from the register that asked. Ask again from this register</td></tr>
+<tr><td><code>403</code></td><td><code>not_permitted</code></td><td>The register or its vendor is not <code>active</code>, or the store does not exist, is not <code>onboarding</code> or <code>live</code> with an <code>active</code> owner, or does not accept your vendor, when it asked or since. At the word, the request has ended</td><td>That this register cannot link at this store: check the store’s <code>MerchantIdentification</code>, and ask the store’s fleet owner whether it accepts registers of your POS</td></tr>
+<tr><td><code>401</code>, <code>403</code></td><td><code>certificate_required</code>, <code>certificate_invalid</code>, <code>certificate_expired</code>, <code>certificate_retired</code></td><td>The register’s credential is refused</td><td>A fault for whoever runs the register, not for the staff member. The holder’s table of <a href="onboarding-device.html"><code>docs/api/onboarding-device.md</code></a> or <a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a> says what to do</td></tr>
+<tr><td><code>503</code></td><td><code>store_unavailable</code></td><td>The middleware’s store did not answer. A request stands, or never existed</td><td>That linking is unavailable for now: try again in a minute. At the word, send the same word again</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="the-registers-terminals-get-v1registerterminals"><a class="header" href="#the-registers-terminals-get-v1registerterminals">The register’s terminals: <code>GET /v1/register/terminals</code></a></h2>
+<p><code>GET /v1/register/terminals</code> lists the terminals bound to the caller, a register, or a <code>pos</code>
+server naming one, for the register’s own screen:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/register/terminals" \
+  --cert chain.pem --key server.key \
+  -H 'Mw-Register: reg_...'
+</code></pre>
+<pre><code class="language-json">{ "Terminals": [ { "POIIdentification": "poi_...", "State": "paired", "Connected": true, "Busy": false } ] }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Means</th></tr>
+</thead>
+<tbody>
+<tr><td><code>POIIdentification</code></td><td>The terminal’s id, which a sale names</td></tr>
+<tr><td><code>State</code></td><td><code>listed</code>, <code>paired</code>, <code>suspended</code> or <code>removed</code>. Only <code>paired</code> takes a sale</td></tr>
+<tr><td><code>Connected</code></td><td>Whether the terminal holds a connection to the instance of the middleware that answered. It is that instance’s own knowledge, so it can read <code>false</code> for a while as the middleware moves between instances</td></tr>
+<tr><td><code>Busy</code></td><td>Whether a sale holds the terminal</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>Connected</code> is for a screen, not a gate: a sale to a terminal not connected is refused
+<code>409 terminal_offline</code> in any case.</p>
+<h2 id="unlinking-delete-v1linkspoiidentification"><a class="header" href="#unlinking-delete-v1linkspoiidentification">Unlinking: <code>DELETE /v1/links/{POIIdentification}</code></a></h2>
+<p>The register’s own unlink button ends its binding to a terminal, named by the terminal’s
+<code>POIIdentification</code>, not by a request’s id:</p>
+<pre><code class="language-sh">curl -s -X DELETE "$MW/v1/links/poi_..." \
+  --cert chain.pem --key server.key \
+  -H 'Mw-Register: reg_...'
+</code></pre>
+<p>The answer is <code>204</code>. The register’s next sale naming the terminal is refused, and a sale already
+in flight is untouched. The terminal is unbound, so a register linking at its store may be shown
+a word on it again. A terminal not bound to the caller is <code>404 not_found</code>. Once a register’s
+last binding ends it sits at no store, and may link at another.</p>
+<p>A terminal removed, or a register removed, ends its bindings as well. A re-pair ends none,
+because the device and its serial are the same.</p>
+<h2 id="what-a-stores-fleet-owner-can-do"><a class="header" href="#what-a-stores-fleet-owner-can-do">What a store’s fleet owner can do</a></h2>
+<p>The fleet owner that listed a store’s terminals sees each with the register and the vendor bound
+to it, at <code>GET /v1/merchant-stores/{StoreIdentification}/terminals</code>, so a binding it never made
+is visible (in <code>docs/api/openapi.yaml</code>, tagged <code>operator</code>). It acts on its <code>admin</code> server’s
+certificate, here <code>admin-chain.pem</code> and <code>admin.key</code> (<a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a>), and can
+do two things a POS cannot.</p>
+<p><strong>End a binding</strong>, of any register, with <code>DELETE /v1/terminals/{POIIdentification}/binding</code>.
+The terminal’s owner may, and so may the operator:</p>
+<pre><code class="language-sh">curl -s -X DELETE "$MW/v1/terminals/poi_.../binding" \
+  --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>204</code>, also where the terminal had no binding. It ends the binding as the
+register’s own unlink does.</p>
+<p><strong>Restrict which vendors’ registers the store accepts</strong>, with
+<code>PUT /v1/merchant-stores/{StoreIdentification}/accepted-vendors</code>, the store’s owner alone:</p>
+<pre><code class="language-sh">curl -s -X PUT "$MW/v1/merchant-stores/mst_.../accepted-vendors" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"AcceptsAnyVendor":false,"Vendors":["ven_..."]}'
+</code></pre>
+<p>The answer is <code>204</code>. Every store starts accepting the register of any onboarded vendor: an
+<code>active</code> vendor with the <code>pos</code> role, whose register holds a certificate. <code>Vendors</code> replaces the
+list before it, and <code>{"AcceptsAnyVendor":true}</code> accepts any again. A register of a vendor not
+accepted is refused <code>403 not_permitted</code> when it asks to link at the store, and at the word of a
+request it opened before the change, which then ends. A binding already made stands until it is
+ended.</p>
+<p>A word proves that someone can see the terminal, not that they are the store’s staff, and a
+vendor’s limits at a store bound what it can try there, however many registers it holds. So a
+fleet owner that sees a binding it does not expect ends it, and restricts the store to the
+vendors whose registers it uses.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="onboarding-device.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="terminal.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="onboarding-device.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="terminal.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

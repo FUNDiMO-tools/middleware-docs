@@ -1,0 +1,29 @@
+MIT License
+
+Copyright (c) 2023-present Scalar
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+The text above is the LICENSE of https://github.com/scalar/scalar at main, commit
+684c6fc457f763ba247991f974a5f6423e72485e, read on 19-Nov-2026: the repository has no tag
+@scalar/api-reference@1.76.4, and the npm tarball carries no licence file. The file last changed
+on 19-Mar-2024 (commit 20151e227922fb9423f71ff8e6f8b6b04c668917), before 1.76.4 was published
+on 30-Oct-2026, and the package's own metadata names MIT.
+
+Vendored: @scalar/api-reference 1.76.4, dist/browser/standalone.js, from https://registry.npmjs.org/@scalar/api-reference/-/api-reference-1.76.4.tgz; SHA-256 of standalone.js: 93951f1794b0463b87ab58d0557a6610075af79a9f94c2a3f261c993bc7f3913
