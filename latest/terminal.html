@@ -58,10 +58,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-a7e42865.js";
+            window.path_to_searchindex_js = "searchindex-122325d1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f470377e.js"></script>
+        <script src="toc-3b0d6c91.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.3.2, 21-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-the-terminal-contract"><a class="header" href="#middleware-the-terminal-contract">Middleware: the terminal contract</a></h1>
 <p>Version 5, 13-Nov-2026. This count numbers the frames of this page alone. It ends at 5. From
@@ -235,8 +235,8 @@ what that system answered in a <code>LoginResponse</code> (Signing in, below). Y
 terminal’s side from this document alone. The schema of each frame,
 <code>TerminalInstruction</code>, <code>TerminalOutcome</code>, <code>TerminalRefusal</code>, <code>TerminalLinkWord</code>,
 <code>TerminalLinkEnded</code>, <code>TerminalStatusRequest</code>, <code>TerminalAbort</code>, <code>TerminalLoginNeeded</code>,
-<code>TerminalLoginRequest</code> and <code>TerminalLoginResponse</code>, is also in <code>docs/api/openapi.yaml</code> beside
-it, for a client that validates what it sends and receives.</p>
+<code>TerminalLoginRequest</code> and <code>TerminalLoginResponse</code>, is also in <a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a>
+beside it, for a client that validates what it sends and receives.</p>
 <p>An instruction is a sale, or with <code>TransactionType</code> <code>RFND</code> a refund, and only a terminal that
 declared <code>RFND</code> is sent a refund. Field names are ISO 20022 element names as written, in
 PascalCase. Every field below says who sends it: <code>mw</code> or <code>terminal</code>. Every amount is a
@@ -311,8 +311,8 @@ them. The certificate names the terminal’s <code>POIIdentification</code>, whi
 30 days. Once a day, <code>GET /v1/certificates/self</code> under it answers <code>RenewNow</code>. When that is
 <code>true</code>, ask <code>POST /v1/certificates/challenge</code>, make a new key with that challenge, renew
 with <code>POST /v1/certificates/renew</code>, use the new certificate from the next connection, and
-delete the old key once a connection on the new one has succeeded. <code>docs/api/openapi.yaml</code>
-holds each of these routes.</p>
+delete the old key once a connection on the new one has succeeded.
+<a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a> holds each of these routes.</p>
 <p>A sandbox terminal may present its sandbox key on the upgrade instead, as
 <code>Authorization: Bearer sbx_...</code>: a <code>pos</code> key of the terminal’s own vendor, on a
 <code>POIIdentification</code> that is <code>paired</code> for that vendor. A <code>pos</code> key names a register of its
@@ -1240,8 +1240,8 @@ amount charged, or on a refund refunded, and the terminal has broken this contra
 bank account.</strong> A receipt printed from these fields has no masked card number and no card
 scheme: a printed card line stays on the terminal’s own receipt. As a safety net, the middleware
 drops any other field and logs its name, never its value. The schema in
-<code>docs/api/openapi.yaml</code> is strict on this frame, because it states what a terminal must
-send.</p>
+<a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a> is strict on this frame, because it states what a terminal
+must send.</p>
 <h2 id="references-by-kind"><a class="header" href="#references-by-kind">References by kind</a></h2>
 <p><code>PaymentReference</code> holds the payment’s references, grouped by the kind of payment that gave
 them: one group for each kind, below. Send the group of the kind the payment was, holding the

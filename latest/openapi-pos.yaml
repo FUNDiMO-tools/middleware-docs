@@ -1,10 +1,44 @@
 openapi: '3.1.0'
 info:
-  title: 'Middleware v0.3.2: what a POS calls'
+  title: 'Middleware v0.4.0: what a POS calls'
   version: '1.0.0'
   summary: The relay between a point of sale, a payment terminal and FUNDiMO.
   description: |-
-    The routes a POS calls: a sale, its reads and its abort, and a refund, which is a sale of its own; linking a register to a terminal; the five routes your own `admin` server calls on your registers; enrolling for a certificate, its daily check and its renewal; and the health check. Each property's `x-sent-by` names who sends it. `servers` holds the base URL of the sandbox, then of staging. This release publishes this document as `openapi-pos.yaml`.
+    The routes a POS calls: a sale, its reads and its abort, and a refund, which is a sale of its
+    own; linking a register to a terminal; the five routes your own `admin` server calls on your
+    registers; enrolling for a certificate, its daily check and its renewal; and the health check.
+    Each property's `x-sent-by` names who sends it. `/docs/api/environments.md` names each
+    environment's base URL. This release publishes this document as `openapi-pos.yaml`.
+
+    Every property carries `x-sent-by`: `pos` for what a POS sends to the middleware, a register's
+    request to link among it, `terminal` for what a terminal sends to the middleware, `vendor` for
+    what a back office sends to the Operator API and what a vendor's app or server sends to enrol or
+    renew a certificate, and `mw` for what the middleware sends to whoever is reading. A field that
+    travels on, such as `TotalAmount`, is `pos` where it enters and `mw` where it leaves.
+
+    `/docs/api/fields.json` holds a row for each field of a sale and of each frame, with its bound
+    and an example. A field's name follows ISO 20022 where `fields.json` or `terminal.md` names its
+    element; every other name is the middleware's own. A later version may add fields to anything
+    the middleware sends, and codes to any open list. An optional field sent as `null` reads as
+    absent.
+
+    `info.version` counts this document's contract, not the middleware's release. Its major is the
+    path family every path is under, `v1` in `/v1/`, and its minor and patch stay 0. It moves only
+    when the middleware serves a new family of paths, so a field or a code a later release adds
+    leaves it as it is. The release of the middleware answering is read at `GET /v1/health`, in its
+    `Version`, and on the sandbox in its MCP server's `serverInfo.version`.
+
+    Every operation but `GET /v1/health` and `POST /v1/enrol` needs a credential, the terminal's
+    WebSocket upgrade among them, and no body or frame changes for it. A `live` middleware refuses
+    every sandbox key with `401 sandbox_key_on_live`, before any lookup.
+
+    The people who use a POS are the POS vendor's responsibility. The middleware takes it that a
+    user was authenticated to make each sale and refund, and judges nothing about that user.
+
+    A path not listed here answers `404` with `Error.Code` `not_found`. A listed path with another
+    method answers `405` with `Error.Code` `method_not_allowed` and an `Allow` header naming the
+    methods it takes. Both carry the `Error` body. A request too malformed to be read as HTTP at all
+    is answered by the HTTP server library itself, with `400`, `414` or `431` and no `Error` body.
 servers:
   - url: https://mw.sandbox.fundimo.com.au
     description: The sandbox

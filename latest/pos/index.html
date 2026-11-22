@@ -58,10 +58,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../searchindex-a7e42865.js";
+            window.path_to_searchindex_js = "../searchindex-122325d1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f470377e.js"></script>
+        <script src="../toc-3b0d6c91.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.3.2, 21-Nov-2026 · <a href="../../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../../versions.html">all releases</a></p>
 
 <h1 id="building-a-pos"><a class="header" href="#building-a-pos">Building a POS</a></h1>
 <p>From a sandbox key to registers that take payments for real merchants, in order. Each step
@@ -212,12 +212,12 @@ holds every route a POS calls, each field and each answer.</p>
 <tbody>
 <tr><td>1</td><td><strong>Take a sandbox key.</strong> It needs no credential, and it opens your own world: a store, a register and simulated terminals that approve, decline or never answer.</td><td>The sandbox: <a href="../sandbox.html#1-a-key-and-a-world">1. A key and a world</a>, <a href="../sandbox.html#2-your-world">2. Your world</a></td></tr>
 <tr><td>2</td><td><strong>Send your first sale</strong>, <code>POST /v1/sales</code>, to a simulated terminal. A new <code>IdempotencyKey</code> for each sale; the same key again never makes a second sale.</td><td><a href="../sandbox.html#4-the-pos-journey">4. The POS journey</a>, step 6. Reference: <a href="reference.html"><code>createSale</code></a></td></tr>
-<tr><td>3</td><td><strong>Read its outcome</strong>, <code>GET /v1/sales/{TransactionReference}</code>, holding the read for a change, until it settles: <code>ACSP</code>, <code>RJCT</code>, or <code>UNKN</code> when no one knows yet.</td><td><a href="../sandbox.html#4-the-pos-journey">4. The POS journey</a>. Reference: <a href="reference.html"><code>readSale</code></a></td></tr>
-<tr><td>4</td><td><strong>Cancel</strong> a sale or a refund still running, <code>POST /v1/sales/{TransactionReference}/abort</code>.</td><td><a href="../sandbox.html#2-your-world">2. Your world</a>, on <code>Abort</code>. Reference: <a href="reference.html"><code>abortSale</code></a></td></tr>
+<tr><td>3</td><td><strong>Read its outcome</strong>, <code>GET /v1/sales/{TransactionReference}</code>, holding the read for a change, until it settles: <code>ACSP</code>, <code>RJCT</code>, or <code>UNKN</code> when no one knows yet.</td><td><a href="../pos.html#a-sales-states">A sale’s states</a>; <a href="../sandbox.html#4-the-pos-journey">4. The POS journey</a>. Reference: <a href="reference.html"><code>readSale</code></a></td></tr>
+<tr><td>4</td><td><strong>Cancel</strong> a sale or a refund still running, <code>POST /v1/sales/{TransactionReference}/abort</code>.</td><td><a href="../pos.html#cancelling-a-sale-or-a-refund">Cancelling</a>; <a href="../sandbox.html#4-the-pos-journey">4. The POS journey</a>, Cancel a sale; <a href="../sandbox.html#2-your-world">2. Your world</a>, on <code>Abort</code>. Reference: <a href="reference.html"><code>abortSale</code></a></td></tr>
 <tr><td>5</td><td><strong>Refund</strong> a sale, the whole amount or a part: a <code>POST /v1/sales</code> of its own, <code>TransactionType</code> <code>RFND</code>.</td><td><a href="../sandbox.html#4-the-pos-journey">4. The POS journey</a>, A refund</td></tr>
 <tr><td>6</td><td><strong>Link a register to a terminal</strong> at the counter, by the word the terminal shows and the staff member types.</td><td><a href="../linking.html">Linking a register to a terminal</a>, and <a href="../linking.html#what-the-pos-shows-at-each-answer">what the POS shows at each answer</a></td></tr>
 <tr><td>7</td><td><strong>Managing your registers</strong>: your own <code>admin</code> server lists a register for each till, and each call for a till names its register in <code>Mw-Register</code>.</td><td>Onboarding a server: <a href="../onboarding-server.html#6-name-the-register-mw-register">6. Name the register</a>, <a href="../onboarding-server.html#7-list-a-servers-register-post-v1registers">7. List a server’s register</a>. Reference: <a href="reference.html">the <code>registers</code> routes</a></td></tr>
-<tr><td>8</td><td><strong>The refusals a POS meets</strong>, and what to do after each.</td><td>Each route’s answers in the <a href="reference.html">reference</a>; <a href="../sandbox.html#7-codes-the-sandbox-adds">7. Codes the sandbox adds</a>; <code>mw://refusals</code> on the MCP server</td></tr>
+<tr><td>8</td><td><strong>The refusals a POS meets</strong>, and what to do after each.</td><td><a href="../pos.html#the-codes-a-pos-meets-by-route">The codes a POS meets</a>, each with its row in <a href="../refusals.json">refusals.json</a>; each route’s answers in the <a href="reference.html">reference</a>; <a href="../sandbox.html#7-codes-the-sandbox-adds">7. Codes the sandbox adds</a>; <code>mw://refusals</code> on the MCP server</td></tr>
 <tr><td>9</td><td><strong>Prove it</strong>: enrol your POS as your world’s server, then run the POS conformance scenarios and keep the signed report.</td><td><a href="../sandbox.html#4-the-pos-journey">4. The POS journey</a>, step 8; <a href="../sandbox.html#6-conformance">6. Conformance</a></td></tr>
 <tr><td>10</td><td><strong>From the sandbox to a live middleware.</strong> A new key and a certificate in place of the sandbox key, then registers and links at real stores.</td><td><a href="../environments.html#from-the-sandbox-to-staging">From the sandbox to staging</a>; <a href="../onboarding-server.html">Onboarding a server</a>; a POS app on a device: <a href="../onboarding-device.html">Onboarding a device</a></td></tr>
 </tbody>
@@ -239,7 +239,7 @@ sandbox key to registers that take payments for real merchants. It is also a
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../pos/reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../pos.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -253,7 +253,7 @@ sandbox key to registers that take payments for real merchants. It is also a
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../pos/reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../pos.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

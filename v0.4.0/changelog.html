@@ -1,0 +1,668 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>What changed - FUNDiMO middleware API</title>
+
+
+        <!-- Custom HTML head -->
+        <link rel="stylesheet" href="theme/fonts.css">
+        <script>
+            (function () {
+                var nearer = { rust: 'light', navy: 'coal', ayu: 'coal' };
+                function remap() {
+                    try {
+                        var saved = (localStorage.getItem('mdbook-theme') || '').replace(/"/g, '');
+                        if (nearer[saved]) { localStorage.setItem('mdbook-theme', nearer[saved]); }
+                    } catch (e) { }
+                }
+                remap();
+                window.addEventListener('storage', remap);
+                window.addEventListener('pageshow', remap);
+                document.addEventListener('DOMContentLoaded', function () {
+                    var dark = document.getElementById('mdbook-theme-coal');
+                    if (dark) { dark.textContent = 'Dark'; }
+                    Object.keys(nearer).forEach(function (name) {
+                        var button = document.getElementById('mdbook-theme-' + name);
+                        if (button) { button.parentNode.remove(); }
+                    });
+                });
+            })();
+        </script>
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/site-acfedb15.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "coal";
+            window.path_to_searchindex_js = "searchindex-122325d1.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-3b0d6c91.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div class="mw-brand">
+                    <a class="mw-wordmark" href="https://fundimo.com.au/"><img class="mw-on-light" src="theme/fundimo.png" alt="FUNDiMO" width="1142" height="277"><img class="mw-on-dark" src="theme/fundimo-on-dark.png" alt="FUNDiMO" width="1200" height="290"></a>
+                    <span class="mw-product">Middleware API</span>
+                </div>
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">FUNDiMO middleware API</h1>
+
+                    <div class="right-buttons">
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
+
+<h1 id="what-changed"><a class="header" href="#what-changed">What changed</a></h1>
+<h2 id="v040-22-nov-2026"><a class="header" href="#v040-22-nov-2026">v0.4.0 (22-Nov-2026)</a></h2>
+<p>The sandbox now serves the OpenAPI document as one file for each reader, a POS’s and a
+terminal’s, in place of the whole document, and a POS’s own page with every code in one file.
+It can also open a world whose one register is an app on a device, so a POS app on a till enrols
+as its own register, with a five-word code, and sells and runs the POS conformance run on its own
+certificate before staging. No route, body, setting, job or migration of the relay changed.</p>
+<h3 id="breaking"><a class="header" href="#breaking">Breaking</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: The sandbox serves the OpenAPI document by reader (21-Nov-2026).
+<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a> and <a href="openapi-terminal.yaml"><code>/docs/api/openapi-terminal.yaml</code></a>, and
+<code>mw://docs/openapi-pos.yaml</code> and <code>mw://docs/openapi-terminal.yaml</code>, replace the whole document,
+<code>/llms.txt</code> lists both, and a terminal’s file holds the schemas of its frames. The old address,
+<code>/docs/api/openapi.yaml</code>, answers <code>410</code> naming both, and the old resource,
+<code>mw://docs/openapi.yaml</code>, answers <code>Resource not found</code> naming both. Read your side’s file in
+its place; an <code>admin</code> server’s routes, but the five on a POS vendor’s registers, are in the
+Operator API, which FUNDiMO gives with that server.</li>
+</ul>
+<h3 id="added"><a class="header" href="#added">Added</a></h3>
+<ul>
+<li><strong>POS</strong>: A POS’s own page, and every code in one file (21-Nov-2026). The sandbox serves
+<a href="pos.html"><code>/docs/api/pos.md</code></a>, also <code>mw://docs/pos.md</code>: what a register shows at each state of a sale and
+a refund, cancelling, refunding, and every code a POS meets, by route. It serves
+<a href="refusals.json"><code>/docs/api/refusals.json</code></a>, the rows of <code>mw://refusals</code> with its own address in each <code>Next</code> that
+names one, and <code>/llms.txt</code> lists both. <code>mw://refusals</code> is now written two spaces in, the same
+JSON.</li>
+<li><strong>POS</strong>: A sandbox world of a register on a device (22-Nov-2026). <code>POST /sandbox/v1/keys</code> with
+<code>{"Register":"device"}</code> opens a world whose register is a device’s, <code>&lt;tester&gt;-register</code>, bound
+to the nine terminals, with no <code>pos</code> server. <code>POST /sandbox/v1/codes</code> with <code>{"Role":"register"}</code>
+gives that register’s five-word code and re-pairs it, so it takes no sale until the app enrols.
+A <code>Side: pos</code> conformance run in that world judges the register’s own newest certificate.</li>
+</ul>
+<h3 id="changed"><a class="header" href="#changed">Changed</a></h3>
+<ul>
+<li><strong>POS</strong>: The key route’s <code>201</code> and <code>mw://world</code> name the world’s kind (22-Nov-2026). Both carry
+<code>Register</code>, <code>server</code> or <code>device</code>, and a device world’s <code>mw://world</code> its
+<code>RegisterSerialNumber</code>. A key route body naming another member, or another <code>Register</code>, is now
+<code>400 unknown_field</code> or <code>400 invalid_field</code> where it gave a server’s world, and one that is not
+a JSON object still gives a server’s world. <code>code_not_valid</code>’s <code>Next</code> names
+<code>{"Role": "register"}</code> too.</li>
+</ul>
+<h2 id="v032-21-nov-2026"><a class="header" href="#v032-21-nov-2026">v0.3.2 (21-Nov-2026)</a></h2>
+<p>The published docs site’s build now gives the site the look of FUNDiMO’s main site, in a light
+theme and a dark one. The device walk now says that other makers’ devices are intended. No route,
+body, setting, job or migration changed.</p>
+<h3 id="changed-1"><a class="header" href="#changed-1">Changed</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: The device walk, <code>mw://onboarding/device</code>, now says it is written for one
+maker’s devices today (21-Nov-2026). Other makers’ devices are intended, each with a walk of
+its own. The sandbox serves the new text, also at <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>.</li>
+</ul>
+<h2 id="v031-21-nov-2026"><a class="header" href="#v031-21-nov-2026">v0.3.1 (21-Nov-2026)</a></h2>
+<p>This is the first release of what v0.3.0 holds: v0.3.0 was tagged and deployed nowhere. A release
+tag’s build now reads the tag it was started for, and no longer refuses before it builds.</p>
+<h2 id="v030-21-nov-2026"><a class="header" href="#v030-21-nov-2026">v0.3.0 (21-Nov-2026)</a></h2>
+<p>A POS may now send <code>CashierIdentification</code>, the user of the POS who made a sale or a refund, and
+the middleware sends it on to the terminal. A hosted middleware may now close a terminal’s
+connection when a POS’s sale reaches another of its instances, and the terminal reconnects as
+after any close. The OpenAPI document’s descriptions are now short and its <code>info.version</code> stays
+<code>1.0.0</code>: apart from the new field and the edge’s <code>411</code>, no route, body, field, bound, enum or
+refusal changed.</p>
+<h3 id="breaking-1"><a class="header" href="#breaking-1">Breaking</a></h3>
+<ul>
+<li><strong>Terminal</strong>: A terminal conformance run’s sale now carries <code>CashierIdentification</code>
+(19-Nov-2026). A terminal that refuses an <code>Instruction</code> holding a key it does not know cannot
+pass the run. Ignore the key, or use it. A report that was green is not green again until the
+terminal does this.</li>
+</ul>
+<h3 id="added-1"><a class="header" href="#added-1">Added</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: <code>CashierIdentification</code>, the user of the POS who made a sale or a refund
+(19-Nov-2026). A POS may send it, as an identifier it chooses and never the person’s name. The
+middleware checks its shape and sends it on in the <code>Instruction</code>. A terminal shows, prints or
+passes it on, or ignores it, and one that checks frames against the published field list takes
+the new list.</li>
+</ul>
+<h3 id="changed-2"><a class="header" href="#changed-2">Changed</a></h3>
+<ul>
+<li><strong>POS</strong>: A POS’s rules stay in the OpenAPI document, each said once, on the operation, answer
+or field it governs (19-Nov-2026). ISO 20022’s definitions are in <a href="fields.json"><code>/docs/api/fields.json</code></a> and
+<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, and the document quotes none.</li>
+<li><strong>Terminal</strong>: The OpenAPI document’s frames say what each one is, and <a href="terminal.html"><code>/docs/api/terminal.md</code></a>
+says how a terminal’s side behaves (19-Nov-2026). ISO 20022’s definitions are on that page and
+in <a href="fields.json"><code>/docs/api/fields.json</code></a>, and the document quotes none. The page now says that a terminal
+ignores a key it does not know on every frame the middleware sends, and that the middleware
+writes an <code>ERROR</code> line at the day’s cap of <code>sign_in_limited</code>.</li>
+<li><strong>POS, Terminal</strong>: How a certificate and a link behave is on <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>,
+<a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a> and <a href="linking.html"><code>/docs/api/linking.md</code></a> (19-Nov-2026). Each onboarding page
+now says that of <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> and <code>invalid_field</code>, the
+first class that fails answers alone.</li>
+<li><strong>POS, Terminal, Operator</strong>: How the Operator API behaves is on its own page for a back office,
+which now holds the rules the OpenAPI document’s descriptions held (19-Nov-2026).</li>
+<li><strong>Terminal</strong>: A hosted middleware may close a terminal’s connection within a few seconds when a
+POS’s sale reaches another instance of it (20-Nov-2026). The terminal reconnects as after any
+close, as <a href="terminal.html"><code>/docs/api/terminal.md</code></a> says under Reconnect.</li>
+</ul>
+<h3 id="fixed"><a class="header" href="#fixed">Fixed</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: A <code>POST</code> with no body is sent with <code>Content-Length: 0</code> (19-Nov-2026). Over
+HTTP/1.1, the edge in front of a hosted middleware refuses one without it with <code>411</code>, a body of
+its own and not an <code>Error</code>, and the request never reaches the middleware. The OpenAPI document
+now lists that <code>411</code> on each <code>POST</code> with no body, the abort and a device’s renewal challenge
+among them, and the guides’ cancel sends the header.</li>
+</ul>
+<h2 id="v020-18-nov-2026"><a class="header" href="#v020-18-nov-2026">v0.2.0 (18-Nov-2026)</a></h2>
+<p>An installation is now a register on the wire, so a POS renames each id, header and route and
+enrols each register again. A terminal that does not know whether a payment was taken now finds
+out and reports it, and a POS can now read the amount the host approved and ask the terminal to
+cancel a sale in flight. A terminal can now ask the middleware to sign it in to its fleet’s own
+payment system, with a credential its fleet set for the store.</p>
+<h3 id="breaking-2"><a class="header" href="#breaking-2">Breaking</a></h3>
+<ul>
+<li><strong>Terminal</strong>: A terminal conformance run has a ninth scenario, <code>lost_instruction</code>
+(16-Nov-2026). The run takes the terminal’s place for one sale, so its instruction never
+reaches the terminal. The terminal reconnects declaring <code>Mw-Message-Functions: SSMQ</code>, is sent
+a <code>StatusRequest</code> for the sale, and answers <code>RJCT</code> with <code>AB11</code>. A report that was green is not
+green again until the terminal does this.</li>
+<li><strong>Terminal</strong>: A terminal conformance run’s <code>approved</code> scenario has a new assertion,
+<code>approved.amount</code> (17-Nov-2026). Every <code>ACSP</code> the terminal sends for the sale, a resend
+included, must state <code>TransactionDetails.AuthorisedAmount</code>, equal to the instruction’s
+<code>TotalAmount</code> exactly as received. A report that was green is not green again until the
+terminal does this.</li>
+<li><strong>Terminal</strong>: A terminal conformance run has a tenth scenario, <code>cancel</code> (17-Nov-2026). The run
+aborts a sale 3 seconds after its instruction, while the terminal holds the payment. The
+terminal declares <code>SSAB</code> in <code>Mw-Message-Functions</code>, is sent an <code>Abort</code> for the sale, and
+answers <code>RJCT</code> with <code>DS02</code>. A report that was green is not green again until the terminal does
+this.</li>
+<li><strong>POS, Operator</strong>: A register is called a register on the wire (18-Nov-2026). Its id is
+<code>RegisterIdentification</code>, <code>reg_</code> then 32 lowercase hex characters, and its header is
+<code>Mw-Register</code>. Its routes are under <code>/v1/registers</code>, and every path under
+<code>/v1/installations</code> answers <code>404 not_found</code>. A POS changes each name, lists and enrols each
+register again, and takes a new sandbox key.</li>
+</ul>
+<h3 id="added-2"><a class="header" href="#added-2">Added</a></h3>
+<ul>
+<li><strong>Terminal</strong>: The upgrade’s header <code>Mw-Message-Functions</code>, and the <code>StatusRequest</code> frame
+(16-Nov-2026). A connection that declares <code>SSMQ</code> is sent a <code>StatusRequest</code> for each sale the
+middleware still holds open for its terminal from an earlier connection, made in the last 23
+hours. The terminal keeps every reference it received, with its outcome, for 24 hours, and
+answers with an <code>Outcome</code>: the one it holds, or <code>RJCT</code> with <code>AB11</code> for a reference it never
+received when its store of references reaches back further than <code>SecondsSinceInstruction</code>. A
+connection that declares nothing is sent no <code>StatusRequest</code>.</li>
+<li><strong>POS</strong>: A POS conformance run lists a ninth scenario, <code>lost_instruction</code>, as not applicable
+(16-Nov-2026). A POS’s report that was green stays green.</li>
+<li><strong>POS, Terminal</strong>: The sandbox’s simulated terminals, all but <code>-silent</code>, declare <code>SSMQ</code>, and
+each answers a <code>StatusRequest</code> but <code>-manual</code>, which queues it for your tools, as <code>mw://world</code>
+says (16-Nov-2026).</li>
+<li><strong>Terminal</strong>: An <code>ACSP</code> outcome states <code>TransactionDetails.AuthorisedAmount</code>, the amount the
+host approved, or on a refund refunded (17-Nov-2026). Send it alone in that group, equal to the
+instruction’s <code>TotalAmount</code>: a terminal adds nothing to <code>TotalAmount</code>, no surcharge, tip or fee,
+and a refund refunds exactly <code>TotalAmount</code>. An outcome without it still applies, and a value that
+fails its pattern, or one beside <code>RJCT</code>, is dropped alone.</li>
+<li><strong>POS</strong>: A sale’s read carries <code>TransactionDetails.AuthorisedAmount</code> when the outcome that
+settled it stated one (17-Nov-2026). Record it as the amount charged, or on a refund
+refunded: one other than <code>TotalAmount</code> means the terminal broke the contract, and <code>Sale</code>’s
+<code>ACSP</code> says what to do. A store’s own surcharge on the bill, such as one for a public holiday,
+stays the POS’s to add to <code>TotalAmount</code>, named in <code>DetailedAmount.Surcharge</code> without its tax.</li>
+<li><strong>POS, Terminal</strong>: The sandbox’s simulated terminals but <code>-manual</code> state <code>AuthorisedAmount</code> on
+every <code>ACSP</code>, equal to the instruction’s <code>TotalAmount</code> (17-Nov-2026). <code>-manual</code> sends the
+outcome you write, so state the amount in it yourself.</li>
+<li><strong>POS</strong>: <code>POST /v1/sales/{TransactionReference}/abort</code> asks the sale’s terminal to cancel a sale
+or a refund in flight, and a POS need not offer it (17-Nov-2026). Only the register that made
+the sale may abort it, sending no body, while the sale holds its terminal: <code>PDNG</code>, or <code>UNKN</code>
+inside its hold. The <code>202</code> is the sale as it stands, so keep reading it: <code>RJCT</code> with <code>DS02</code>
+means it was cancelled and nothing was charged or refunded, and <code>ACSP</code> that the abort came too
+late. <code>409 terminal_cannot_abort</code> means cancel at the terminal, <code>409 sale_not_abortable</code> that
+the sale has ended, and <code>409 terminal_offline</code> that the terminal has no connection or its queue
+is full.</li>
+<li><strong>Terminal</strong>: The <code>Abort</code> frame, <code>{"MessageType":"Abort","TransactionReference":"sal_…"}</code>, sent
+only on a connection that declares <code>SSAB</code> in <code>Mw-Message-Functions</code> (17-Nov-2026). A payment not
+yet with its host stops and is answered <code>RJCT</code> with <code>DS02</code>, ISO’s “An authorized user has
+cancelled the order”; one already with its host carries on and its outcome is sent; an ended
+reference’s stored outcome is sent unless already sent on this connection; a reference never
+received gets nothing. An <code>Abort</code> never stops a payment for another reference, and <code>DS02</code> is
+sent only in answer to one: a cancel at the terminal stays <code>AB11</code>.</li>
+<li><strong>POS</strong>: A POS conformance run lists a tenth scenario, <code>cancel</code>, as not applicable
+(17-Nov-2026). A POS’s report that was green stays green.</li>
+<li><strong>POS, Terminal</strong>: The sandbox’s simulated terminals, all but <code>-silent</code>, declare <code>SSAB</code>, and
+each answers an <code>Abort</code> but <code>-manual</code>, which queues it for your tools (17-Nov-2026). An abort of
+a sale to <code>-silent</code> is <code>409 terminal_cannot_abort</code> while the sale holds the terminal, and
+<code>409 sale_not_abortable</code> once its hold has ended. <code>mw://world</code>’s <code>Aborts</code> says how each of your
+terminals answers.</li>
+<li><strong>Terminal</strong>: A terminal that declares <code>SASQ</code> in <code>Mw-Message-Functions</code> may ask to be signed in
+to its fleet’s own payment system with a <code>LoginNeeded</code>, and is answered a <code>LoginRequest</code> or a
+<code>Refusal</code> (17-Nov-2026). The ask’s <code>RecipientKey</code> is a fresh P-256 key made for that ask alone,
+signed on a certificate’s connection by the key of the certificate presented. The answer’s
+<code>Sealed</code> holds the <code>SignedValue</code> group, whose <code>Signature</code> is a MAC of its <code>Challenge</code> under the
+fleet’s key, sealed to that fresh key by HPKE, RFC 9180’s base mode, with <code>Kem</code> <code>0x0010</code>, <code>Kdf</code>
+<code>0x0001</code> and <code>Aead</code> <code>0x0001</code>. A connection that does not declare <code>SASQ</code> is answered as before:
+its <code>LoginNeeded</code> is refused <code>unknown_frame_type</code>.</li>
+<li><strong>Terminal</strong>: Four new <code>Refusal</code> codes answer an ask: <code>recipient_key_invalid</code>,
+<code>sign_in_not_available</code>, <code>sign_in_limited</code> and <code>sign_in_unavailable</code> (17-Nov-2026).
+<code>recipient_key_invalid</code> is a bug in the terminal’s key or its signature, and after
+<code>sign_in_not_available</code>, no credential the middleware can use, the terminal asks no more on that
+connection. After <code>sign_in_limited</code> or <code>sign_in_unavailable</code> it asks again no sooner than 60
+seconds later, and short of a session it answers the sale <code>RJCT</code> with <code>AB11</code>. No refusal of an
+ask closes the connection.</li>
+<li><strong>Terminal</strong>: A terminal conformance run has an eleventh and a twelfth scenario, <code>sign_in</code> and
+<code>sign_in_none</code>, judged only for a terminal that declared <code>SASQ</code> when the step opened
+(17-Nov-2026). In <code>sign_in</code> the sale wakes a terminal holding no session, which asks once and
+answers the sale; in <code>sign_in_none</code> the run ends the store’s sign-in attachment for the step, so
+the ask is refused <code>sign_in_not_available</code> and the sale answered <code>RJCT</code> with <code>AB11</code>. For a
+terminal that did not declare <code>SASQ</code>, each is <code>not_applicable</code>, at once where its connection was
+open as the step began, its row’s <code>NotTested</code>
+says sign-in was not tested, and the report reads <code>green</code> when every other step passes.</li>
+<li><strong>POS, Terminal</strong>: A conformance report’s <code>ReportVersion</code> is 2, and its <code>DoesNotProve</code> adds
+that the run judged the log alone and saw no screen (17-Nov-2026). A row may now hold
+<code>NotTested</code>, only on a terminal’s <code>sign_in</code> or <code>sign_in_none</code> that did not apply. Each scenario
+of <code>mw://conformance</code> names <code>AppliesIfDeclared</code>, <code>null</code> on every row but those two.</li>
+<li><strong>Terminal</strong>: Each sandbox world’s store holds the sandbox’s stand-in sign-in credential,
+<code>sandbox-signin-1</code>, attached, so a terminal on <code>-yours</code> can walk its sign-in there
+(17-Nov-2026). It signs with the sandbox’s own secret, published in <code>mw://world</code>’s <code>SignIn</code>, so
+a terminal can verify the <code>Signature</code> it opens, and it proves nothing to any fleet. A world
+opened before this release holds none: a new key opens one that does. <code>validate_message</code> names a
+<code>LoginNeeded</code> given as an <code>Outcome</code>, and says whether its key has its shape.</li>
+<li><strong>Terminal</strong>: A terminal that declares <code>SASQ</code> reports each sign-in it tried in a <code>LoginResponse</code>,
+and the sealed <code>SignedValue</code> group carries what its fleet’s payment system needs for the store
+(18-Nov-2026). After <code>Signature</code> the group holds <code>LoginReference</code>, the middleware’s name for
+that one answer, then <code>AcceptorIdentification</code>, <code>UserName</code> and <code>ApplicationIdentification</code>, each
+only where the store, its attachment or its credential holds one. The report names the opened
+group’s <code>LoginReference</code> with <code>Response</code> <code>SUCC</code>, or <code>FAIL</code> and <code>ResponseReason</code> <code>not_covered</code>,
+<code>not_accepted</code> or <code>no_answer</code>, and is sent no frame. A first failure in a row other than
+<code>not_covered</code> opens one answer at once, inside the interval, so ask again at once, once; after
+any other <code>FAIL</code>, ask again no sooner than 60 seconds later.</li>
+<li><strong>Terminal</strong>: A terminal conformance run’s <code>sign_in</code> has a new assertion, <code>login_reported</code>, and
+its <code>one_ask</code> takes a second ask only after a <code>sign_in_failed</code> line (18-Nov-2026).
+<code>login_reported</code> passes on a report the middleware took of the step’s <code>LoginRequest</code>, and
+<code>one_ask</code> never takes a third ask on one connection. <code>sign_in</code> is new in this release, and stays
+<code>not_applicable</code> for a terminal that did not declare <code>SASQ</code>, which is sent nothing new.
+<code>mw://start</code>’s sign-in step now ends with the report, and <code>validate_message</code> names a
+<code>LoginResponse</code> given as an <code>Outcome</code>.</li>
+<li><strong>Terminal</strong>: A <code>LoginRequest</code> that does not open, or that names a suite the terminal does not
+take, is treated as <code>sign_in_unavailable</code> (18-Nov-2026). The terminal answers the sale <code>RJCT</code>
+with <code>AB11</code>, and asks again no sooner than 60 seconds later. It reports nothing for it: no group
+was opened, so there is no <code>LoginReference</code> to name.</li>
+<li><strong>Terminal</strong>: The sandbox, hosted or run from its image, answers one terminal’s sign-in up to
+1440 times a day, where the relay’s default stays 24 (18-Nov-2026). Each conformance run of a
+terminal spends one answer, and so does each restart of it. <code>sign_in_limited</code> still answers an
+ask within 60 seconds of the last answer.</li>
+</ul>
+<h3 id="changed-3"><a class="header" href="#changed-3">Changed</a></h3>
+<ul>
+<li><strong>Terminal</strong>: A terminal that does not know whether a payment was taken must find out
+(16-Nov-2026). It asks its host for the payment by the reference it stored, or reverses it and
+sends <code>RJCT</code> with <code>AB11</code> once the host has confirmed the reversal, and it sends the outcome as
+soon as it knows. A second <code>Instruction</code> while a payment runs is never started, and is
+answered <code>RJCT</code> with <code>AB11</code>.</li>
+<li><strong>POS, Terminal</strong>: The two integration guides are rebuilt, one for a POS vendor’s developer and
+one for a terminal fleet vendor’s (17-Nov-2026). Each walks three stages, integrate, enrol and
+link, through the sandbox, staging and production. The terminal’s guide covers the
+<code>StatusRequest</code> and the <code>Abort</code>, and the POS’s guide the abort of a sale. Each says where to get
+help: by email in the sandbox, then on a private Slack Connect channel once the vendor signs
+with FUNDiMO.</li>
+</ul>
+<h2 id="v010-16-nov-2026"><a class="header" href="#v010-16-nov-2026">v0.1.0 (16-Nov-2026)</a></h2>
+<p>The first numbered release. Every build from 07-Nov-2026 to this one called itself 0.1.0, so a
+report naming <code>SandboxVersion</code> 0.1.0 may come from any of them. Its <code>FinishedAt</code> dates it
+against the dated bullets below.</p>
+<h3 id="breaking-3"><a class="header" href="#breaking-3">Breaking</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: Every operation but <code>GET /v1/health</code> needs a credential, the terminal’s
+WebSocket upgrade among them (08-Nov-2026). In the sandbox it is a sandbox key, sent as
+<code>Authorization: Bearer sbx_...</code>. The middleware issues every id, a terminal’s
+<code>POIIdentification</code> among them, so a terminal no longer chooses its own. A whitelist decides
+who may sell where, and its refusal is <code>403 not_permitted</code>.</li>
+<li><strong>POS</strong>: A sale’s answer states its result in ISO 20022’s terms (10-Nov-2026).
+<code>TransactionStatus</code>, one of <code>PDNG</code>, <code>ACSP</code>, <code>RJCT</code> and <code>UNKN</code>, and <code>StatusReasonInformation</code>
+replace <code>AuthorisationResult</code>. <code>PaymentReference</code> groups its references by the kind of
+payment: <code>Card</code>, <code>Bank</code>, <code>Wallet</code> and <code>NPP</code>.</li>
+<li><strong>Terminal</strong>: The terminal contract’s version 3 states an outcome in ISO 20022’s terms
+(10-Nov-2026). An outcome holds <code>TransactionStatus</code>, <code>ACSP</code> or <code>RJCT</code>, and a
+<code>StatusReasonInformation</code> whose <code>Reason</code> says why no payment was taken. Its references are
+grouped by kind. An outcome built to version 2 is refused <code>missing_field</code>.</li>
+<li><strong>POS, Terminal</strong>: The link word is a pair of two different words joined by a dot, such as
+<code>rabbit.lamp</code>: the terminal contract’s version 4 (11-Nov-2026). A terminal shows it from
+<code>LinkWord</code>’s <code>Word</code>, and a register sends it to <code>POST /v1/links/{LinkIdentification}/word</code>.
+A terminal that checks the frame against version 3’s pattern refuses it. A link request in a
+store with more unbound terminals than it can give pairs is refused <code>409 too_many_terminals</code>.</li>
+<li><strong>POS, Terminal</strong>: Every name a side sends or matches says <code>mw</code> (12-Nov-2026). The header is
+<code>Mw-Installation</code>, the MCP resources are under <code>mw://</code>, and the text a device’s attestation
+challenge is made from begins <code>mw-enrol-v1</code>. The OpenAPI document’s <code>x-sent-by</code> names the
+middleware <code>mw</code>. A client built to the earlier names changes them.</li>
+<li><strong>POS, Terminal</strong>: A device’s pairing code is five words, each different, from the list at
+<code>mw://docs/words.txt</code> (14-Nov-2026). The 16-character form ended at that day’s deploy, and a
+server’s code did not change. A device code issued before the deploy and not yet typed was
+refused. A device whose answer was lost in the 15 minutes before the deploy is paired again,
+with a new code.</li>
+</ul>
+<h3 id="added-3"><a class="header" href="#added-3">Added</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: The relay, and the terminal contract’s version 1 (07-Nov-2026). A POS
+creates a sale with <code>POST /v1/sales</code>, and reads it with <code>GET /v1/sales/{TransactionReference}</code>,
+holding the read for up to <code>wait_seconds</code>. A terminal holds a WebSocket at
+<code>GET /v1/terminals/{POIIdentification}/connect</code>, is sent a <code>TerminalInstruction</code>, and answers
+with a <code>TerminalOutcome</code>. Field names are ISO 20022’s, and an amount is a string such as
+<code>"12.50"</code>.</li>
+<li><strong>POS, Terminal</strong>: The field catalogue and the conformance scenarios (07-Nov-2026). The
+catalogue has one row for each field of each message. Each scenario lists the assertions it is
+judged by. The sandbox, from 11-Nov-2026, serves them as <code>mw://fields</code> and
+<code>mw://conformance</code>.</li>
+<li><strong>POS, Terminal, Operator</strong>: The Operator API, for vendors and their servers, app identities,
+allowed models, sandbox keys, merchant stores and their aliases, terminals and registers
+(08-Nov-2026). A vendor’s <code>admin</code> manages its own, and the operator manages every vendor’s. A
+<code>PairingCode</code> and a <code>SandboxKey</code> are each shown once, in one answer.</li>
+<li><strong>POS, Terminal</strong>: A device or a server holds a client certificate of its own (10-Nov-2026).
+It spends a pairing code once at <code>POST /v1/enrol</code>, and renews at <code>POST /v1/certificates/renew</code>,
+a device after <code>POST /v1/certificates/challenge</code>. A live middleware checks a device’s key
+attestation when it enrols. <code>GET /v1/certificates/self</code> is the daily check of the certificate
+presented.</li>
+<li><strong>Terminal</strong>: The terminal contract’s version 2 (10-Nov-2026). A live terminal presents a
+client certificate. While a register links to it, a terminal is sent <code>LinkWord</code>, the word to
+show, and <code>LinkEnded</code> when the link ends. A terminal built to version 1 ignores both frames.</li>
+<li><strong>POS</strong>: A register links to a terminal at the counter by the word the terminal shows
+(10-Nov-2026). It asks at <code>POST /v1/links</code>, then sends the word to
+<code>POST /v1/links/{LinkIdentification}/word</code>. <code>GET /v1/register/terminals</code> lists the terminals
+bound to it.</li>
+<li><strong>POS, Terminal</strong>: The sandbox (11-Nov-2026). <code>POST /sandbox/v1/keys</code> gives a key and a world
+of your own, and asks for no credential. Its MCP server at <code>POST /mcp</code> serves the contract as
+resources, and tools to read fields, send sales, drive a terminal and read the log. A
+conformance run of your side ends in a signed report, which the key at <code>mw://report-key</code>
+verifies.</li>
+<li><strong>POS, Terminal</strong>: The sandbox names its entry points (11-Nov-2026). <code>GET /</code> answers
+<code>llms.txt</code>, which lists the sandbox guide first. A <code>404</code> off the sandbox’s routes names
+<code>GET /llms.txt</code>, <code>POST /mcp</code> and <code>POST /sandbox/v1/keys</code> in <code>Next</code>. <code>mw://world</code> states the
+sandbox’s <code>TlsMode</code>, and its WebSocket ping interval in <code>Timers</code>.</li>
+<li><strong>POS, Terminal</strong>: A vendor’s <code>admin</code> reads the certificates of its own servers, stores,
+terminals and registers (13-Nov-2026). Each is a <code>GET</code> of <code>certificates</code> under the vendor,
+the store, the terminal or the installation, such as
+<code>GET /v1/terminals/{POIIdentification}/certificates</code>.
+<code>GET /v1/merchant-stores/{StoreIdentification}/accepted-vendors</code> reads a store’s accepted
+vendors.</li>
+<li><strong>POS, Terminal</strong>: A hosted middleware stands behind an edge (13-Nov-2026). On
+<code>POST /v1/enrol</code> the edge may answer a <code>429</code> of its own, whose body is not an <code>Error</code>. Wait a
+minute, then send the same request again: the code was not read, and no attempt is counted.</li>
+<li><strong>Terminal</strong>: Refunds, the terminal contract’s version 5 (14-Nov-2026). An <code>Instruction</code> may
+carry <code>TransactionType</code> <code>RFND</code> and an <code>OriginalTransaction</code>, the sale to refund. A terminal
+that declares <code>Mw-Transaction-Types: CRDP, RFND</code> on its upgrade is sent refunds. One that
+declares nothing is sent sales alone.</li>
+<li><strong>POS</strong>: A POS asks for a refund with <code>POST /v1/sales</code>, as for a sale (14-Nov-2026). The body
+holds <code>TransactionType</code> <code>RFND</code>, the sale in <code>OriginalTransaction</code>, and the amount to refund in
+<code>TotalAmount</code>. The refund is read as a sale is. A sale that cannot be refunded here is
+<code>409 sale_not_refundable</code>, and a terminal that has not said it takes refunds is
+<code>409 terminal_cannot_refund</code>.</li>
+<li><strong>POS, Terminal, Operator</strong>: A terminal’s and a register’s listing hold <code>Attestation</code>, the
+mark of a failed key attestation (14-Nov-2026). It gives <code>State</code> <code>failed</code>, the <code>FailedChecks</code>
+and <code>Since</code>. Only a middleware with <code>MW_ATTESTATION_FAILURES</code> set to <code>mark</code> records one. A
+sandbox marks nothing.</li>
+<li><strong>POS, Terminal</strong>: Two step-by-step integration guides, as PDF files: one for a POS’s
+developer, one for a terminal’s (14-Nov-2026). Each walks from a sandbox key to live. They
+followed the five pairing words the same day, the two environments on 15-Nov-2026, and the
+enrolment screen on 16-Nov-2026. Where a guide and the published pages differ, the pages are
+right.</li>
+<li><strong>POS, Terminal</strong>: <code>mw://environments</code> names the two environments open to an integration, the
+sandbox and staging (15-Nov-2026). It gives each one’s base URL, its credential, and what
+differs. Keep the base URL in one setting, so the same code reaches staging.</li>
+<li><strong>POS, Terminal</strong>: The device walk, <code>mw://onboarding/device</code>, states the requirements of an
+app’s enrolment screen (16-Nov-2026). It is the screen a person enrols a terminal or a register
+on, reached from the app’s own menu with the device alone. Each requirement is a Must or a
+Should, with a check a person can make at the device. A conformance run does not check the
+screen.</li>
+<li><strong>POS, Terminal</strong>: The middleware has a release number (16-Nov-2026). The MCP server states it
+in <code>serverInfo.version</code> and the first sentence of its <code>instructions</code>. Each host states it in
+<code>GET /v1/health</code>, as <code>Version</code>, and a report in <code>SandboxVersion</code>.</li>
+</ul>
+<h3 id="changed-4"><a class="header" href="#changed-4">Changed</a></h3>
+<ul>
+<li><strong>POS</strong>: A sale outlives a restart of the middleware (08-Nov-2026). The same <code>IdempotencyKey</code>
+after a restart answers the sale as it stands. <code>503 at_capacity</code> is gone, and
+<code>503 store_unavailable</code> means retry with the same key, never a new one.</li>
+<li><strong>Terminal</strong>: After any reconnect, a terminal sends its most recent outcome again
+(08-Nov-2026). It stops at a new <code>TerminalInstruction</code>, at a <code>TerminalRefusal</code> for that
+outcome, or 23 hours after it first sent it. The reconnect backoff resets only once a
+connection has stayed open 10 seconds.</li>
+<li><strong>POS</strong>: A sale’s <code>TransactionStatus</code> and <code>Reason</code> are open lists (11-Nov-2026). A later
+version may add a code, and an answer that holds one still validates. Read a status you do not
+know as <code>UNKN</code>, and <code>RJCT</code> as no payment taken, whatever its <code>Reason</code>.</li>
+<li><strong>Terminal</strong>: A terminal conformance run checks that an outcome is sent once on a connection
+(11-Nov-2026). Each scenario that ends on an outcome adds an assertion, such as
+<code>approved.one_outcome</code>. A sale’s outcome sent twice on one connection fails it.</li>
+<li><strong>POS, Terminal</strong>: The sandbox guide says more of a conformance run (11-Nov-2026). It shows
+what <code>conformance_start</code> answers, and two worked <code>conformance_status</code> answers. It gives the
+report key’s encoding, the raw 32-byte Ed25519 key in base64. It says, for each side, what a
+green run does not check.</li>
+<li><strong>POS, Terminal</strong>: The pages say more on three points (13-Nov-2026). A terminal whose
+WebSocket library answers Pings itself sets its own ping every 30 seconds, and the middleware
+answers each with a Pong. A <code>201</code> from enrolment after a re-pair ends any wait, so connect at
+once. The sandbox guide states the sandbox’s 30-second sale deadline, so a slow sale reads
+<code>UNKN</code> until its outcome replaces it.</li>
+<li><strong>POS, Terminal</strong>: On staging, a device whose key attestation fails some checks is issued its
+certificate all the same, and marked (15-Nov-2026). It enrols and takes sales, so everything
+but the attestation can be tested. The checks that tie the chain to this request, this key and
+this app still refuse.</li>
+</ul>
+<h3 id="fixed-1"><a class="header" href="#fixed-1">Fixed</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: Two dead ends in the sandbox are gone (11-Nov-2026). A sandbox with no CA
+answers <code>POST /v1/enrol</code> with <code>503 ca_unavailable</code>, and a <code>Next</code> saying no run can start
+there. A world whose log had filled could never run green: now a step’s window is partial only
+when a line after its start was lost.</li>
+<li><strong>POS, Terminal, Operator</strong>: A hosted middleware reads a client certificate’s fingerprint from
+its edge in standard or URL-safe base64, padded or not (13-Nov-2026). Before, it read one form
+alone, so a good certificate could be refused <code>503 edge_not_trusted</code>. The refusal’s log line
+now names the check that failed.</li>
+<li><strong>POS</strong>: On the hosted sandbox, a POS run’s <code>resend</code> step no longer ends the run
+(13-Nov-2026). Its lost answer is a <code>503</code> whose body is not an <code>Error</code>, on a connection left
+open. Before, the lost answer stopped the sandbox, and the run was lost with all it held in
+memory.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="terminal.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="files.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="terminal.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="files.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

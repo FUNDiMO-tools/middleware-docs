@@ -1,0 +1,488 @@
+[
+  {
+    "Channel": "Error.Code",
+    "Code": "invalid_json",
+    "Meaning": "The body is not JSON, or not a JSON object, or it holds, in any field, half a surrogate pair as an escape, a number beyond the range of an IEEE 754 double, or nesting 128 deep.",
+    "Next": "Nothing was created and the key is unspent, so fix it and send the sale again."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "unknown_field",
+    "Meaning": "The body holds a field the contract does not name. Fields lists each one, at most 32, and its value is held nowhere.",
+    "Next": "Take out each field named. Nothing was created and the key is unspent, so send the sale again."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "missing_field",
+    "Meaning": "A required field is absent. Fields lists each one, at most 32.",
+    "Next": "Add each field named. Nothing was created and the key is unspent, so send the sale again."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "invalid_field",
+    "Meaning": "A field fails its rule, or a required field was sent as null, or an item is not an object. Fields lists each one, at most 32. On a terminal's connect, POIIdentification fails its pattern.",
+    "Next": "Fix each field named. Nothing was created and the key is unspent, so send the sale again. On a connect, fix the id: retrying will not help."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "body_unreadable",
+    "Meaning": "The body could not be read.",
+    "Next": "Nothing was created and the key is unspent, so send the sale again."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "idempotency_conflict",
+    "Meaning": "The same key came with a different body, and the first sale is unchanged.",
+    "Next": "A retry sends the same sale. After a lost answer this means a sale may exist under the key with no id to read, so treat the sale as unknown: tell the cashier to check the terminal before another tender."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "terminal_offline",
+    "Meaning": "The terminal has no current connection, or its writer has gone, or its queue of frames is full. The terminal was sent nothing.",
+    "Next": "Nothing holds the terminal this sale names, or its queue of frames is full. If it is your world's own, your TesterIdentification then -yours, your terminal is not connected to it: connect it there, as mw://docs/terminal.md says. A simulated terminal connects again by itself within seconds. Then send the same sale again with the same IdempotencyKey: it is unspent. On an abort, the terminal was sent nothing: abort again once it is connected, or have the cashier cancel at the terminal."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "terminal_busy",
+    "Meaning": "That terminal is claimed by a sale.",
+    "Next": "Retry with the same key once that sale has ended: it is unspent."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sale_not_refundable",
+    "Meaning": "OriginalTransaction names no sale the middleware can refund here. A sale is refundable when it was approved as a sale, its vendor is the caller's, its store is the store of the terminal's binding and its refund window is open. Every other id, one never issued included, gets this one code, so a caller cannot probe what exists. Nothing was created.",
+    "Next": "Refund at the terminal directly, or another way: sent again, the same refund is refused again. Nothing was created and the key is unspent."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "terminal_cannot_refund",
+    "Meaning": "The terminal named is connected and has not said it takes refunds: it declared no RFND in Mw-Transaction-Types when it connected. Nothing was created, and the terminal was sent nothing.",
+    "Next": "Choose another terminal, one that takes refunds, and send the refund there: nothing was created and the key is unspent."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sale_not_abortable",
+    "Meaning": "The sale has ended and cannot be cancelled: it reads ACSP or RJCT, or it reads UNKN because its terminal contradicted itself or because the terminal's hold has ended, 300 seconds from the sale at the middleware's default settings, after which the terminal may be in another payment. A refund is the same. The terminal was sent nothing.",
+    "Next": "Read the sale, with GET /v1/sales/{TransactionReference}: its answer says how it ended. ACSP means the abort came too late, and the payment was taken."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "terminal_cannot_abort",
+    "Meaning": "The sale's terminal is connected and has not said it can stop a payment: it declared no SSAB in Mw-Message-Functions when it connected. The terminal was sent nothing, and the sale goes on.",
+    "Next": "Have the cashier cancel at the terminal, then read the sale for the outcome the terminal sends. The middleware sends an abort only to a terminal that declared SSAB when it connected."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "body_too_large",
+    "Meaning": "The body is over 65,536 bytes.",
+    "Next": "Send less: SaleItem is optional, so a sale can go with no items. Nothing was created and the key is unspent."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "store_unavailable",
+    "Meaning": "The middleware's store did not answer, or a sale it holds could not be read. Usually nothing was created, but a sale may have been committed with its answer lost.",
+    "Next": "Retry with the same key, never a new one: if a sale was created, the retry answers it as it stands, and if not, the key is unspent. Retry a read as it was sent. An abort sent the terminal nothing, and none is sent until the store answers: abort again, or read the sale."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "invalid_wait",
+    "Meaning": "wait_seconds is not an integer from 0 to 30, or is given twice.",
+    "Next": "Send one integer from 0 to 30, or leave it out."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "invalid_query",
+    "Meaning": "A query parameter of GET /v1/sales is malformed, out of its range, or given twice. Fields names each one.",
+    "Next": "Fix each parameter named, or leave it out to take its default. Nothing was read."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sale_not_found",
+    "Meaning": "The middleware does not hold this id. On an id the middleware gave you, the sale passed retention and the middleware forgot it, which does not mean no sale happened.",
+    "Next": "On an id the middleware gave you, treat the sale as unknown: tell the cashier to check the terminal before another tender."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "not_found",
+    "Meaning": "The path is unknown, or on the Operator API the id names nothing the caller may see, which answers the same as an id no row holds.",
+    "Next": "Start at GET /llms.txt, the index of what is served here, or POST /mcp, an MCP server over Streamable HTTP. A sandbox key: POST /sandbox/v1/keys, with no credential. Under /v1 only these paths are served: /v1/sales, /v1/sales/{TransactionReference}, /v1/sales/{TransactionReference}/abort, /v1/terminals/{POIIdentification}/connect, /v1/health, /v1/enrol, /v1/certificates/{one segment}, /v1/links and every path below it, and /v1/register/terminals."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "method_not_allowed",
+    "Meaning": "The path is known and the method is not.",
+    "Next": "Use the method the contract names for that path."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "invalid_upgrade",
+    "Meaning": "A bad WebSocket version or key.",
+    "Next": "Fix the client."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "upgrade_required",
+    "Meaning": "A GET with no Upgrade header.",
+    "Next": "Fix the client."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "certificate_required",
+    "Meaning": "The route needs a credential and none came. Every route but /v1/health and POST /v1/enrol needs one, and so does a terminal's connect.",
+    "Next": "Send it again with the caller's credential: its client certificate at the TLS handshake, or in the sandbox its sandbox key as Authorization: Bearer. To a holder of a certificate this is its own bug, or a route it holds no certificate for: enrol first, with POST /v1/enrol. This request did nothing and spent no IdempotencyKey, but if it retried a sale whose answer was lost, that sale may stand: send that sale again with the same IdempotencyKey from the same register, never a new one."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "certificate_invalid",
+    "Meaning": "A credential came and is not acceptable: an Authorization header of another scheme, a token of no form the middleware issues, two Authorization headers, a client certificate beside an Authorization header, a client certificate no row holds, or one whose SPIFFE id is not its row's.",
+    "Next": "Send one credential: a client certificate, or in the sandbox one Authorization header holding Bearer and the sandbox key. A holder refused on its certificate backs off an hour, and after three refusals an hour apart tells the installer it needs a new code, and keeps trying hourly. It never deletes its key or its certificate. This request did nothing and spent no IdempotencyKey, but if it retried a sale whose answer was lost, that sale may stand: send that sale again with the same IdempotencyKey from the same register, never a new one."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sandbox_key_on_live",
+    "Meaning": "A sandbox key came to a live middleware, which refuses every one before any lookup.",
+    "Next": "A sandbox key works in the sandbox alone: a live caller presents a client certificate. This request did nothing and spent no IdempotencyKey, but if it retried a sale whose answer was lost, that sale may stand: send that sale again with the same IdempotencyKey from the same register, never a new one. A terminal refused on connect waits one hour before it connects again, and keeps any outcome it holds."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sandbox_key_invalid",
+    "Meaning": "The sandbox key is malformed, unknown or retired.",
+    "Next": "Check the sandbox key, or get a new one with: curl -X POST https://mw.sandbox.fundimo.com.au/sandbox/v1/keys. The same sandbox key will not pass. This request did nothing and spent no IdempotencyKey. A terminal refused on connect waits one hour before it connects again, and keeps any outcome it holds."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "not_permitted",
+    "Meaning": "The credential is good, and the route, its scope or a whitelist refuses it: a key of another scope, a vendor or a store not in a state to act, a move the object's state does not allow, or a sale naming a terminal or a merchant the caller's register is not bound to. One code for every reason, so a caller cannot probe what exists.",
+    "Next": "Nothing was done, and a sale's key is unspent. Check the credential's scope and what is listed and bound for the caller. A holder refused on connect backs off to one hour, keeping any outcome it holds: its credential was good and the row refused it, which is what a removal or a re-pair reads as."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "too_many_keys",
+    "Meaning": "The vendor already holds two servers of this scope that are not removed.",
+    "Next": "Remove one of them, then list the new one. Nothing was created."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "alias_taken",
+    "Meaning": "The vendor's MerchantIdentification already names another store, as an accepted alias.",
+    "Next": "On a proposal, choose another MerchantIdentification for this store. On an accept, reject this proposal, and have the store's owner propose another MerchantIdentification for this store. Nothing was changed."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "serial_taken",
+    "Meaning": "The fleet already lists a device of this SerialNumber that is not removed.",
+    "Next": "Use the terminal already listed, or remove it and list the device again. Nothing was created."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "certificate_expired",
+    "Meaning": "The client certificate is past its NotAfter. Behind the load balancer, a chain it did not verify on a row past its NotAfter reads the same.",
+    "Next": "Renew from RenewFrom, which the daily check answers, and this never comes. A holder that gets it backs off an hour, and after three refusals an hour apart tells the installer it needs a new code to enrol again, and keeps trying hourly. It never deletes its key or its certificate. This request did nothing and spent no IdempotencyKey, but if it retried a sale whose answer was lost, that sale may stand: send that sale again with the same IdempotencyKey from the same register, never a new one."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "certificate_retired",
+    "Meaning": "The client certificate is past its retired_at, on a principal in good state: a newer certificate of this identity was first used and the overlap after it has passed, or a newer CSR retired it before it was ever used. The middleware writes an ERROR line naming it and the row that took over.",
+    "Next": "A holder holding a newer certificate than the one presented drops that connection and retries on the newer one, with the same idempotency key: that is ordinary, past an overlap. A holder refused on its newest certificate stops, keeps any outcome it holds, and tells a person: something else holds a newer certificate of this identity. It never deletes its key or its certificate."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "edge_not_trusted",
+    "Meaning": "Behind the load balancer, a request came with no forward token, or with a chain the load balancer did not verify on a live certificate row. It is an edge fault, and the middleware writes an ERROR line: the caller's certificate is not in question.",
+    "Next": "Retry on the normal backoff. It says nothing of the certificate, so a holder never deletes its key or its certificate for it."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "code_not_valid",
+    "Meaning": "The pairing code is wrong, unknown, expired or spent, the serial is not the listing's, the principal is not listed, or its vendor is suspended. One code for every reason, so enrolment names no serial, id or state. A code already spent, sent again with another key, is this too.",
+    "Next": "Check the code as it was given, and a device's serial, and send again inside the code's 15 minutes: each refusal of a code neither spent nor burned counts an attempt on it. Past that, get a fresh code with POST https://mw.sandbox.fundimo.com.au/sandbox/v1/codes under your sandbox key, with {\"Role\": \"server\"}, {\"Role\": \"terminal\"} or {\"Role\": \"register\"}, as your world's kind takes; in live, ask whoever listed the principal for one. A server that gets this on a fresh code treats it as an alarm: someone else may have spent it, and in live the vendor's servers show the key that did."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "attestation_failed",
+    "Meaning": "The device's attestation chain fails a check: the chain, its root, its dates, a revoked certificate, the extension, the leaf's key not the CSR's, the hardware, the challenge or the boot state. A chain that does not parse, and a live device that sent none, are this too.",
+    "Next": "On enrolment the code stays live: fix what the app sends, a key made in the device's hardware with the challenge and the CSR of that key, and enrol again inside the code's 15 minutes. On renewal the current certificate stays good until its NotAfter: ask a new challenge and renew with a new key. A device that cannot pass needs a person."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "app_identity_unknown",
+    "Meaning": "The attestation names an app package, or a signing digest, that the principal's vendor has not registered for its role, or names more than one package.",
+    "Next": "Register the app's AppPackage and SigningDigest with POST /v1/vendors/{VendorIdentification}/app-identities, then try again: an enrolment inside its code's 15 minutes, a renewal with a new challenge and a new key."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "model_not_allowed",
+    "Meaning": "What the device attests matches no row of the allowed list that applies to it, or a row it matches says its model has no attestation rooted at Google.",
+    "Next": "Ask the operator for a row of the allowed list that names the device, or use a device it already allows. The code stays live for its 15 minutes."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "attestation_status_unavailable",
+    "Meaning": "The middleware holds no attestation status list, or one past MW_ATTESTATION_STATUS_MAX_AGE_HOURS, so it cannot check a device's chain for revocation. No attempt is counted, a code stays live and a challenge stays good.",
+    "Next": "Retry on the normal backoff. Sales are untouched, and a certificate has 15 days to renew in."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "ca_unavailable",
+    "Meaning": "The middleware could not sign the certificate: its signer is not reachable, was slow past its bound, made a signature that does not verify, or the process has none. Nothing was written and no attempt counted.",
+    "Next": "If this sandbox runs with no CA, it issues no certificate and no conformance run can start here, and its answer to POST /v1/enrol says so in Next. Otherwise retry on the normal backoff with the same code and the same key: the code is not spent."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "challenge_not_valid",
+    "Meaning": "A device's renewal chain was made with no challenge of this certificate's that is live: none was asked, it was spent, or its 10 minutes passed, or the chain holds another.",
+    "Next": "Ask a new challenge with POST /v1/certificates/challenge, make a new key with it, and renew with that key. The current certificate stays good until its NotAfter."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "renewal_not_due",
+    "Meaning": "The certificate is before its RenewFrom, day 15 of its life.",
+    "Next": "Keep using it, and renew once the daily check, GET /v1/certificates/self, answers RenewNow true."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "renewal_rate",
+    "Meaning": "This identity was issued 5 certificates in the last 24 hours. A second renewer of one identity is the best sign of a fork, so the middleware writes a WARNING naming it.",
+    "Next": "Keep the current certificate and renew later. Let one instance renew for an identity, and install its certificate on every other inside the overlap."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "link_in_progress",
+    "Meaning": "A request to link is already open at this store, or for this register. Nothing was written.",
+    "Next": "Try again in a minute."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "no_terminal_to_link",
+    "Meaning": "No terminal of the store is paired with no binding, so there is none to ask. Nothing was written.",
+    "Next": "Check that the terminal is paired and connected, and not bound already: a terminal bound to another register is linked by ending that binding first."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "too_many_terminals",
+    "Meaning": "More terminals of the store are paired with no binding than one request can ask, 523,776: each is shown a different pair of two words, and never one pair both ways round. Nothing was written.",
+    "Next": "Have the store's fleet owner bind or remove terminals of the store, and ask again."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "register_in_other_store",
+    "Meaning": "The register is bound at another store, at the ask or, checked again, at the word, where it closes the request. A register may link more terminals of its own store.",
+    "Next": "End the register's bindings at the other store, with DELETE /v1/links/{POIIdentification}, and ask again."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "link_rate",
+    "Meaning": "The caller's vendor asked 10 times at this store in the last hour, or typed 3 wrong words there in the last 24 hours. The middleware writes a WARNING.",
+    "Next": "Wait and ask later, and tell the staff why. A store's fleet owner sees each request."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "link_word_unknown",
+    "Meaning": "The word is not one a terminal of this request showed, its two words in that order. One attempt: the request has ended, every terminal clears, and the wrong word counts toward the vendor's limit at the store.",
+    "Next": "Ask again, and have the staff type the word shown on the terminal in their hand."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "link_expired",
+    "Meaning": "The request to link has ended: past its ExpiresInSeconds, closed by a wrong word or a refusal, or its binding since ended.",
+    "Next": "Ask again with POST /v1/links."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "adapter_not_taken",
+    "Meaning": "A sign-in credential's Adapter is the other environment's, or the body holds a Secret where none is taken: a sandbox takes sandbox_signed_value alone, with no Secret, not even null or empty, and a live middleware takes signed_value alone. Nothing else of the body was read, and nothing was written.",
+    "Next": "Fix the body: in a sandbox, Adapter sandbox_signed_value and no Secret; on a live middleware, Adapter signed_value and the fleet's Secret. Retrying the same body will not help: it is refused the same way."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sign_in_not_configured",
+    "Meaning": "Sign-in is off on this middleware: no MW_SIGNIN_KMS_KEY is set, so it has no key to seal a fleet's Secret under. Only a create or a replace of a signed_value credential is refused, and nothing was written: every other route of a sign-in credential still works.",
+    "Next": "Ask the operator to set MW_SIGNIN_KMS_KEY on this middleware. Retrying will not help until it is set: until then the same request is refused the same way."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "signin_credential_removed",
+    "Meaning": "The sign-in credential named is removed, so it can be neither replaced nor attached to a store, and it is unchanged. A removed credential stays removed.",
+    "Next": "Create a new credential with POST /v1/vendors/{VendorIdentification}/signin-credentials, and attach it to the store with PUT /v1/merchant-stores/{StoreIdentification}/signin-credential. Retrying will not help: the removed one stays removed."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "kms_unavailable",
+    "Meaning": "The key service did not seal the fleet's Secret: it was not reached, did not answer inside its bound, refused, or gave an answer the middleware could not read. Nothing was written.",
+    "Next": "Retry later on the normal backoff with the same body: nothing was written. If it persists, ask the operator: the key service may be refusing the middleware."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "unparseable_frame",
+    "Meaning": "A frame of valid UTF-8 that is not JSON, or JSON that is not an object, or a frame the middleware cannot parse: one holding, in any field, half a surrogate pair as an escape, a number beyond the range of an IEEE 754 double, or nesting 128 deep.",
+    "Next": "A bug: alert someone. Do not resend that frame. Keep it, so the outcome can be sent once the code is fixed."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "binary_frame",
+    "Meaning": "A binary frame.",
+    "Next": "A bug: alert someone. Do not resend that frame. Keep it, so the outcome can be sent once the code is fixed."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "unknown_frame_type",
+    "Meaning": "MessageType is absent or is not Outcome. A LoginNeeded is answered instead only on a connection that declared SASQ in Mw-Message-Functions, and on any other it gets this. A LoginResponse too is read instead only on a connection that declared SASQ, and on any other it gets this.",
+    "Next": "A bug: alert someone. Do not resend that frame. Keep it, so the outcome can be sent once the code is fixed."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "missing_field",
+    "Meaning": "TransactionStatus or TransactionReference is absent, or StatusReasonInformation.Reason is absent with RJCT. In a LoginResponse, LoginReference or Response is absent, or ResponseReason is absent with FAIL.",
+    "Next": "A bug: alert someone. Do not resend that frame. Keep it, so the outcome can be sent once the code is fixed."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "invalid_result",
+    "Meaning": "TransactionStatus is not ACSP or RJCT, or is not a string, or with RJCT StatusReasonInformation.Reason is not AG07, AB11 or DS02. In a LoginResponse, Response is not SUCC or FAIL, or is not a string, or with FAIL ResponseReason is not one of not_covered, not_accepted and no_answer, or with SUCC a ResponseReason is sent.",
+    "Next": "A bug: alert someone. Do not resend that frame. Keep it, so the outcome can be sent once the code is fixed."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "invalid_reference",
+    "Meaning": "TransactionReference is not a string. In a LoginResponse, LoginReference is not lgn_ then 32 lowercase hex characters.",
+    "Next": "A bug: alert someone. Do not resend that frame. Keep it, so the outcome can be sent once the code is fixed."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "not_held",
+    "Meaning": "A well-formed outcome naming no sale the middleware holds.",
+    "Next": "Stop. Keep your own record. The middleware cannot say whether the sale passed retention or it never held that reference. Its log holds what passed the allow-list but never the TransactionReference, so an operator reconciles the sale from your record."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "other_terminal",
+    "Meaning": "The outcome names a sale held for another terminal.",
+    "Next": "A bug: alert someone. Do not resend that frame. Keep it, so the outcome can be sent once the code is fixed."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "terminal_not_permitted",
+    "Meaning": "A well-formed outcome came on a connection that may no longer hold its terminal: the terminal is not paired, or the credential it connected with is retired. The middleware did not take it, and its log keeps what the terminal said. A LoginNeeded, or a well-formed LoginResponse, on such a connection gets it too, and nothing is counted or written.",
+    "Next": "Keep the outcome, close the connection, reconnect, and send it again. It is the one Refusal whose frame is sent again: once the terminal may connect, the outcome is taken. After a LoginNeeded or a LoginResponse, close the connection and reconnect with the backoff all the same."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "recipient_key_invalid",
+    "Meaning": "A LoginNeeded's RecipientKey cannot be used: it is absent or not an object, its PublicKey is not 65 bytes in base64url of a point on P-256, 0x04 first, or on a connection made with a certificate, its Signature is absent, malformed, or does not verify under the key of the certificate the connection presented. Nothing was counted.",
+    "Next": "A bug: alert someone. Answer the sale RJCT with AB11, as any sale the terminal cannot start for want of a session."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "sign_in_not_available",
+    "Meaning": "The middleware holds no sign-in credential it can use for the terminal's store: none is attached, the credential is removed, the store or its owner is not in a state to act, or sign-in is off on this middleware. A terminal signed out is normal. Nothing was counted.",
+    "Next": "Answer the sale RJCT with AB11, unless a person signs in at the terminal by its fleet's own means, and ask no more on this connection."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "sign_in_limited",
+    "Meaning": "The terminal was answered a sign-in less than MW_SIGNIN_INTERVAL_SECS ago, 60 seconds at the middleware's default settings, or has been answered MW_SIGNIN_PER_DAY times, 24 by default, in the day counted from that day's first answer. At the day's cap the middleware writes an ERROR line. Nothing was counted.",
+    "Next": "Answer the sale RJCT with AB11, and ask again no sooner than 60 seconds later."
+  },
+  {
+    "Channel": "ResponseReason",
+    "Code": "sign_in_unavailable",
+    "Meaning": "The middleware could not answer the ask: its store did not answer or did not read as it should, the key service did not open the credential's secret, or the answer could not be signed or sealed. Nothing was sent in clear. An ask whose secret could not be opened still counts toward the terminal's limit. On a well-formed LoginResponse, its store did not answer or did not read as it should, and nothing of the report was written.",
+    "Next": "Answer the sale RJCT with AB11, and ask again no sooner than 60 seconds later. After a LoginResponse, go on as its Response says, without sending it again, and ask again no sooner than 60 seconds later."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "key_required",
+    "Meaning": "This tool needs a sandbox key.",
+    "Next": "Run: curl -X POST https://mw.sandbox.fundimo.com.au/sandbox/v1/keys, then add the key as Authorization: Bearer."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "key_not_recognised",
+    "Meaning": "This sandbox key is unknown or expired.",
+    "Next": "Get a new key with: curl -X POST https://mw.sandbox.fundimo.com.au/sandbox/v1/keys, and send it as Authorization: Bearer. A key lasts until the ExpiryDateTime its answer gave."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "credential_not_for_sandbox",
+    "Meaning": "The sandbox takes only keys beginning sbx_. If this was a live credential, rotate it.",
+    "Next": "The sandbox takes only keys beginning sbx_. If this was a live credential, rotate it."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "invalid_argument",
+    "Meaning": "An argument is missing, or is not of the type, range or words its input schema gives.",
+    "Next": "Fix each argument Fields names, as the tool's input schema in tools/list gives it, and call the tool again. A field's Path and its Message are as mw://fields lists them."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "log_not_held",
+    "Meaning": "This sale's log lines are no longer held.",
+    "Next": "Lines are kept until 30 minutes pass with no request of yours, within the bounds of the sandbox's index, which a restart empties. Read a sale's log soon after it settles."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "no_instruction",
+    "Meaning": "No instruction came for the -manual terminal in the time waited.",
+    "Next": "Send a sale to your world's -manual terminal, with send_sale or from your own code, then call this tool again."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "answer_lost",
+    "Meaning": "The relay's answer did not arrive, so whether the request took effect is not known.",
+    "Next": "Call send_sale again with the same sale and the same IdempotencyKey, never a new one: if the sale was made, the relay answers 200 with it as it stands and makes no second one, and if not, the key is unspent. A read changes nothing: call read_sale or read_log again as it was."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "run_not_found",
+    "Meaning": "No conformance run of this world has that RunIdentification.",
+    "Next": "Runs live in memory, and a restart of the sandbox loses them: start again with conformance_start. Every line read_log gives carries boot_id, one for each start of the sandbox: a boot_id other than the one on the lines you read while the run went says the sandbox restarted, and your code did not lose the run."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "run_in_progress",
+    "Meaning": "A conformance run of this tester is already running.",
+    "Next": "Finish the run that is running, or wait for its deadline, then start again."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "run_not_finished",
+    "Meaning": "The run has not ended, so it has no report yet.",
+    "Next": "The run's Result is running, and a report is made when it ends. Read conformance_status until its Result is green, red, undetermined or partial, then call conformance_report again."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sandbox_rate",
+    "Meaning": "A bound of the sandbox was passed: too many requests in flight, or in the last minute or hour. Retry later.",
+    "Next": "Wait a minute, and retry with the same IdempotencyKey. If an earlier answer was lost, the sale may exist."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sandbox_busy",
+    "Meaning": "The sandbox has as many worlds connected as it may. Retry later.",
+    "Next": "Try again shortly: a world with no call for 30 minutes is closed, which frees a place."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sandbox_restarting",
+    "Meaning": "The sandbox is restarting for this tester. Retry in a few seconds.",
+    "Next": "Retry with the normal backoff: a restart keeps the sale."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sandbox_key_rate",
+    "Meaning": "The sandbox has issued as many keys as it may this hour. Retry later.",
+    "Next": "Try again in an hour: keys are issued at a bounded rate across every caller."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sandbox_full",
+    "Meaning": "The sandbox holds as many testers as it may. Retry later.",
+    "Next": "Keys free up as they expire. Try again in an hour."
+  },
+  {
+    "Channel": "log line",
+    "Code": "sandbox_fault",
+    "Meaning": "The sandbox lost the answer to this sale on purpose, in a conformance run's resend step, after the sale was made.",
+    "Next": "Send the same sale again with the same IdempotencyKey: the relay answers it as it stands, and makes no second one. That retry is what the resend step judges."
+  }
+]

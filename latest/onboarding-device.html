@@ -58,10 +58,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-a7e42865.js";
+            window.path_to_searchindex_js = "searchindex-122325d1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f470377e.js"></script>
+        <script src="toc-3b0d6c91.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.3.2, 21-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-onboarding-a-device"><a class="header" href="#middleware-onboarding-a-device">Middleware: onboarding a device</a></h1>
 <p>10-Nov-2026.</p>
@@ -219,11 +219,14 @@ model, held by the app its vendor registered. Nothing is given to a vendor to em
 certificate lasts 30 days and renews from day 15 with a new key. FUNDiMO’s staging middleware
 can be set to issue it though some checks of the attestation fail, for testing, and to mark the
 device so (step 3, Which devices the middleware admits).</p>
-<p>Read it beside <a href="terminal.html"><code>docs/api/terminal.md</code></a>, the terminal’s contract, and the operations of
-<code>docs/api/openapi.yaml</code> tagged <code>operator</code>, the back office’s routes. A vendor with a server
+<p>Read it beside <a href="terminal.html"><code>docs/api/terminal.md</code></a>, the terminal’s contract. A vendor with a server
 reads <a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a> instead, and linking a register to a terminal at the
-counter is <a href="linking.html"><code>docs/api/linking.md</code></a>. <code>docs/api/openapi.yaml</code> holds the schema of every route named
-here. The middleware publishes no Android library: the code here is for you to paste and own.</p>
+counter is <a href="linking.html"><code>docs/api/linking.md</code></a>. <a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a> holds the schema of every
+route a device calls here, and <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a> holds those a register calls, with
+the two that list a register and give it a code. The three routes that register an app,
+list a terminal and give it a code are in the Operator API, which FUNDiMO gives a vendor with an
+<code>admin</code> server directly. The middleware publishes no Android library: the code here is for you
+to paste and own.</p>
 <h2 id="what-is-proven-on-a-device-and-what-is-not-yet"><a class="header" href="#what-is-proven-on-a-device-and-what-is-not-yet">What is proven on a device, and what is not yet</a></h2>
 <p>Every step here was written from documents. Two runs have since tried parts of it on one SUNMI
 P2 Lite SE, Android 11 (API 30), whose keystore is software: AOSP’s software keymaster keeps its
@@ -273,13 +276,17 @@ menu or settings opens, with the device alone, and again after the first enrolme
 enrolment screen).</li>
 </ol>
 <h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
-<p>The same file is served in the sandbox, where three things differ.</p>
+<p>The same file is served in the sandbox, where four things differ.</p>
 <ul>
 <li>The sandbox’s gate answers <code>404</code> to the operator’s routes. In their place the sandbox has
 two routes of its own, served by its own process, <code>mw-sandbox</code> (the middleware’s
 <code>003b-sandbox</code>), under your tester’s sandbox key, and a <code>live</code> middleware has neither:
 <code>POST /sandbox/v1/app-identities</code> registers the app (step 1), and <code>POST /sandbox/v1/codes</code>
 gives the code (step 2).</li>
+<li>A register is tried in a world of its own kind, which <code>POST /sandbox/v1/keys</code> with
+<code>{"Register":"device"}</code> opens (<a href="sandbox.html"><code>docs/api/sandbox.md</code></a>, 1. A key and a world). Its register is
+listed with the serial <code>&lt;tester&gt;-register</code>, as every world’s own terminal is <code>-yours</code> with
+<code>&lt;tester&gt;-yours</code>.</li>
 <li>No attestation is required, so an emulator or a debug build can enrol. A chain sent is
 checked all the same, for its key, its challenge and its app, against app identities where
 a debug build counts, so you can prove your package and signing digest before you have a
@@ -400,9 +407,23 @@ which app holds the key from the attestation, which states the app’s Android p
 SHA-256 of each certificate the app is signed with, so nothing secret is put in the app.
 Register each app once for its role: <code>terminal</code> for a payment terminal’s app, <code>register</code> for a
 POS app on a device.</p>
+<p>One app holds one role. One device may run both, a payment terminal’s app and a POS app: two
+apps, each registered for its own role, and two principals, each with its own listing, code,
+key and certificate. Both listings may carry the device’s one serial, and the middleware keeps
+their codes apart. Each app enrols with its own principal’s code. Where the app sends its
+attestation, as production requires, the other app’s attestation on a code is refused
+<code>403 app_identity_unknown</code>. An enrolment with no attestation is not checked for its app: in
+the sandbox, and on a middleware set to mark, it enrols as whichever principal the code and
+serial name, so the enrolment screen says which app a code is for. In the sandbox the two
+serials differ, <code>&lt;tester&gt;-yours</code> and <code>&lt;tester&gt;-register</code>, so a code sent with the other app’s
+serial is <code>403 code_not_valid</code>. A row of the operator’s allowed list admits a model for one
+vendor or for every vendor, so a model allowed for a fleet alone does not admit a POS vendor’s
+register on the same device: ask for it for each vendor, or for every vendor (Which devices
+the middleware admits). A middleware set to mark records the model’s check rather than
+refusing.</p>
 <p>On <code>live</code>, the operator or the vendor’s own <code>admin</code> sends
-<code>POST /v1/vendors/{VendorIdentification}/app-identities</code> (in <code>docs/api/openapi.yaml</code>, tagged
-<code>operator</code>), with this body:</p>
+<code>POST /v1/vendors/{VendorIdentification}/app-identities</code> (in the Operator API, which FUNDiMO
+gives a vendor with an <code>admin</code> server directly), with this body:</p>
 <pre><code class="language-json">{ "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "..." }
 </code></pre>
 <p>In the sandbox, <code>POST /sandbox/v1/app-identities</code> takes the same body under your tester’s
@@ -451,9 +472,10 @@ certificates registers each. A device whose app is not registered is refused
 <code>403 app_identity_unknown</code> at enrolment and at renewal.</p>
 <h2 id="2-the-listing-and-the-code"><a class="header" href="#2-the-listing-and-the-code">2. The listing and the code</a></h2>
 <p>Every device starts with one human act. On <code>live</code>, the terminal’s fleet owner lists it at a
-store by its serial, <code>POST /v1/merchant-stores/{StoreIdentification}/terminals</code>, and the POS
-vendor’s <code>admin</code> lists a register by its serial, <code>POST /v1/registers</code> (both in
-<code>docs/api/openapi.yaml</code>, tagged <code>operator</code>). The <code>201</code> holds the
+store by its serial, <code>POST /v1/merchant-stores/{StoreIdentification}/terminals</code> (in the Operator
+API, which FUNDiMO gives a vendor with an <code>admin</code> server directly), and the POS vendor’s <code>admin</code>
+lists a register by its serial, <code>POST /v1/registers</code> (in <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a>, as
+<code>listRegister</code>, tagged <code>registers</code>). The <code>201</code> holds the
 device’s id, <code>POIIdentification</code> or <code>RegisterIdentification</code>, and its <code>PairingCode</code>:</p>
 <pre><code class="language-json">{ "POIIdentification": "poi_...", "SerialNumber": "SN-0001", "State": "listed", "PairingCode": "bronze.farm.loop.prism.tempo" }
 </code></pre>
@@ -463,8 +485,8 @@ gives it to the installer, read aloud, sent, or shown as a QR code (The QR code,
 installer types or scans it into your app’s enrolment screen at the device (The enrolment
 screen). It is kept out of every log, the app’s
 own among them. A fresh one comes from <code>POST /v1/terminals/{POIIdentification}/pairing-code</code>,
-which also re-pairs a <code>paired</code> terminal, or for a register from
-<code>POST /v1/registers/{RegisterIdentification}/pairing-code</code>.</p>
+which also re-pairs a <code>paired</code> terminal and is in the Operator API, or for a register from
+<code>POST /v1/registers/{RegisterIdentification}/pairing-code</code>, in <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a>.</p>
 <p>In the sandbox the listing is done for you: your tester’s world holds a terminal of your own,
 <code>-yours</code>, listed with the serial <code>&lt;tester&gt;-yours</code>. <code>POST /sandbox/v1/codes</code> gives its code,
 under your tester’s key:</p>
@@ -478,9 +500,12 @@ under your tester’s key:</p>
 </code></pre>
 <p>Enrol with that code and that <code>SerialNumber</code> within 15 minutes. A new code re-pairs <code>-yours</code>,
 so its sandbox key is refused on its upgrade until it enrols. Past 6 codes an hour the route
-answers <code>429 sandbox_rate</code>. <code>Role: register</code> is not built yet, and answers
-<code>400 invalid_field</code>: until it is, a POS app on a device runs the sandbox on a server’s code,
-as <a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a> walks.</p>
+answers <code>429 sandbox_rate</code>.</p>
+<p>A register is tried in a world of its own kind (In the sandbox, above), where
+<code>{"Role":"register"}</code> gives your world’s register’s code and its <code>SerialNumber</code>,
+<code>&lt;tester&gt;-register</code>. It re-pairs the register, so the register takes no sale until it enrols.
+A world’s kind does not change: a world of a server’s register answers <code>{"Role":"register"}</code>
+with <code>400 invalid_field</code>.</p>
 <h3 id="the-word-list"><a class="header" href="#the-word-list">The word list</a></h3>
 <p>The list is <a href="words.txt"><code>docs/api/words.txt</code></a>: 1,024 words, one a line, each 3 to 6 letters <code>a</code> to <code>z</code>. The
 sandbox serves it as <a href="words.txt"><code>/docs/api/words.txt</code></a>, and its MCP server as <code>mw://docs/words.txt</code>. Each
@@ -1352,7 +1377,7 @@ read by this table, which is <a href="terminal.html"><code>docs/api/terminal.md<
 <tr><th>What the device sees</th><th>What it does next</th></tr>
 </thead>
 <tbody>
-<tr><td>A close, a reset, a timeout, or any failure with no TLS alert</td><td>The normal backoff (<a href="terminal.html"><code>docs/api/terminal.md</code></a>, Reconnect), which resets only once a connection has stayed open 10 seconds. It says nothing about a certificate</td></tr>
+<tr><td>A close, a reset, a timeout, or any failure with no TLS alert</td><td>The normal backoff: wait 1 second, double the wait after each failure up to 30 seconds, and add a little randomness. A terminal’s connection resets it only once it has stayed open 10 seconds (<a href="terminal.html"><code>docs/api/terminal.md</code></a>, Reconnect), and a register’s once a call is answered with anything but a <code>429</code> or a <code>5xx</code>. It says nothing about a certificate</td></tr>
 <tr><td>A TLS alert naming the certificate: <code>certificate_expired</code>, <code>bad_certificate</code>, <code>certificate_unknown</code>, <code>unknown_ca</code> or <code>decrypt_error</code>. Only where the middleware ends TLS itself</td><td>Back off an hour. After three, an hour apart, tell the installer the device needs a new code, and keep trying hourly</td></tr>
 <tr><td><code>401 certificate_expired</code> or <code>401 certificate_invalid</code></td><td>Back off an hour. After three, an hour apart, tell the installer the device needs a new code, and keep trying hourly</td></tr>
 <tr><td><code>401 certificate_required</code></td><td>A client’s own bug, or a route it has no certificate for: enrol first</td></tr>
@@ -1429,8 +1454,8 @@ An installer or a store’s staff uses it at the first enrolment and at each re-
 person can make at the device: most with the device alone, and the few that need more, a sale
 sent to the device, or the app’s own log or tests, say so. A <strong>Must</strong> is one an app is not ready
 for a store without. A <strong>Should</strong> is one an app meets unless its vendor can say why it does not.
-A register’s app enrols on a server’s code in the sandbox (step 2), so its screen is first tried
-at staging.</p>
+A register’s app tries its screen in the sandbox, in a world of a register on a device (step 2),
+as a terminal’s app does on <code>-yours</code>.</p>
 <p>A conformance run does not check this screen. It judges what a terminal sends on its connection,
 and sees no screen (<a href="sandbox.html"><code>docs/api/sandbox.md</code></a>, What a green run does not check).</p>
 <h3 id="how-a-person-reaches-it"><a class="header" href="#how-a-person-reaches-it">How a person reaches it</a></h3>
@@ -1464,7 +1489,7 @@ device to another environment (SCREEN-13).</p>
 <tr><td>SCREEN-8</td><td>Where the device has a camera or a scanner, a way to scan the code’s QR code into the same field (step 2, The QR code)</td><td>Should</td><td>Scan a QR code of a code, and see its five words in the field</td></tr>
 <tr><td>SCREEN-9</td><td>The five words, as the app read them, are shown before the person taps to enrol, and the enrolment is sent on that tap alone, never on a scan or on the fifth word typed</td><td>Must</td><td>Type or scan a code, and see that nothing is sent until you tap</td></tr>
 <tr><td>SCREEN-10</td><td>Where the serial to send is the device’s own, as it is outside the sandbox, and the device reports it (step 5), the screen shows that serial, read each time the screen opens, not typed and not editable. A serial kept from an earlier enrolment is never shown in its place</td><td>Must</td><td>Outside the sandbox, compare the serial on the screen with the one printed on the device</td></tr>
-<tr><td>SCREEN-11</td><td>Where the serial to send is not one the device reports, the screen takes it typed, in a field that is empty each time the screen opens and never filled from an earlier enrolment, and says which serial it asks for. In the sandbox a world names its own, <code>&lt;tester&gt;-yours</code>, the <code>SerialNumber</code> that <code>POST /sandbox/v1/codes</code> answered beside the code, and the screen asks for that one. On a device whose SDK gives no serial (step 5), it asks for the one printed on the device</td><td>Must</td><td>Enrol in the sandbox, open the screen again, and see the serial’s field empty</td></tr>
+<tr><td>SCREEN-11</td><td>Where the serial to send is not one the device reports, the screen takes it typed, in a field that is empty each time the screen opens and never filled from an earlier enrolment, and says which serial it asks for. In the sandbox a world names its own, <code>&lt;tester&gt;-yours</code> for a terminal’s app, or in a world of a register on a device <code>&lt;tester&gt;-register</code> for the register’s app, the <code>SerialNumber</code> that <code>POST /sandbox/v1/codes</code> answered beside the code, and the screen asks for that one. On a device whose SDK gives no serial (step 5), it asks for the one printed on the device</td><td>Must</td><td>Enrol in the sandbox, open the screen again, and see the serial’s field empty</td></tr>
 <tr><td>SCREEN-12</td><td>The environment it will enrol into, by the name <a href="environments.html"><code>docs/api/environments.md</code></a> gives it, the sandbox or staging, and its base URL’s host, taken from the list the app holds and never from an address typed (What you need)</td><td>Must</td><td>Read the environment on the screen before you tap to enrol</td></tr>
 <tr><td>SCREEN-13</td><td>On a device that holds a certificate, the screen offers no other environment. Moving a device to another environment is clearing the app’s data, a deliberate act, as <a href="environments.html"><code>docs/api/environments.md</code></a> says, and never a choice on this screen, so no code from another environment, a sandbox code anyone can take among them, moves a device in service</td><td>Must</td><td>On a device enrolled, open the screen, and find no way to choose another environment</td></tr>
 <tr><td>SCREEN-14</td><td>The state the device is in: not enrolled; or enrolled, as which terminal by its <code>POIIdentification</code>, or which register by its <code>RegisterIdentification</code>, in which environment, and its certificate’s dates, <code>NotAfter</code> and <code>RenewFrom</code>, as the last <code>201</code> or daily check answered them</td><td>Must</td><td>Read the state on a device not enrolled, and on one enrolled</td></tr>
@@ -1489,7 +1514,7 @@ may have used one, or spent the code.</p>
 <tbody>
 <tr><td><code>403 code_not_valid</code></td><td>The code or the serial was not taken. Check that the serial on the screen is the one the code was given for, then ask whoever gave you the code for a new one</td></tr>
 <tr><td><code>403 attestation_failed</code></td><td>This device did not pass the middleware’s check of its hardware and software. Tell the app’s support. The code stays good for its 15 minutes, less this try</td></tr>
-<tr><td><code>403 app_identity_unknown</code></td><td>This build of the app is not registered in this environment. Tell the app’s support. The code stays good for its 15 minutes, less this try</td></tr>
+<tr><td><code>403 app_identity_unknown</code></td><td>This build of the app is not registered in this environment. Tell the app’s support. The code stays good for its 15 minutes, less this try. On a device that runs two apps, check first that the code was given for this app</td></tr>
 <tr><td><code>403 model_not_allowed</code></td><td>This model of device is not yet allowed. Ask whoever gave you the code to have it allowed, then try again within the code’s 15 minutes, or later with a new code</td></tr>
 <tr><td><code>400 invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> or <code>invalid_field</code></td><td>The app could not make its request. Tell the app’s support</td></tr>
 <tr><td><code>429</code> from the edge, whose body is not an <code>Error</code></td><td>Too many enrolments came from this network just now. Wait a minute, then tap to enrol again: the app sends the same enrolment (SCREEN-18). The code was not read</td></tr>

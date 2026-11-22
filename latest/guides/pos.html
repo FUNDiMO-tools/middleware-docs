@@ -58,10 +58,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../searchindex-a7e42865.js";
+            window.path_to_searchindex_js = "../searchindex-122325d1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f470377e.js"></script>
+        <script src="../toc-3b0d6c91.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.3.2, 21-Nov-2026 · <a href="../../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../../versions.html">all releases</a></p>
 
 <p>This guide is also a PDF, to print or keep: <a href="fundimo-middleware-integration-guide-pos.pdf">fundimo-middleware-integration-guide-pos.pdf</a>.</p>
 <div class="mw-guide">
@@ -672,7 +672,7 @@ status<span style="color: #d73948">=</span><span style="color: #198810">$</span>
 <li>A <code>pos</code> server, for sales and linking.</li>
 <li>An <code>admin</code> server, for your back office.</li>
 </ul>
-<p>Ask FUNDiMO for an <code>admin</code> server if your back office lists your registers and other servers. Your <code>admin</code> server can then list more servers:</p>
+<p>Ask FUNDiMO for an <code>admin</code> server if your back office lists your registers and other servers. FUNDiMO gives you the Operator API with your <code>admin</code> server. Your <code>admin</code> server can then list more servers with a call of the Operator API:</p>
 <pre><code data-lang="sh"><span style="color: #4b69c6">curl</span> -s -X POST <span style="color: #198810">"</span><span style="color: #198810">$</span><span style="color: #198810">MW</span><span style="color: #198810">/v1/vendors/ven_.../servers</span><span style="color: #198810">"</span> \
   --cert admin-chain.pem --key admin.key \
   -H <span style="color: #198810">'</span><span style="color: #198810">Content-Type: application/json</span><span style="color: #198810">'</span> \
@@ -701,7 +701,7 @@ status<span style="color: #d73948">=</span><span style="color: #198810">$</span>
   -d <span style="color: #198810">'</span><span style="color: #198810">{}</span><span style="color: #198810">'</span></code></pre>
 <div>Response: <code>201</code>, with <code>RegisterIdentification</code> (the register's id), <code>Kind</code> <code>server</code> and <code>State</code> <code>active</code>. Your <code>pos</code> server names the register in <code>Mw-Register</code> on that register's calls. The register can send sales to no terminal until you link it to one at the counter (<a href="#s-link">step 3.1</a>).</div>
 <p>Give each register its own <code>RegisterIdentification</code>. Never send the sales of two registers with one <code>RegisterIdentification</code>. A retry must name the same register as the first send. If it does not, it makes a second sale.</p>
-<div><strong>If your register is an app on a device.</strong> A register on a device holds its own certificate. Thus your <code>admin</code> server lists it with the serial number on the device: <code>POST /v1/registers</code> with its <code>SerialNumber</code>. The response holds the device's pairing code. FUNDiMO's onboarding team can also list the register and give this pairing code (<a href="#help">Get help</a>). This pairing code is five different words of FUNDiMO's word list, <a href="https://mw.sandbox.fundimo.com.au/docs/api/words.txt"><code>/docs/api/words.txt</code></a>. The words are in lower case and joined by dots, for example <code>bronze.farm.loop.prism.tempo</code>. The pairing code is valid for 15 minutes and for one use. The installer opens your app's enrolment screen from the app's own menu or settings, with only the device. The installer types the words, or scans them from a QR code. The app then enrols as <code>onboarding-device.md</code> shows. Its section "The enrolment screen" gives the requirements of that screen. In the sandbox, a register on a device enrols with a server's pairing code (<a href="#s-enrol-sandbox">step 1.8</a>). The sandbox does not have a register's own pairing code yet.</div>
+<div><strong>If your register is an app on a device.</strong> A register on a device holds its own certificate. Thus your <code>admin</code> server lists it with the serial number on the device: <code>POST /v1/registers</code> with its <code>SerialNumber</code>. The response holds the device's pairing code. FUNDiMO's onboarding team can also list the register and give this pairing code (<a href="#help">Get help</a>). This pairing code is five different words of FUNDiMO's word list, <a href="https://mw.sandbox.fundimo.com.au/docs/api/words.txt"><code>/docs/api/words.txt</code></a>. The words are in lower case and joined by dots, for example <code>bronze.farm.loop.prism.tempo</code>. The pairing code is valid for 15 minutes and for one use. The installer opens your app's enrolment screen from the app's own menu or settings, with only the device. The installer types the words, or scans them from a QR code. The app then enrols as <code>onboarding-device.md</code> shows. Its section "The enrolment screen" gives the requirements of that screen. In the sandbox, a register on a device is tried in a world of its own. <code>POST /sandbox/v1/keys</code> with <code>{"Register":"device"}</code> opens that world. <code>POST /sandbox/v1/codes</code> with <code>{"Role":"register"}</code> gives the register's own pairing code and its serial number. The serial number is your <code>TesterIdentification</code> and <code>-register</code>, for example <code>sbx-3f9a1c2e7b10-register</code>. <code>sandbox.md</code> § 1 and § 4, step 8, walk it.</div>
 <h3 id="s-renew">2.4 Automate the renewal of every certificate</h3>
 <p>Your POS software must renew each certificate automatically. No person does it. Once a day, your software asks FUNDiMO if it must renew. From day 15, the answer is yes, and your software renews. After its <code>NotAfter</code>, a certificate cannot renew. Its server then needs a new pairing code, from a new listing. Thus put the renewal in your software. Each certificate in use must have one live instance that renews it.</p>
 <p>The daily question is <code>GET /v1/certificates/self</code>, on the certificate. To test it manually, send it with <code>curl</code>:</p>
@@ -827,7 +827,7 @@ status<span style="color: #d73948">=</span><span style="color: #198810">$</span>
 <tr><td><code>mw://fields/{Message}/{Path}</code></td><td>No</td><td>One row, for example <code>mw://fields/Sale/TransactionDetails.TotalAmount</code></td></tr>
 <tr><td><code>mw://refusals</code></td><td>No</td><td>Every code that FUNDiMO and the sandbox give, what it means, and what to do next</td></tr>
 <tr><td><code>mw://conformance</code></td><td>No</td><td>The conformance scenarios, and the assertions that judge each</td></tr>
-<tr><td><code>mw://docs/openapi.yaml</code><br><code>mw://docs/terminal.md</code><br><code>mw://docs/llms.txt</code></td><td>No</td><td>The OpenAPI document, the terminal contract and the index</td></tr>
+<tr><td><code>mw://docs/openapi-pos.yaml</code><br><code>mw://docs/terminal.md</code><br><code>mw://docs/llms.txt</code></td><td>No</td><td>The OpenAPI document for a POS, the terminal contract and the index</td></tr>
 <tr><td><code>mw://onboarding/server</code><br><code>mw://onboarding/device</code><br><code>mw://onboarding/linking</code></td><td>No</td><td>Enrolment of a server, enrolment of an app on a device, and linking at the counter</td></tr>
 <tr><td><code>mw://report-key</code></td><td>No</td><td>The public key that verifies a conformance report's signature</td></tr>
 </tbody>
@@ -875,7 +875,7 @@ status<span style="color: #d73948">=</span><span style="color: #198810">$</span>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/llms.txt"><code>/llms.txt</code></a></td><td>The index of every page below</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/sandbox.md"><code>/docs/api/sandbox.md</code></a></td><td>Start here. Your sandbox key and test world, the POS journey, the MCP server, conformance, and every code that the sandbox adds</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/environments.md"><code>/docs/api/environments.md</code></a></td><td>The sandbox and staging: the address of each, the differences, and how to move from the sandbox to staging</td></tr>
-<tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/openapi.yaml"><code>/docs/api/openapi.yaml</code></a></td><td>The calls, the sale and its statuses, and every refusal with what to do</td></tr>
+<tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a></td><td>The calls, the sale and its statuses, and every refusal with what to do</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/onboarding-server.md"><code>/docs/api/onboarding-server.md</code></a></td><td>Your server's pairing code, private key and certificate, with code for curl, Rust and Java. Also <code>Mw-Register</code>, the listing of registers, and renewal</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/linking.md"><code>/docs/api/linking.md</code></a></td><td>Linking a register to a terminal at the counter. What your register shows for each response</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/onboarding-device.md"><code>/docs/api/onboarding-device.md</code></a></td><td>For a register that is an app on a device</td></tr>
@@ -935,7 +935,7 @@ status<span style="color: #d73948">=</span><span style="color: #198810">$</span>
 </tbody>
 </table>
 <h3 id="loc-5">FUNDiMO's own names</h3>
-<p>These names are FUNDiMO's, not ISO 20022's. The other names of FUNDiMO's API in this guide are FUNDiMO's too. <code>openapi.yaml</code>, <code>sandbox.md</code> and <code>conformance.json</code> define them.</p>
+<p>These names are FUNDiMO's, not ISO 20022's. The other names of FUNDiMO's API in this guide are FUNDiMO's too. <code>openapi-pos.yaml</code>, <code>sandbox.md</code> and <code>conformance.json</code> define them. The Operator API defines the names of the calls of your <code>admin</code> server that are not in <code>openapi-pos.yaml</code>.</p>
 <table>
 <thead>
 <tr><th>Name</th><th>What it is</th></tr>

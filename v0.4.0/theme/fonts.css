@@ -1,0 +1,29 @@
+/* The site's two typefaces, the main site's: Oswald for display, DM Sans for text. Each is the
+   latin subset of its variable weight axis, served from the release itself, from fonts/ beside
+   this file with each one's licence, the SIL Open Font License 1.1. build.sh copies them there
+   from docs/site/vendor/fonts/. Each page of the book links this file, each reference page, and
+   the list of releases. A character outside the subset is drawn in the next family a stack names. */
+
+@font-face {
+    font-family: "Oswald";
+    font-style: normal;
+    font-weight: 200 700;
+    font-display: swap;
+    src: url("fonts/oswald-latin-wght-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "DM Sans";
+    font-style: normal;
+    font-weight: 100 1000;
+    font-display: swap;
+    src: url("fonts/dm-sans-latin-wght-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "DM Sans";
+    font-style: italic;
+    font-weight: 100 1000;
+    font-display: swap;
+    src: url("fonts/dm-sans-latin-wght-italic.woff2") format("woff2");
+}

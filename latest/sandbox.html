@@ -58,10 +58,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-a7e42865.js";
+            window.path_to_searchindex_js = "searchindex-122325d1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f470377e.js"></script>
+        <script src="toc-3b0d6c91.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.3.2, 21-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-the-sandbox"><a class="header" href="#middleware-the-sandbox">Middleware: the sandbox</a></h1>
 <p>13-Nov-2026.</p>
@@ -258,6 +258,7 @@ a little randomness.</p>
   "ExpiryDateTime": "2026-12-10T04:12:33Z",
   "MerchantIdentification": "sbx-3f9a1c2e7b10-M1",
   "RegisterIdentification": "reg_...",
+  "Register": "server",
   "Terminals": { "approve": "sbx-3f9a1c2e7b10-approve", "decline": "sbx-3f9a1c2e7b10-decline", "technical": "...", "slow": "...", "late": "...", "silent": "...", "card": "...", "manual": "...", "yours": "sbx-3f9a1c2e7b10-yours" },
   "McpEndpoint": "https://sandbox.mw.invalid/mcp",
   "Enrolment": { "Role": "server", "PairingCode": "...", "Next": "Read mw://onboarding/server. This code lasts 15 minutes. POST /sandbox/v1/codes gives another." },
@@ -273,11 +274,14 @@ named after it.</li>
 <li><code>ExpiryDateTime</code> is when the key and the world end, 30 days on. After it the key is refused,
 and a new key is a new world.</li>
 <li><code>MerchantIdentification</code> is your world’s one store: every sale of yours names it.</li>
-<li><code>RegisterIdentification</code> is your world’s one register, which your key acts for and which
-a server’s certificate names in <code>Mw-Register</code>.</li>
+<li><code>RegisterIdentification</code> is your world’s one register, which your key acts for. In a world
+of a server’s register, a server’s certificate names it in <code>Mw-Register</code>; in a world of a
+register on a device, your app enrols as it.</li>
+<li><code>Register</code> is your world’s kind, <code>server</code> or <code>device</code>.</li>
 <li><code>Terminals</code> are your world’s nine terminals (step 2).</li>
 <li><code>Enrolment</code> holds a pairing code for a <code>pos</code> server on your world, good 15 minutes (step 6).
-It is a secret, as the key is.</li>
+It is a secret, as the key is. In a world of a register on a device it holds no code (A world
+for a POS app on a device, below).</li>
 </ul>
 <div class="table-wrapper">
 <table>
@@ -286,12 +290,30 @@ It is a secret, as the key is.</li>
 </thead>
 <tbody>
 <tr><td><code>201</code></td><td></td><td>A key and a world exist</td><td>Keep the key</td></tr>
+<tr><td><code>400</code></td><td><code>invalid_field</code></td><td><code>Register</code> is neither <code>server</code> nor <code>device</code></td><td>Send one of the two, or none</td></tr>
+<tr><td><code>400</code></td><td><code>unknown_field</code></td><td>The body is a JSON object naming a member other than <code>Register</code></td><td>Send <code>Register</code> alone, or no body</td></tr>
 <tr><td><code>429</code></td><td><code>sandbox_key_rate</code></td><td>The sandbox has issued as many keys as it may this hour, counted across every caller</td><td>Try again in an hour</td></tr>
 <tr><td><code>503</code></td><td><code>sandbox_full</code></td><td>The sandbox holds as many testers as it may</td><td>Keys free up as they expire. Try again in an hour</td></tr>
 <tr><td><code>503</code></td><td><code>store_unavailable</code></td><td>The sandbox’s store did not answer, and no key was made</td><td>Retry with the normal backoff</td></tr>
 </tbody>
 </table>
 </div>
+<p><strong>A world for a POS app on a device.</strong> A world’s one register is a server’s, which a POS on its
+own server names in <code>Mw-Register</code>, unless you ask for a register on a device: an app on a till
+that enrols as the register itself, with its own key and certificate, and sends no
+<code>Mw-Register</code>.</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/sandbox/v1/keys" -H 'Content-Type: application/json' \
+  -d '{"Register":"device"}'
+</code></pre>
+<p>The answer is the <code>201</code> above, with three differences: <code>Register</code> is <code>device</code>;
+<code>RegisterIdentification</code> is your register on a device, listed with the serial
+<code>&lt;tester&gt;-register</code>; and <code>Enrolment</code> holds no code, <code>{ "Role": "register", "SerialNumber": "sbx-3f9a1c2e7b10-register", "Next": "..." }</code>. Your register takes sales on your key from the
+start, and asking for its code takes it off sale until your app enrols (4. The POS journey, step
+8). A world keeps its kind for its life: to try both kinds of POS, take a key for each. With no
+body, a body that is not a JSON object, or no <code>Register</code>, the world is a server’s, as
+<code>"Register": "server"</code> asks; any other <code>Register</code> is <code>400 invalid_field</code>, naming it, and no key
+is made, as is any other member, <code>400 unknown_field</code>. A body past 1,024 bytes is not read, and
+gives a server’s world.</p>
 <p><strong>The sandbox’s TLS mode.</strong> <code>mw://world</code>’s <code>TlsMode</code> states which this sandbox runs. In
 <code>direct</code>, the mode of a sandbox with a CA on your own machine, the sandbox ends TLS itself, so a
 certificate it does not take can end the handshake with a TLS alert. In <code>forwarded</code>, the mode of
@@ -303,7 +325,9 @@ a dead certificate does).</p>
 <h2 id="2-your-world"><a class="header" href="#2-your-world">2. Your world</a></h2>
 <p>Each terminal’s id is your <code>TesterIdentification</code>, a <code>-</code>, and a suffix. All nine terminals
 exist from the moment the key is issued, each is bound to your register, and your key may send
-a sale to any of them and read it. Another tester’s ids answer as if they did not exist.</p>
+a sale to any of them while your register is <code>active</code>, and read its sales whatever the
+register’s state: in a world of a register on a device, its code takes it off sale until your app
+enrols (4. The POS journey, step 8). Another tester’s ids answer as if they did not exist.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -441,9 +465,11 @@ states its own release and reads no other: it never calls staging. Staging’s o
 <tr><td><code>mw://environments</code></td><td><code>text/markdown</code></td><td>No</td><td>The two environments, the sandbox and staging, and each one’s base URL</td></tr>
 <tr><td><code>mw://fields</code></td><td><code>application/json</code></td><td>No</td><td>The field catalogue: one row for each field of each message</td></tr>
 <tr><td><code>mw://fields/{Message}/{Path}</code></td><td><code>application/json</code></td><td>No</td><td>One row, such as <code>mw://fields/Sale/TransactionDetails.TotalAmount</code>. A resource template</td></tr>
-<tr><td><code>mw://refusals</code></td><td><code>application/json</code></td><td>No</td><td>Every code the middleware and the sandbox answer with, and <code>sandbox_fault</code>, which a log line alone carries: what it means, and what to do next</td></tr>
+<tr><td><code>mw://refusals</code></td><td><code>application/json</code></td><td>No</td><td>Every code the middleware and the sandbox answer with, and <code>sandbox_fault</code>, which a log line alone carries: what it means, and what to do next. Also served as <a href="refusals.json"><code>/docs/api/refusals.json</code></a></td></tr>
 <tr><td><code>mw://conformance</code></td><td><code>application/json</code></td><td>No</td><td>The conformance scenarios, and the assertions each is judged by</td></tr>
-<tr><td><code>mw://docs/openapi.yaml</code></td><td><code>application/yaml</code></td><td>No</td><td>The OpenAPI document</td></tr>
+<tr><td><code>mw://docs/openapi-pos.yaml</code></td><td><code>application/yaml</code></td><td>No</td><td>The OpenAPI document for a POS: the routes a POS calls, the five its own <code>admin</code> server calls on its registers among them</td></tr>
+<tr><td><code>mw://docs/openapi-terminal.yaml</code></td><td><code>application/yaml</code></td><td>No</td><td>The OpenAPI document for a terminal: the routes a terminal calls over HTTP, and the schemas of the frames on its WebSocket</td></tr>
+<tr><td><code>mw://docs/pos.md</code></td><td><code>text/markdown</code></td><td>No</td><td>For a POS: what the register shows at each state, cancelling, refunding, and every code by route</td></tr>
 <tr><td><code>mw://docs/terminal.md</code></td><td><code>text/markdown</code></td><td>No</td><td>The terminal contract</td></tr>
 <tr><td><code>mw://docs/llms.txt</code></td><td><code>text/plain</code></td><td>No</td><td>The index of these documents</td></tr>
 <tr><td><code>mw://docs/words.txt</code></td><td><code>text/plain</code></td><td>No</td><td>The word list, one word a line: a device’s pairing code is five of its words, and a terminal’s word when linking a pair of them</td></tr>
@@ -451,7 +477,7 @@ states its own release and reads no other: it never calls staging. Staging’s o
 <tr><td><code>mw://onboarding/server</code></td><td><code>text/markdown</code></td><td>No</td><td>Enrolling a server for its certificate</td></tr>
 <tr><td><code>mw://onboarding/linking</code></td><td><code>text/markdown</code></td><td>No</td><td>Linking a register to a terminal at the counter</td></tr>
 <tr><td><code>mw://report-key</code></td><td><code>application/json</code></td><td>No</td><td>The public key a report’s signature verifies with</td></tr>
-<tr><td><code>mw://world</code></td><td><code>application/json</code></td><td>Yes</td><td>Your world’s ids, its expiry, how each terminal takes a refund and answers a <code>StatusRequest</code> and an <code>Abort</code>, the timers in force, the TLS mode, and in <code>SignIn</code> the sign-in credential your store holds, with the published secret it signs with</td></tr>
+<tr><td><code>mw://world</code></td><td><code>application/json</code></td><td>Yes</td><td>Your world’s ids and its kind, <code>Register</code>, its expiry, how each terminal takes a refund and answers a <code>StatusRequest</code> and an <code>Abort</code>, the timers in force, the TLS mode, and in <code>SignIn</code> the sign-in credential your store holds, with the published secret it signs with</td></tr>
 </tbody>
 </table>
 </div>
@@ -460,9 +486,11 @@ states its own release and reads no other: it never calls staging. Staging’s o
 is no reference. A URI no resource has is JSON-RPC <code>-32602</code>, <code>Resource not found</code>.</p>
 <p>The same files are served over plain HTTP, for a reader with no MCP client: <code>/llms.txt</code>, also
 at <code>/</code>, <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a> (this document), <a href="environments.html"><code>/docs/api/environments.md</code></a>,
-<code>/docs/api/openapi.yaml</code>, <a href="terminal.html"><code>/docs/api/terminal.md</code></a>, <a href="fields.json"><code>/docs/api/fields.json</code></a>,
-<a href="conformance.json"><code>/docs/api/conformance.json</code></a>, <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>,
-<a href="linking.html"><code>/docs/api/linking.md</code></a> and <a href="words.txt"><code>/docs/api/words.txt</code></a>.</p>
+<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, <a href="openapi-terminal.yaml"><code>/docs/api/openapi-terminal.yaml</code></a>, <a href="pos.html"><code>/docs/api/pos.md</code></a>,
+<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, <a href="fields.json"><code>/docs/api/fields.json</code></a>, <a href="conformance.json"><code>/docs/api/conformance.json</code></a>,
+<a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, <a href="linking.html"><code>/docs/api/linking.md</code></a> and
+<a href="words.txt"><code>/docs/api/words.txt</code></a>. <code>mw://refusals</code>’s rows are served at <a href="refusals.json"><code>/docs/api/refusals.json</code></a>, with this
+sandbox’s own address in each <code>Next</code> that names one.</p>
 <h3 id="tools"><a class="header" href="#tools">Tools</a></h3>
 <div class="table-wrapper">
 <table>
@@ -500,7 +528,7 @@ reads as any sale.</p>
 </thead>
 <tbody>
 <tr><td>1</td><td>Read what this is</td><td><code>GET /llms.txt</code></td><td>Nothing can fail but the network</td></tr>
-<tr><td>2</td><td>Take a key</td><td><code>curl -s -X POST "$SANDBOX/sandbox/v1/keys"</code></td><td><code>503 sandbox_full</code>: try again in an hour</td></tr>
+<tr><td>2</td><td>Take a key</td><td><code>curl -s -X POST "$SANDBOX/sandbox/v1/keys"</code>, or for an app on a till that is its own register with <code>-d '{"Register":"device"}'</code> (step 1)</td><td><code>503 sandbox_full</code>: try again in an hour</td></tr>
 <tr><td>3</td><td>Add the server, then start a new session, or call it with <code>curl</code></td><td><code>claude mcp add</code> or <code>curl</code>, as in step 3</td><td>A mistyped key connects, and the first tool that needs a key answers <code>key_not_recognised</code>, with the <code>curl</code> line</td></tr>
 <tr><td>4</td><td>Learn the fields</td><td><code>mw://world</code>, <code>describe_field</code>, <code>mw://fields</code></td><td><code>describe_field</code> on a path no message has: <code>invalid_argument</code>, and <code>Next</code> names <code>mw://fields</code></td></tr>
 <tr><td>5</td><td>Check a first sale</td><td><code>validate_message</code> with <code>Kind: "Sale"</code></td><td><code>Accepted: false</code>, the code, the fields, and <code>Next</code></td></tr>
@@ -525,8 +553,8 @@ key, holding the read up to 25 seconds for a change, until it settles:</p>
 </code></pre>
 <p>with the <code>TransactionReference</code> from the <code>202</code> in place of the one here. If an answer is lost,
 send the same sale again with the same <code>IdempotencyKey</code>: a repeat is answered <code>200</code> with the
-sale as it stands, and never makes a second sale. <code>mw://docs/openapi.yaml</code>, also served as
-<code>/docs/api/openapi.yaml</code>, holds every route, field and refusal.</p>
+sale as it stands, and never makes a second sale. <code>mw://docs/openapi-pos.yaml</code>, also served as
+<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, holds every route a POS calls, with its fields and its refusals.</p>
 <p><strong>A refund.</strong> Once a sale reads <code>ACSP</code>, a refund of it, the whole amount or a part, is a
 <code>POST /v1/sales</code> of its own: <code>TransactionType</code> <code>RFND</code>, the sale’s <code>TransactionReference</code> in
 <code>OriginalTransaction</code>, the amount to refund in <code>TotalAmount</code>, your own reference for the refund,
@@ -548,11 +576,47 @@ cashier what it has refunded already, from its own records. Two refusals leave t
 and create nothing: <code>409 sale_not_refundable</code>, a sale the middleware cannot refund here, so
 refund at the terminal or another way; and <code>409 terminal_cannot_refund</code>, a terminal that has not
 declared refunds, so choose one that has.</p>
-<p>Step 8: your POS enrols as your world’s <code>pos</code> server. The code is the <code>201</code>’s <code>Enrolment</code>, or
-<code>POST /sandbox/v1/codes</code> with <code>{"Role":"server"}</code> under your key gives a fresh one, good 15
-minutes, up to 6 an hour. <code>mw://onboarding/server</code>, also served as
-<a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, walks it from the key to the certificate. A POS app on a
-device enrols on a <code>server</code> code too.</p>
+<p><strong>Cancel a sale.</strong> A register with a cancel button cancels a sale or a refund still running with
+<code>POST /v1/sales/{TransactionReference}/abort</code>, under the key that made it, with no body and
+<code>Content-Length: 0</code>. To see both sides, send a sale from your own code to <code>-manual</code>, then cancel
+it within the sale’s 30 seconds:</p>
+<pre><code class="language-sh">curl -s -X POST -H 'Authorization: Bearer sbx_...' -H 'Content-Length: 0' \
+  "$SANDBOX/v1/sales/sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a/abort"
+</code></pre>
+<p>The answer is <code>202</code> with the sale as it stands, <code>PDNG</code>. <code>terminal_next_instruction</code> gives the
+sale’s <code>Instruction</code>, and called again its <code>Abort</code>. Answer with <code>terminal_send_outcome</code>, <code>RJCT</code>
+with <code>StatusReasonInformation.Reason</code> <code>DS02</code>, and the sale reads <code>RJCT</code> with <code>DS02</code>; answer
+<code>ACSP</code> instead, and it reads as a cancel that came too late. For a one-line try, a sale to <code>-slow</code>
+cancelled within its 8 seconds reads <code>RJCT</code> with <code>DS02</code>. <a href="pos.html"><code>/docs/api/pos.md</code></a> says what your
+register shows at each answer.</p>
+<p>Step 8, a POS on its own server, in a world of a server’s register: it enrols as your world’s
+<code>pos</code> server. The code is the <code>201</code>’s <code>Enrolment</code>, or <code>POST /sandbox/v1/codes</code> with
+<code>{"Role":"server"}</code> under your key gives a fresh one, good 15 minutes, up to 6 an hour.
+<code>mw://onboarding/server</code>, also served as <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, walks it from the key
+to the certificate.</p>
+<p>Step 8, an app on a till that is its own register: in a world of a register on a device (step
+1), it enrols as your world’s register. Register your app first with <code>Role</code> <code>register</code>
+(<code>POST /sandbox/v1/app-identities</code>). <code>POST /sandbox/v1/codes</code> with <code>{"Role":"register"}</code> under
+your key gives the register’s code, five words, with its <code>SerialNumber</code>, <code>&lt;tester&gt;-register</code>,
+good 15 minutes, up to 6 an hour with every other code. The code re-pairs the register: until
+your app enrols with it, your world’s register takes no sale: on your key it is <code>403 not_permitted</code>, through the MCP server’s <code>send_sale</code> the tool answers <code>not_permitted</code>, and a
+terminal run’s sale is refused the same, so its step does not pass.
+<code>mw://onboarding/device</code>, also served as <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, walks it from the app
+identity to the certificate, and its section The enrolment screen says what the screen a person
+types the code into must be. The app then sells on its own certificate and sends no
+<code>Mw-Register</code>, and a run with <code>Side: "pos"</code> judges what it sends from that certificate.</p>
+<p>A world’s kind does not change: a world of a server’s register answers <code>{"Role":"register"}</code>
+with <code>400 invalid_field</code>, and a world of a register on a device answers <code>{"Role":"server"}</code> the
+same.</p>
+<p><strong>One device, two apps.</strong> A device that runs a payment terminal’s app and a POS app is
+supported: two apps, each registered for its own role, each with its own key, code and
+certificate, as <code>-yours</code> and as your world’s register. In a world of a register on a device,
+<code>-yours</code> is linked to that register from the start, so the POS app’s sale to <code>-yours</code> reaches the
+payment app on the same device. To try linking on that one screen, the POS app unlinks <code>-yours</code>
+(<code>DELETE /v1/links/{POIIdentification}</code>), the payment app connects, and the POS app asks at your
+world’s <code>MerchantIdentification</code> (<code>POST /v1/links</code>): the payment app shows two words, and the
+person reads them there and types them into the POS app, which sends them
+(<a href="linking.html"><code>/docs/api/linking.md</code></a>). The two apps pass the word to each other by no other path.</p>
 <p>A conformance run of a working POS takes under 3 minutes.</p>
 <h2 id="5-the-terminal-journey"><a class="header" href="#5-the-terminal-journey">5. The terminal journey</a></h2>
 <p>For any terminal. Steps 1 to 4 of the POS journey come first, then:</p>
@@ -643,8 +707,9 @@ fleet’s payment system as that system needs them (<a href="terminal.html"><cod
 world’s store, its attachment and its credential hold none of <code>AcceptorIdentification</code>,
 <code>UserName</code> and <code>ApplicationIdentification</code>, so the group holds its four keys and its
 <code>LoginReference</code> alone. This sandbox serves no route that sets them. A fleet sets them with
-three operations <code>/docs/api/openapi.yaml</code> tags <code>operator</code>: the store’s own number at its
-fleet’s payment system with <code>PUT /v1/merchant-stores/{StoreIdentification}/acceptor</code>,
+three operations of the Operator API, which FUNDiMO gives a vendor with an <code>admin</code> server
+directly: the store’s own number at its fleet’s payment system with
+<code>PUT /v1/merchant-stores/{StoreIdentification}/acceptor</code>,
 <code>ApplicationIdentification</code> on the credential
 <code>POST /v1/vendors/{VendorIdentification}/signin-credentials</code> sets, and <code>UserName</code> on its
 attachment to the store, <code>PUT /v1/merchant-stores/{StoreIdentification}/signin-credential</code>.</p>
@@ -771,7 +836,7 @@ seconds longer for each step your terminal meets.</p>
 <tr><td><code>resend</code></td><td><code>-approve</code>: the answer to your first create is lost on purpose, after the sale is made. Where a front end stands before the sandbox, a load balancer ending TLS, it comes as a <code>503</code> whose body is text and not an <code>Error</code>; on a sandbox you reach with nothing in front, the connection closes with no status. Treat either as an unknown outcome, and send the same body with the same <code>IdempotencyKey</code></td><td>Hold the outcome 2 seconds, so the connection drops first, then reconnect and send it</td></tr>
 <tr><td><code>restart</code></td><td><code>-slow</code>: a 5 second outage from your first read</td><td>Reconnect with the contract’s backoff, and send the outcome</td></tr>
 <tr><td><code>lost_instruction</code></td><td>Not run: nothing changes for a POS, which reads the terminal’s answer as any late outcome</td><td>The sandbox takes your terminal’s place for the sale, so its instruction never reaches you: reconnect with <code>Mw-Message-Functions: SSMQ</code> declared, and when a <code>StatusRequest</code> asks about the sale, answer <code>RJCT</code> with <code>AB11</code></td></tr>
-<tr><td><code>cancel</code></td><td>Not run: a POS need not offer a cancel, and one that does reads the abort’s answers in <code>/docs/api/openapi.yaml</code></td><td>With <code>SSAB</code> declared in <code>Mw-Message-Functions</code>, take the sale and hold its payment, no card presented: 3 seconds after the instruction the sandbox cancels the sale, as a POS does with <code>POST /v1/sales/{TransactionReference}/abort</code>, and your terminal is sent an <code>Abort</code>. Stop the payment and answer <code>RJCT</code> with <code>DS02</code></td></tr>
+<tr><td><code>cancel</code></td><td>Not run: a POS need not offer a cancel, and one that does tries it as Cancel a sale, above, walks it</td><td>With <code>SSAB</code> declared in <code>Mw-Message-Functions</code>, take the sale and hold its payment, no card presented: 3 seconds after the instruction the sandbox cancels the sale, as a POS does with <code>POST /v1/sales/{TransactionReference}/abort</code>, and your terminal is sent an <code>Abort</code>. Stop the payment and answer <code>RJCT</code> with <code>DS02</code></td></tr>
 <tr><td><code>sign_in</code></td><td>Not run: nothing changes for a POS, since the terminal signs in by itself</td><td>With <code>SASQ</code> declared in <code>Mw-Message-Functions</code>, start your terminal holding no session at its fleet’s payment system, asleep, its screen off and its app not in front. The sale’s instruction wakes it: send one <code>LoginNeeded</code>, open the <code>LoginRequest</code> and verify its group as step 5 walks, report the outcome of your sign-in at your fleet’s system with <code>LoginResponse</code>, naming the answer’s <code>LoginReference</code>, then answer the sale</td></tr>
 <tr><td><code>sign_in_none</code></td><td>Not run: nothing changes for a POS, since the terminal signs in by itself</td><td>With <code>SASQ</code> declared and no session held, take the sale: the sandbox ends your store’s sign-in attachment for the step and restores it after, so your <code>LoginNeeded</code> is refused <code>sign_in_not_available</code>. Ask no more on that connection, and answer the sale <code>RJCT</code> with <code>AB11</code></td></tr>
 </tbody>
@@ -854,19 +919,19 @@ Each is stated where the link says.</p>
 <ul>
 <li><strong><code>UNKN</code> tells the cashier to check the terminal before another tender</strong>, as soon as the
 sale reads <code>UNKN</code>, while it keeps reading: not only once reading gives up. <code>UNKN</code> means a
-payment may have been taken (<code>/docs/api/openapi.yaml</code>, <code>Sale</code>’s <code>TransactionStatus</code>).</li>
+payment may have been taken (<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, <code>Sale</code>’s <code>TransactionStatus</code>).</li>
 <li><strong>A <code>404 sale_not_found</code> on an id the middleware gave you reads as unknown</strong>, not as no sale
-(<code>/docs/api/openapi.yaml</code>, <code>readSale</code>’s <code>404</code>).</li>
+(<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, <code>readSale</code>’s <code>404</code>).</li>
 <li><strong><code>409 idempotency_conflict</code> after a lost answer reads as unknown</strong>: a sale may exist under
 that key, so the cashier checks the terminal before another tender
-(<code>/docs/api/openapi.yaml</code>, <code>createSale</code>’s <code>409</code>).</li>
+(<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, <code>createSale</code>’s <code>409</code>).</li>
 <li><strong>A field you do not know is ignored, and a <code>TransactionStatus</code> you do not know reads as
-<code>UNKN</code></strong> (<code>/docs/api/openapi.yaml</code>, <code>Sale</code>).</li>
+<code>UNKN</code></strong> (<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, <code>Sale</code>).</li>
 <li><strong>No card, bank or personal data in any string you choose</strong>, an item’s description or an
 invoice reference among them (the top of this page, and <code>/llms.txt</code>).</li>
 <li><strong>The people who use your POS are your responsibility.</strong> The middleware takes it that a user of
 your POS was authenticated to make each sale and refund, and judges nothing about that user
-(<code>/docs/api/openapi.yaml</code>, <code>info</code>).</li>
+(<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, <code>info</code>).</li>
 </ul>
 <p>For a terminal:</p>
 <ul>
@@ -914,11 +979,15 @@ certificate and gives it to you; the sandbox does not serve it, since a root fet
 connection it vouches for proves nothing.</li>
 </ul>
 <h2 id="7-codes-the-sandbox-adds"><a class="header" href="#7-codes-the-sandbox-adds">7. Codes the sandbox adds</a></h2>
-<p>The middleware’s own codes are in the OpenAPI document and the terminal contract. The table holds the
-codes only the sandbox answers, and five of the middleware’s as the sandbox gives them:
+<p>The middleware’s own codes are in <a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, <a href="openapi-terminal.yaml"><code>/docs/api/openapi-terminal.yaml</code></a>
+and the terminal contract, and a code only the Operator API’s routes answer is in the Operator
+API. The table holds the codes only the sandbox answers, and five of the middleware’s as the
+sandbox gives them:
 <code>sale_not_found</code> from a tool, <code>not_found</code> from its gate, <code>terminal_offline</code>, whose <code>Next</code> here
 names your own terminal, <code>code_not_valid</code>, whose <code>Next</code> here names the route that gives a
-fresh code, and <code>ca_unavailable</code>, which a sandbox with no CA answers itself. <code>mw://refusals</code> holds every code of both, with its meaning and <code>Next</code>.
+fresh code, and <code>ca_unavailable</code>, which a sandbox with no CA answers itself.
+<a href="refusals.json"><code>/docs/api/refusals.json</code></a>, also <code>mw://refusals</code>, holds every code of both, with its meaning and
+<code>Next</code>, and <a href="pos.html"><code>/docs/api/pos.md</code></a> lists the middleware’s codes a POS meets, route by route.
 One row has no code: the <code>429</code> an edge in front of the sandbox gives on <code>POST /v1/enrol</code>, whose
 body is the edge’s own.</p>
 <div class="table-wrapper">
@@ -946,7 +1015,7 @@ body is the edge’s own.</p>
 <tr><td><code>sandbox_full</code></td><td><code>503</code> at the key route</td><td>The sandbox holds as many testers as it may</td><td>Try again in an hour</td></tr>
 <tr><td><code>not_found</code></td><td><code>404</code> at any path the sandbox does not serve</td><td>A path off the sandbox’s routes, <code>/v1</code> routes of the middleware’s that a sandbox does not serve among them</td><td>Start at <code>GET /llms.txt</code> or <code>POST /mcp</code>, and take a key with <code>POST /sandbox/v1/keys</code>. Under <code>/v1</code> only sales, the connect route, health, enrolment, a holder’s own certificate, the link routes and <code>/v1/register/terminals</code> are served here. The gate’s answer for a path off its routes says so in <code>Next</code>; a <code>404</code> the relay gives on a path the gate passes, such as one deep under <code>/v1/links/</code>, has no <code>Next</code></td></tr>
 <tr><td><code>terminal_offline</code></td><td><code>409</code> at <code>/v1/sales</code> and at <code>/v1/sales/{TransactionReference}/abort</code>, and <code>send_sale</code></td><td>Nothing holds the terminal the sale names, or its queue of frames is full</td><td>If it is <code>&lt;tester&gt;-yours</code>, your terminal is not connected to it: connect it, as the terminal contract says. A simulated terminal connects again by itself. Then send the same sale with the same <code>IdempotencyKey</code>: it is unspent. On an abort, the terminal was sent nothing: abort again once it is connected, or have the cashier cancel at the terminal</td></tr>
-<tr><td><code>code_not_valid</code></td><td><code>403</code> at <code>/v1/enrol</code></td><td>The pairing code is wrong, unknown, expired or spent, or the serial is not the one it names</td><td>Check the code and send again inside its 15 minutes. Past that, <code>POST /sandbox/v1/codes</code> with <code>{"Role":"server"}</code> or <code>{"Role":"terminal"}</code> under your key gives a fresh one. In live, ask whoever listed the principal</td></tr>
+<tr><td><code>code_not_valid</code></td><td><code>403</code> at <code>/v1/enrol</code></td><td>The pairing code is wrong, unknown, expired or spent, or the serial is not the one it names</td><td>Check the code and send again inside its 15 minutes. Past that, <code>POST /sandbox/v1/codes</code> with <code>{"Role":"server"}</code>, <code>{"Role":"terminal"}</code> or, in a world of a register on a device, <code>{"Role":"register"}</code> under your key gives a fresh one. In live, ask whoever listed the principal</td></tr>
 <tr><td><code>ca_unavailable</code></td><td><code>503</code> at <code>/v1/enrol</code></td><td>This sandbox has no CA, so it issues no certificate, or its CA could not sign this once</td><td>With no CA, the answer’s <code>Next</code> says so: no certificate is issued and no conformance run can start here, and a sandbox in <code>direct</code> or <code>forwarded</code> with a CA issues one. Otherwise retry on the normal backoff with the same code and the same key: the code is not spent</td></tr>
 </tbody>
 </table>

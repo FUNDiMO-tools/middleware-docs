@@ -58,10 +58,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-a7e42865.js";
+            window.path_to_searchindex_js = "searchindex-122325d1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f470377e.js"></script>
+        <script src="toc-3b0d6c91.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,14 +198,54 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.3.2, 21-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="what-changed"><a class="header" href="#what-changed">What changed</a></h1>
+<h2 id="v040-22-nov-2026"><a class="header" href="#v040-22-nov-2026">v0.4.0 (22-Nov-2026)</a></h2>
+<p>The sandbox now serves the OpenAPI document as one file for each reader, a POS’s and a
+terminal’s, in place of the whole document, and a POS’s own page with every code in one file.
+It can also open a world whose one register is an app on a device, so a POS app on a till enrols
+as its own register, with a five-word code, and sells and runs the POS conformance run on its own
+certificate before staging. No route, body, setting, job or migration of the relay changed.</p>
+<h3 id="breaking"><a class="header" href="#breaking">Breaking</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: The sandbox serves the OpenAPI document by reader (21-Nov-2026).
+<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a> and <a href="openapi-terminal.yaml"><code>/docs/api/openapi-terminal.yaml</code></a>, and
+<code>mw://docs/openapi-pos.yaml</code> and <code>mw://docs/openapi-terminal.yaml</code>, replace the whole document,
+<code>/llms.txt</code> lists both, and a terminal’s file holds the schemas of its frames. The old address,
+<code>/docs/api/openapi.yaml</code>, answers <code>410</code> naming both, and the old resource,
+<code>mw://docs/openapi.yaml</code>, answers <code>Resource not found</code> naming both. Read your side’s file in
+its place; an <code>admin</code> server’s routes, but the five on a POS vendor’s registers, are in the
+Operator API, which FUNDiMO gives with that server.</li>
+</ul>
+<h3 id="added"><a class="header" href="#added">Added</a></h3>
+<ul>
+<li><strong>POS</strong>: A POS’s own page, and every code in one file (21-Nov-2026). The sandbox serves
+<a href="pos.html"><code>/docs/api/pos.md</code></a>, also <code>mw://docs/pos.md</code>: what a register shows at each state of a sale and
+a refund, cancelling, refunding, and every code a POS meets, by route. It serves
+<a href="refusals.json"><code>/docs/api/refusals.json</code></a>, the rows of <code>mw://refusals</code> with its own address in each <code>Next</code> that
+names one, and <code>/llms.txt</code> lists both. <code>mw://refusals</code> is now written two spaces in, the same
+JSON.</li>
+<li><strong>POS</strong>: A sandbox world of a register on a device (22-Nov-2026). <code>POST /sandbox/v1/keys</code> with
+<code>{"Register":"device"}</code> opens a world whose register is a device’s, <code>&lt;tester&gt;-register</code>, bound
+to the nine terminals, with no <code>pos</code> server. <code>POST /sandbox/v1/codes</code> with <code>{"Role":"register"}</code>
+gives that register’s five-word code and re-pairs it, so it takes no sale until the app enrols.
+A <code>Side: pos</code> conformance run in that world judges the register’s own newest certificate.</li>
+</ul>
+<h3 id="changed"><a class="header" href="#changed">Changed</a></h3>
+<ul>
+<li><strong>POS</strong>: The key route’s <code>201</code> and <code>mw://world</code> name the world’s kind (22-Nov-2026). Both carry
+<code>Register</code>, <code>server</code> or <code>device</code>, and a device world’s <code>mw://world</code> its
+<code>RegisterSerialNumber</code>. A key route body naming another member, or another <code>Register</code>, is now
+<code>400 unknown_field</code> or <code>400 invalid_field</code> where it gave a server’s world, and one that is not
+a JSON object still gives a server’s world. <code>code_not_valid</code>’s <code>Next</code> names
+<code>{"Role": "register"}</code> too.</li>
+</ul>
 <h2 id="v032-21-nov-2026"><a class="header" href="#v032-21-nov-2026">v0.3.2 (21-Nov-2026)</a></h2>
 <p>The published docs site’s build now gives the site the look of FUNDiMO’s main site, in a light
 theme and a dark one. The device walk now says that other makers’ devices are intended. No route,
 body, setting, job or migration changed.</p>
-<h3 id="changed"><a class="header" href="#changed">Changed</a></h3>
+<h3 id="changed-1"><a class="header" href="#changed-1">Changed</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: The device walk, <code>mw://onboarding/device</code>, now says it is written for one
 maker’s devices today (21-Nov-2026). Other makers’ devices are intended, each with a walk of
@@ -221,14 +261,14 @@ connection when a POS’s sale reaches another of its instances, and the termina
 after any close. The OpenAPI document’s descriptions are now short and its <code>info.version</code> stays
 <code>1.0.0</code>: apart from the new field and the edge’s <code>411</code>, no route, body, field, bound, enum or
 refusal changed.</p>
-<h3 id="breaking"><a class="header" href="#breaking">Breaking</a></h3>
+<h3 id="breaking-1"><a class="header" href="#breaking-1">Breaking</a></h3>
 <ul>
 <li><strong>Terminal</strong>: A terminal conformance run’s sale now carries <code>CashierIdentification</code>
 (19-Nov-2026). A terminal that refuses an <code>Instruction</code> holding a key it does not know cannot
 pass the run. Ignore the key, or use it. A report that was green is not green again until the
 terminal does this.</li>
 </ul>
-<h3 id="added"><a class="header" href="#added">Added</a></h3>
+<h3 id="added-1"><a class="header" href="#added-1">Added</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: <code>CashierIdentification</code>, the user of the POS who made a sale or a refund
 (19-Nov-2026). A POS may send it, as an identifier it chooses and never the person’s name. The
@@ -236,7 +276,7 @@ middleware checks its shape and sends it on in the <code>Instruction</code>. A t
 passes it on, or ignores it, and one that checks frames against the published field list takes
 the new list.</li>
 </ul>
-<h3 id="changed-1"><a class="header" href="#changed-1">Changed</a></h3>
+<h3 id="changed-2"><a class="header" href="#changed-2">Changed</a></h3>
 <ul>
 <li><strong>POS</strong>: A POS’s rules stay in the OpenAPI document, each said once, on the operation, answer
 or field it governs (19-Nov-2026). ISO 20022’s definitions are in <a href="fields.json"><code>/docs/api/fields.json</code></a> and
@@ -270,7 +310,7 @@ enrols each register again. A terminal that does not know whether a payment was 
 out and reports it, and a POS can now read the amount the host approved and ask the terminal to
 cancel a sale in flight. A terminal can now ask the middleware to sign it in to its fleet’s own
 payment system, with a credential its fleet set for the store.</p>
-<h3 id="breaking-1"><a class="header" href="#breaking-1">Breaking</a></h3>
+<h3 id="breaking-2"><a class="header" href="#breaking-2">Breaking</a></h3>
 <ul>
 <li><strong>Terminal</strong>: A terminal conformance run has a ninth scenario, <code>lost_instruction</code>
 (16-Nov-2026). The run takes the terminal’s place for one sale, so its instruction never
@@ -293,7 +333,7 @@ this.</li>
 <code>/v1/installations</code> answers <code>404 not_found</code>. A POS changes each name, lists and enrols each
 register again, and takes a new sandbox key.</li>
 </ul>
-<h3 id="added-1"><a class="header" href="#added-1">Added</a></h3>
+<h3 id="added-2"><a class="header" href="#added-2">Added</a></h3>
 <ul>
 <li><strong>Terminal</strong>: The upgrade’s header <code>Mw-Message-Functions</code>, and the <code>StatusRequest</code> frame
 (16-Nov-2026). A connection that declares <code>SSMQ</code> is sent a <code>StatusRequest</code> for each sale the
@@ -400,7 +440,7 @@ was opened, so there is no <code>LoginReference</code> to name.</li>
 terminal spends one answer, and so does each restart of it. <code>sign_in_limited</code> still answers an
 ask within 60 seconds of the last answer.</li>
 </ul>
-<h3 id="changed-2"><a class="header" href="#changed-2">Changed</a></h3>
+<h3 id="changed-3"><a class="header" href="#changed-3">Changed</a></h3>
 <ul>
 <li><strong>Terminal</strong>: A terminal that does not know whether a payment was taken must find out
 (16-Nov-2026). It asks its host for the payment by the reference it stored, or reverses it and
@@ -418,7 +458,7 @@ with FUNDiMO.</li>
 <p>The first numbered release. Every build from 07-Nov-2026 to this one called itself 0.1.0, so a
 report naming <code>SandboxVersion</code> 0.1.0 may come from any of them. Its <code>FinishedAt</code> dates it
 against the dated bullets below.</p>
-<h3 id="breaking-2"><a class="header" href="#breaking-2">Breaking</a></h3>
+<h3 id="breaking-3"><a class="header" href="#breaking-3">Breaking</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: Every operation but <code>GET /v1/health</code> needs a credential, the terminal’s
 WebSocket upgrade among them (08-Nov-2026). In the sandbox it is a sandbox key, sent as
@@ -448,7 +488,7 @@ server’s code did not change. A device code issued before the deploy and not y
 refused. A device whose answer was lost in the 15 minutes before the deploy is paired again,
 with a new code.</li>
 </ul>
-<h3 id="added-2"><a class="header" href="#added-2">Added</a></h3>
+<h3 id="added-3"><a class="header" href="#added-3">Added</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: The relay, and the terminal contract’s version 1 (07-Nov-2026). A POS
 creates a sale with <code>POST /v1/sales</code>, and reads it with <code>GET /v1/sales/{TransactionReference}</code>,
@@ -524,7 +564,7 @@ screen.</li>
 in <code>serverInfo.version</code> and the first sentence of its <code>instructions</code>. Each host states it in
 <code>GET /v1/health</code>, as <code>Version</code>, and a report in <code>SandboxVersion</code>.</li>
 </ul>
-<h3 id="changed-3"><a class="header" href="#changed-3">Changed</a></h3>
+<h3 id="changed-4"><a class="header" href="#changed-4">Changed</a></h3>
 <ul>
 <li><strong>POS</strong>: A sale outlives a restart of the middleware (08-Nov-2026). The same <code>IdempotencyKey</code>
 after a restart answers the sale as it stands. <code>503 at_capacity</code> is gone, and

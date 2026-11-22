@@ -58,10 +58,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-a7e42865.js";
+            window.path_to_searchindex_js = "searchindex-122325d1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f470377e.js"></script>
+        <script src="toc-3b0d6c91.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.3.2, 21-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-linking-a-register-to-a-terminal"><a class="header" href="#middleware-linking-a-register-to-a-terminal">Middleware: linking a register to a terminal</a></h1>
 <p>11-Nov-2026.</p>
@@ -217,8 +217,14 @@ and keeps the binding, so the POS keeps nothing but the terminal’s id, and a s
 <p><strong>A POS never sees a word.</strong> No answer the middleware gives a POS holds one, at any step, and that is
 the whole proof: the person at the register typed what only someone holding that terminal could
 read. If you also write the terminal’s app, never pass its word to the POS by any other path.</p>
+<p>On one device that runs both, a payment terminal’s app and a POS app, the same holds: the
+terminal’s app shows the word, and the person reads it there and types it into the POS app. The
+terminal’s app shows it until a <code>LinkEnded</code> comes or its <code>ExpiresInSeconds</code> pass, whichever is
+first, as <a href="terminal.html"><code>docs/api/terminal.md</code></a>, Linking to a register, says, and keeps it while the person
+moves to the POS app to type it. The two apps pass it to each other by no other path.</p>
 <p>Read it beside <a href="terminal.html"><code>docs/api/terminal.md</code></a>, which says what a terminal shows (Linking to a register),
-and <code>docs/api/openapi.yaml</code>, which holds the schema of every route named here, tagged <code>links</code>.</p>
+and <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a>, which holds the schema of every route a register calls here,
+tagged <code>links</code>.</p>
 <h2 id="in-short"><a class="header" href="#in-short">In short</a></h2>
 <ol>
 <li>The register asks to link at its store: <code>POST /v1/links</code> with the store’s
@@ -429,9 +435,9 @@ because the device and its serial are the same.</p>
 <h2 id="what-a-stores-fleet-owner-can-do"><a class="header" href="#what-a-stores-fleet-owner-can-do">What a store’s fleet owner can do</a></h2>
 <p>The fleet owner that listed a store’s terminals sees each with the register and the vendor bound
 to it, at <code>GET /v1/merchant-stores/{StoreIdentification}/terminals</code>, so a binding it never made
-is visible (in <code>docs/api/openapi.yaml</code>, tagged <code>operator</code>). It acts on its <code>admin</code> server’s
-certificate, here <code>admin-chain.pem</code> and <code>admin.key</code> (<a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a>), and can
-do two things a POS cannot.</p>
+is visible. It acts on its <code>admin</code> server’s certificate, here <code>admin-chain.pem</code> and <code>admin.key</code>
+(<a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a>), and can do two things a POS cannot. The three routes of this
+section are in the Operator API, which FUNDiMO gives a vendor with an <code>admin</code> server directly.</p>
 <p><strong>End a binding</strong>, of any register, with <code>DELETE /v1/terminals/{POIIdentification}/binding</code>.
 The terminal’s owner may, and so may the operator:</p>
 <pre><code class="language-sh">curl -s -X DELETE "$MW/v1/terminals/poi_.../binding" \
