@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-122325d1.js";
+            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-a-poss-sales-refunds-and-codes"><a class="header" href="#middleware-a-poss-sales-refunds-and-codes">Middleware: a POS’s sales, refunds and codes</a></h1>
 <p>21-Nov-2026.</p>
@@ -211,7 +211,9 @@ refunding, and every code a POS meets, by route. Each route’s fields and answe
 <p>The register uses its own words. The words in these tables are an example.</p>
 <p>A POS on its own server names the register each call is for in <code>Mw-Register</code>, on every sale,
 read, cancel and link: <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, 6. Name the register. An app on a till
-holds its register’s own certificate, and sends none.</p>
+holds its register’s own certificate, and sends none, or one naming itself: on a sale, read,
+cancel or link, naming another register, or sending it twice, is <code>403 not_permitted</code> (An app on a
+till, below).</p>
 <h2 id="a-sales-states"><a class="header" href="#a-sales-states">A sale’s states</a></h2>
 <p><code>POST /v1/sales</code> answers <code>202</code> with the sale, <code>PDNG</code>, and its <code>TransactionReference</code>. Read it
 with <code>GET /v1/sales/{TransactionReference}?wait_seconds=25</code>, which holds the read up to 25
@@ -246,6 +248,15 @@ its timers.</li>
 <li>The middleware keeps a sale 24 hours after it settles or goes <code>UNKN</code>, and 30 minutes in the
 sandbox. A read after that is <code>404 sale_not_found</code>: on an id the middleware gave you, the
 register shows Unknown, never that there was no sale.</li>
+<li>How long to read an <code>UNKN</code> sale: until a read settles it or answers <code>404 sale_not_found</code>, each
+held read followed by the next, as after any answer. The cashier does not wait for it: the
+register shows Unknown at once, the cashier checks the terminal, and the register keeps
+reading. A sale that went <code>UNKN</code> at its deadline holds its terminal until its outcome comes or
+the hold ends, 300 seconds from the sale at the default settings and 75 in the sandbox. A
+register that restarts meanwhile reads the sale again from its own records. A sale that never
+settles is FUNDiMO’s to reconcile against the acquirer’s record, from its own list of the sales
+that read <code>UNKN</code>: the middleware is not the record of a payment, and a register reads only its
+own sales, one at a time.</li>
 <li>Read a <code>TransactionStatus</code> your register does not know as <code>UNKN</code>, and ignore a field it does
 not know.</li>
 <li>While a person is signed in at the terminal by its fleet’s own means, the terminal takes no POS
@@ -268,9 +279,9 @@ shows Unknown, and the cashier checks the terminal.</p>
 <tr><th>Status and <code>Error.Code</code></th><th>Why</th><th>The register shows</th></tr>
 </thead>
 <tbody>
-<tr><td><code>409 terminal_busy</code></td><td>The terminal holds another sale: one that reads <code>PDNG</code>, or <code>UNKN</code> within the terminal’s hold, 300 seconds from that sale at the default settings and 75 in the sandbox</td><td>Terminal busy</td></tr>
+<tr><td><code>409 terminal_busy</code></td><td>The terminal holds another sale: one that reads <code>PDNG</code>, or <code>UNKN</code> within the terminal’s hold. The hold starts at that sale’s deadline: 180 seconds after the 120-second deadline at the default settings, 300 from the sale, and in the sandbox 45 after 30, 75 from the sale, as <code>mw://world</code>’s <code>TerminalHoldSeconds</code> and <code>SaleDeadlineSeconds</code> give them</td><td>Terminal busy</td></tr>
 <tr><td><code>409 terminal_offline</code></td><td>The terminal is not connected, or its queue of frames is full. It was sent nothing</td><td>Terminal not connected</td></tr>
-<tr><td><code>403 not_permitted</code></td><td>The register is not linked to that terminal; <code>MerchantIdentification</code> is not that store’s; a POS on its own server sent no <code>Mw-Register</code>, or named another register; or the terminal, the register, its store or your vendor is not in a state to take a sale</td><td>This register cannot use that terminal: check the store and the link (<a href="linking.html"><code>/docs/api/linking.md</code></a>)</td></tr>
+<tr><td><code>403 not_permitted</code></td><td>The register is not linked to that terminal; <code>MerchantIdentification</code> is not that store’s; a POS on its own server sent no <code>Mw-Register</code>, or named another register; an app on a till, on its own certificate, named a register not its own; either sent <code>Mw-Register</code> twice, or one of no register’s shape; the register was re-paired with a new code and has not yet enrolled with it; or the terminal, the register, its store or your vendor is not in a state to take a sale</td><td>This register cannot use that terminal: check the store and the link (<a href="linking.html"><code>/docs/api/linking.md</code></a>). An app on a till whose other calls, a read among them, are refused the same, and that sends no <code>Mw-Register</code> or one naming itself, reads it as its holder’s table does, a removal or a re-pair, and says the device may need a new code (<a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, 11. Re-enrol with a new code)</td></tr>
 </tbody>
 </table>
 </div>
@@ -325,7 +336,10 @@ registers at the same store, within its refund window, 90 days at the default se
 whole amount or a part, and more than once, on any terminal there that takes refunds. A refund is
 never refunded.</p>
 <p>At the terminal, the refund asks for a merchant user’s PIN before it is made: whoever holds that
-PIN at the store types it there.</p>
+PIN at the store types it there. A refund the PIN does not pass refunds nothing: it reads <code>RJCT</code>,
+whatever its <code>Reason</code>. The time spent at the PIN counts toward the refund’s deadline, 120 seconds
+at the default settings and 30 in the sandbox, so a refund still waiting for its PIN then reads
+<code>UNKN</code>, until the terminal’s outcome replaces it.</p>
 <p>Read the refund as a sale. <code>ACSP</code>: refunded, and <code>AuthorisedAmount</code> is the amount refunded.
 <code>RJCT</code>: not refunded, whatever its <code>Reason</code>. <code>UNKN</code>: no one knows yet, so the cashier checks the
 terminal before refunding another way, and the register keeps reading and never sends the refund
@@ -356,6 +370,17 @@ by hand, so the sale is not refunded twice.</p>
 the counter, and what the register shows at each answer. Before a till moves to another store,
 unlink each of its terminals: a register still bound at one store cannot link at another, and is
 refused <code>409 register_in_other_store</code>.</p>
+<h2 id="an-app-on-a-till"><a class="header" href="#an-app-on-a-till">An app on a till</a></h2>
+<p>An app on a till that holds its register’s own certificate sells, reads, cancels, refunds and
+links on the same routes, with the same bodies and answers, as a POS on its own server, and sends
+no <code>Mw-Register</code>. One it sends names itself, once: naming another register, sending it twice, or
+one of no register’s shape is <code>403 not_permitted</code> on every one of those calls, a read among them,
+which no new code mends. It enrols as a device does, with a five-word code, a key in the device’s
+keystore and its attestation, and renews its own certificate: <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>.
+In the sandbox it is tried in a world of a register on a device: <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 1. A key
+and a world. A device may also run a payment terminal’s app: two apps, each on its own
+certificate, linked as any register and terminal are, the person reading the word in the
+terminal’s app and typing it into the POS app (<a href="linking.html"><code>/docs/api/linking.md</code></a>).</p>
 <h2 id="the-codes-a-pos-meets-by-route"><a class="header" href="#the-codes-a-pos-meets-by-route">The codes a POS meets, by route</a></h2>
 <p>A refusal’s body is <code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>; in the
 sandbox, its gate’s <code>404</code> and its <code>503 ca_unavailable</code> add <code>Next</code> beside <code>Error</code>. Ignore a key

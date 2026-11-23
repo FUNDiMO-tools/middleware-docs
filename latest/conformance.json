@@ -223,10 +223,10 @@
       "Side": "pos",
       "TerminalSuffix": "",
       "Fault": null,
-      "Instruction": "Not run: a POS need not offer a cancel; one that does reads the abort's answers in `openapi.yaml`.",
+      "Instruction": "Not run: a POS need not offer a cancel; one that does tries it as `/docs/api/sandbox.md` walks it under The POS journey, Cancel a sale.",
       "Assertions": [],
       "AppliesIfDeclared": null,
-      "NotApplicable": "A POS need not offer a cancel; one that does reads the abort's answers in `openapi.yaml`."
+      "NotApplicable": "A POS need not offer a cancel; one that does tries it as `/docs/api/sandbox.md` walks it under The POS journey, Cancel a sale."
     },
     {
       "Id": "approved",

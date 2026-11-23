@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-122325d1.js";
+            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-onboarding-a-device"><a class="header" href="#middleware-onboarding-a-device">Middleware: onboarding a device</a></h1>
 <p>10-Nov-2026.</p>
@@ -266,8 +266,9 @@ of it to <code>POST /v1/enrol</code> (step 6).</li>
 presents the key and the chain at the TLS handshake of every call after, REST and
 WebSocket alike (step 8).</li>
 <li>Once a day it asks <code>GET /v1/certificates/self</code> (step 9). When <code>RenewNow</code> is <code>true</code>, it
-renews with a new key under a new alias, and deletes the old key only after a call on the
-new one has been answered (step 10).</li>
+renews with a new key under a new alias, or sends again as it was a renewal still waiting
+for a verdict, and deletes the old key only after a call on the new one has been answered
+(step 10).</li>
 <li>After a refusal it does what the holder’s table says, and never deletes its key (What a
 holder of a dead certificate does). A device off longer than its certificate re-enrols
 with a new code (step 11).</li>
@@ -276,7 +277,7 @@ menu or settings opens, with the device alone, and again after the first enrolme
 enrolment screen).</li>
 </ol>
 <h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
-<p>The same file is served in the sandbox, where four things differ.</p>
+<p>The same file is served in the sandbox, where five things differ.</p>
 <ul>
 <li>The sandbox’s gate answers <code>404</code> to the operator’s routes. In their place the sandbox has
 two routes of its own, served by its own process, <code>mw-sandbox</code> (the middleware’s
@@ -293,6 +294,10 @@ a debug build counts, so you can prove your package and signing digest before yo
 device. The first live enrolment is where the rest is proven.</li>
 <li>Enrolment needs a sandbox with an issuing certificate. A sandbox run without one answers
 <code>POST /v1/enrol</code> with <code>503 ca_unavailable</code>.</li>
+<li>A code can make a certificate due at once: <code>POST /sandbox/v1/codes</code> with <code>"Due": true</code> beside
+<code>Role</code> gives a code whose certificate is issued 16 days back, so <code>RenewNow</code> is <code>true</code> from its
+first daily check, and renewal, the overlap and their refusals can be tried the same day
+(<a href="sandbox.html"><code>docs/api/sandbox.md</code></a>, 4. The POS journey).</li>
 </ul>
 <h2 id="what-you-need"><a class="header" href="#what-you-need">What you need</a></h2>
 <ul>
@@ -989,7 +994,8 @@ fun enrolDevice(enrolment: Enrolment): Answer = sendUntilAnswered(plain, enrolme
 </code></pre>
 <p><code>SpiffeId</code> is the certificate’s URI. Its host is the trust domain of the deployment that issued
 it, which need not be the address you call, and its first segment is the environment, <code>live</code> or
-<code>sandbox</code>.</p>
+<code>sandbox</code>. In the hosted sandbox its host is staging’s trust domain, the host of staging’s base
+URL (<a href="environments.html"><code>/docs/api/environments.md</code></a>), and its first segment <code>sandbox</code>.</p>
 <p>A register’s answer names <code>RegisterIdentification</code> where a terminal’s names
 <code>POIIdentification</code>. <code>NotAfter</code> is when the certificate ends, 30 days on, and <code>RenewFrom</code> is
 day 15. If an answer is lost, send the same body again inside the code’s 15 minutes, as
@@ -1036,8 +1042,10 @@ fails answers alone, with <code>Fields</code> naming every field of it, sorted.<
 <p>The <code>201</code>’s <code>CertificateChain</code> is two certificates, PEM: the device’s own, then the issuing
 certificate. The device presents both at the handshake of every call from now on (step 8). A
 certificate is public, so the chain needs no protecting, but it belongs to the key under one
-alias, and is kept against that alias. The app keeps the alias of the key it connects with,
-<code>current</code>, and while a new certificate waits for its first use, that one’s, <code>next</code>.</p>
+alias, and is kept against that alias.
+The app keeps the alias of the key it connects with, <code>current</code>; while a new certificate waits
+for its first use, that one’s, <code>next</code>; and while a renewal it sent waits for a verdict, that
+renewal’s alias and body, <code>renewal</code> (step 10).</p>
 <pre><code class="language-kotlin">import android.content.Context
 import java.io.File
 import java.io.IOException
@@ -1061,6 +1069,23 @@ class Identities(context: Context) {
         get() = prefs.getString("next", null)
         set(alias) {
             prefs.edit().putString("next", alias).commit()
+        }
+
+    /**
+     * A renewal sent and not yet settled: the alias of its new key and its body, kept until a
+     * `201` or a `200` of it is kept, or a refusal says no certificate is over its key (step 10).
+     */
+    var renewal: Pair&lt;String, String&gt;?
+        get() {
+            val alias = prefs.getString("renewal-alias", null) ?: return null
+            val body = prefs.getString("renewal-body", null) ?: return null
+            return alias to body
+        }
+        set(sent) {
+            prefs.edit()
+                .putString("renewal-alias", sent?.first)
+                .putString("renewal-body", sent?.second)
+                .commit()
         }
 
     /** Keeps a `201`'s `CertificateChain` against [alias], whole or not at all. */
@@ -1211,9 +1236,10 @@ on 13-Nov-2026. A key in secure hardware is not yet tried.</li>
 answers when the certificate ends, and whether to renew:</p>
 <pre><code class="language-json">{ "NotAfter": "...", "RenewFrom": "...", "RenewNow": true }
 </code></pre>
-<p>Renew when <code>RenewNow</code> is <code>true</code>, and not before. The middleware decides, so the device’s clock does
-not matter. <code>RenewNow</code> reads <code>true</code> only on the newest certificate in use, from <code>RenewFrom</code>
-on, and <code>false</code> on a certificate that is retired.</p>
+<p>Renew when <code>RenewNow</code> is <code>true</code>, and not before, and never while a next certificate waits for its
+first use (step 10). The middleware decides, so the device’s clock does not matter. <code>RenewNow</code>
+reads <code>true</code> only on the newest certificate in use, from <code>RenewFrom</code> on, and <code>false</code> on a
+certificate that is retired.</p>
 <pre><code class="language-kotlin">import android.content.Context
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -1235,7 +1261,8 @@ class DailyCheck(context: Context, params: WorkerParameters) : Worker(context, p
             val client = clientFor(alias, chain)
             val self = Request.Builder().url("$MW/v1/certificates/self").build()
             val answer = call(client, self)
-            if (answer is Answer.Ok &amp;&amp; answer.body.getBoolean("RenewNow")) {
+            // Never while a next waits: a second renewal would retire it (step 10).
+            if (answer is Answer.Ok &amp;&amp; answer.body.getBoolean("RenewNow") &amp;&amp; identities.next == null) {
                 if (renew(client, identities) is Answer.Ok) firstUse(identities)
             }
             // A refusal: the holder's table, below.
@@ -1260,7 +1287,8 @@ certificate does, below). A call that gets no answer is tried again later.</p>
 <h2 id="10-renew-a-new-key-under-a-new-alias"><a class="header" href="#10-renew-a-new-key-under-a-new-alias">10. Renew: a new key under a new alias</a></h2>
 <p>A certificate renews from day 15, always with a new key. So a device proves its state again
 every 15 days, and a device rooted after it enrolled loses its identity within one lifetime of
-a certificate, but on a middleware set to mark (step 3), which marks it instead.</p>
+a certificate, but on a middleware set to mark (step 3), which marks it instead. In the sandbox, a
+certificate enrolled on a code asked with <code>"Due": true</code> is due at once (In the sandbox, above).</p>
 <ol>
 <li>Send <code>POST /v1/certificates/challenge</code> on the current certificate, with no body and with
 <code>Content-Length: 0</code>: over HTTP/1.1, the edge in front of a hosted middleware refuses it
@@ -1269,9 +1297,12 @@ characters, and <code>ExpiresInSeconds</code>, 600.</li>
 <li>Make a new key under a new alias with those 32 bytes as its attestation challenge
 (step 3), and a CSR for it (step 4).</li>
 <li>Send <code>POST /v1/certificates/renew</code> with <code>CertificateSigningRequest</code> and <code>AttestationChain</code>,
-on the current certificate, inside the challenge’s 10 minutes. The <code>201</code> is enrolment’s. If
-an answer is lost, send the same body again: a CSR of the key the middleware issued for last
-answers <code>200</code> with that certificate.</li>
+on the current certificate, inside the challenge’s 10 minutes, and keep the body and the new
+key’s alias until a verdict on them. The <code>201</code> is enrolment’s. If an answer is lost, or a
+<code>2xx</code> comes that the device cannot read or keep, send the same body again, at the next daily
+check if not before, and ask no new challenge meanwhile: a CSR of the key the middleware
+issued for last answers <code>200</code> with that certificate, whatever became of its challenge, and a
+second renewal would retire it.</li>
 <li>Keep the new chain against the new alias, as the next certificate (step 7), and use it from
 the next connection, on a new client of its own (step 8).</li>
 <li>Once a call on the new certificate has been answered, it is current. Only then delete the
@@ -1285,40 +1316,62 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 /**
- * Renews on [client], the current certificate's: a challenge, a new key under a new alias made
- * with it, and the renewal. A certificate issued is kept as the next one.
+ * Renews on [client], the current certificate's. A renewal sent and not yet settled is sent again
+ * as it was, with no new challenge: a certificate may have been issued over its key, and its own
+ * body is answered `200` with that one. Otherwise a challenge, a new key under a new alias made
+ * with it, and the renewal, kept before it is sent. A certificate issued is kept as the next one.
  */
 fun renew(client: OkHttpClient, identities: Identities): Answer {
-    val ask = Request.Builder()
-        .url("$MW/v1/certificates/challenge")
-        .post(ByteArray(0).toRequestBody())
-        .build()
-    val issued = call(client, ask)
-    if (issued !is Answer.Ok) return issued
-    val challenge = requireNotNull(bytesOfHex(issued.body.getString("Challenge"))) {
-        "a challenge is 64 hex characters"
+    val (alias, body) = identities.renewal ?: run {
+        val ask = Request.Builder()
+            .url("$MW/v1/certificates/challenge")
+            .post(ByteArray(0).toRequestBody())
+            .build()
+        val issued = call(client, ask)
+        if (issued !is Answer.Ok) return issued
+        val challenge = requireNotNull(bytesOfHex(issued.body.getString("Challenge"))) {
+            "a challenge is 64 hex characters"
+        }
+        val alias = "mw-" + UUID.randomUUID()
+        makeKey(alias, challenge)
+        val body = JSONObject()
+            .put("CertificateSigningRequest", csrFor(alias))
+            .put("AttestationChain", attestationChainOf(alias))
+            .toString()
+        (alias to body).also { identities.renewal = it }
     }
-
-    val alias = "mw-" + UUID.randomUUID()
-    makeKey(alias, challenge)
-    val body = JSONObject()
-        .put("CertificateSigningRequest", csrFor(alias))
-        .put("AttestationChain", attestationChainOf(alias))
-        .toString()
-        .toRequestBody(JSON)
-    val request = Request.Builder().url("$MW/v1/certificates/renew").post(body).build()
+    val request = Request.Builder()
+        .url("$MW/v1/certificates/renew")
+        .post(body.toRequestBody(JSON))
+        .build()
     val renewed = sendUntilAnswered(client, request)
     if (renewed is Answer.Ok) {
         identities.storeChain(alias, renewed.body.getString("CertificateChain"))
         identities.next = alias
+        identities.renewal = null
+    } else if (renewed is Answer.Refused &amp;&amp; renewed.code in NONE_ISSUED) {
+        // No certificate not yet used is over the key: delete it, unless it is one it keeps.
+        if (alias != identities.current &amp;&amp; alias != identities.next) {
+            KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(alias)
+        }
+        identities.renewal = null
     }
+    // Any other answer is no verdict on the key: the next daily check sends the same body.
     return renewed
 }
 
+/** A renewal's refusals that say no certificate not yet used is over the key it sent. */
+val NONE_ISSUED = setOf(
+    "invalid_json", "unknown_field", "missing_field", "invalid_field", "renewal_not_due",
+    "challenge_not_valid", "attestation_failed", "app_identity_unknown", "model_not_allowed",
+    "renewal_rate",
+)
+
 /**
  * The first use of the next certificate, on a client of its own. Once the middleware has answered on
- * it, it is current, and only then are the old key, and any key a refused renewal left, deleted.
- * Returns whether it moved.
+ * it, it is current, and only then are the old key, and any key a refused renewal or a re-pair left,
+ * deleted. An app holds one identity, of the one environment it chose before its first enrolment
+ * (`/docs/api/environments.md`), so every other `mw-` alias is one of these. Returns whether it moved.
  */
 fun firstUse(identities: Identities): Boolean {
     val next = identities.next ?: return false
@@ -1334,6 +1387,7 @@ fun firstUse(identities: Identities): Boolean {
             identities.forget(alias)
         }
     }
+    identities.renewal = null
     return true
 }
 </code></pre>
@@ -1345,7 +1399,9 @@ the first call on the new certificate gets no answer, go on with the old one, wh
 until then, and try the new one again later.</p>
 <p>Run the daily check, a renewal and a first use one at a time. A second renewal retires a
 certificate the first issued that is not yet used, and the middleware warns the operator of it, as
-the sign of an identity copied.</p>
+the sign of an identity copied.
+So renew only while no next certificate waits for its first use, and send a renewal that waits
+for a verdict again as it was, never a new one in its place.</p>
 <h3 id="when-renewal-is-refused"><a class="header" href="#when-renewal-is-refused">When renewal is refused</a></h3>
 <p>A refusal of a renewal leaves the current certificate as it was.</p>
 <p>Of <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> and <code>invalid_field</code>, the first class that
@@ -1362,9 +1418,9 @@ fails answers alone, with <code>Fields</code> naming every field of it, sorted.<
 <tr><td><code>403</code></td><td><code>attestation_failed</code>, <code>app_identity_unknown</code>, <code>model_not_allowed</code></td><td>The new key’s attestation fails, as at enrolment (step 6)</td><td>The current certificate is good until its <code>NotAfter</code>, and the operator is warned. Fix the cause, and try again with a new challenge at the next daily check</td></tr>
 <tr><td><code>429</code></td><td><code>renewal_rate</code></td><td>5 certificates for this identity in 24 hours</td><td>Back off, and try again tomorrow</td></tr>
 <tr><td><code>403</code></td><td><code>not_permitted</code></td><td>The device or its vendor is not in good standing: removed, suspended or re-paired</td><td>Back off to one hour. The certificate was good and the row refused it</td></tr>
-<tr><td><code>403</code></td><td><code>certificate_retired</code></td><td>The certificate presented is retired</td><td>Renew on the newer certificate if the device holds one. On its newest, stop and tell a person: something else holds a newer certificate of this identity</td></tr>
+<tr><td><code>403</code></td><td><code>certificate_retired</code></td><td>The certificate presented is retired</td><td>Move to the newer certificate if the device holds one, by its first use (step 10). On its newest, stop and tell a person: something else holds a newer certificate of this identity</td></tr>
 <tr><td><code>401</code></td><td><code>certificate_expired</code></td><td>The certificate is past its <code>NotAfter</code></td><td>Re-enrol with a new code (step 11)</td></tr>
-<tr><td><code>503</code></td><td><code>ca_unavailable</code>, <code>attestation_status_unavailable</code>, <code>store_unavailable</code></td><td>The middleware could not sign, holds no fresh status list, or its store did not answer</td><td>Back off and try again with the same body inside the challenge’s 10 minutes, or later with a new challenge and a new key</td></tr>
+<tr><td><code>503</code></td><td><code>ca_unavailable</code>, <code>attestation_status_unavailable</code>, <code>store_unavailable</code></td><td>The middleware could not sign, holds no fresh status list, or its store did not answer</td><td>Back off and send the same body again, at the next daily check if not before, never a new challenge in its place: a <code>store_unavailable</code> may follow a certificate issued, which the same body is answered <code>200</code> with, and where none was, a body holding its <code>AttestationChain</code> is refused <code>403 challenge_not_valid</code> once the challenge’s 10 minutes have passed and the fault has cleared, unless a row above refuses it first</td></tr>
 </tbody>
 </table>
 </div>
@@ -1383,7 +1439,7 @@ read by this table, which is <a href="terminal.html"><code>docs/api/terminal.md<
 <tr><td><code>401 certificate_required</code></td><td>A client’s own bug, or a route it has no certificate for: enrol first</td></tr>
 <tr><td><code>403 certificate_retired</code>, holding a newer certificate than the one presented</td><td>Drop that connection and retry on the newer one, with the same idempotency key where the request carried one</td></tr>
 <tr><td><code>403 certificate_retired</code> on its newest certificate</td><td>Stop, keep any outcome, and tell a person: something else holds a newer certificate of this identity</td></tr>
-<tr><td><code>403 not_permitted</code></td><td>Back off to one hour, keeping any outcome. The certificate was good and the row refused it, which is what a removal or a re-pair reads as</td></tr>
+<tr><td><code>403 not_permitted</code></td><td>Back off to one hour, keeping any outcome. The certificate was good and the row refused it, which is what a removal or a re-pair reads as. A register’s call on a <code>pos</code> route, a sale, read, cancel, link or its list of terminals, is refused so for causes of its own too, its <code>Mw-Register</code> among them: one naming another register, sent twice or of no register’s shape, which no wait and no new code mends (<a href="pos.html"><code>/docs/api/pos.md</code></a>, An app on a till)</td></tr>
 <tr><td><code>403 challenge_not_valid</code></td><td>Ask a new challenge, with a new key</td></tr>
 <tr><td><code>429</code>, <code>503</code>, <code>edge_not_trusted</code> among them</td><td>The normal backoff. <code>503 edge_not_trusted</code> is an edge fault, and the device’s certificate is not in question</td></tr>
 </tbody>
@@ -1394,11 +1450,24 @@ read by this table, which is <a href="terminal.html"><code>docs/api/terminal.md<
 <code>SSLV3_ALERT_CERTIFICATE_UNKNOWN</code>; how a SUNMI device words the other alerts is not yet proven
 on a device. Behind the middleware’s load balancer no handshake fails on a client certificate,
 and the refusal comes as a <code>401</code> or a <code>403</code> instead.</p>
-<p><strong>A device never deletes its key or its certificate on a refusal, any of those above.</strong> A
-device can recover from a mistake of the middleware’s by a fix on the middleware’s side, and a key deleted
-cannot be recovered. A device holding a certificate makes a new key only to renew, or when a
-person brings a new code, and deletes an old key only once a call on the certificate that
-follows it has been answered. A device decides none of this by its own clock.</p>
+<p><strong>A device never deletes its key or its certificate on a refusal, any of those above.</strong> Its key
+is that of a certificate it keeps, the current or the next. A device can recover from a mistake
+of the middleware’s by a fix on the middleware’s side, and a key deleted cannot be recovered. A
+device holding a certificate makes a new key only to renew, or when a person brings a new code,
+and deletes an old key only once a call on the certificate that follows it has been answered. A
+device decides none of this by its own clock.</p>
+<p>A key made for a renewal, which no certificate the device keeps is over, is kept with the
+renewal’s body until a <code>201</code> or a <code>200</code> of it is kept, or the renewal is refused <code>400</code>
+<code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> or <code>invalid_field</code>, <code>409 renewal_not_due</code>, <code>403 challenge_not_valid</code>, <code>attestation_failed</code>, <code>app_identity_unknown</code> or <code>model_not_allowed</code>, or
+<code>429 renewal_rate</code>. Each of those says that no certificate the device could still use is over
+that key, which may be deleted then: a body the middleware cannot read was never issued for; one
+it reads is answered <code>200</code> before any rule that refuses, if its key is that of the newest
+certificate not yet used and not retired; and the gate, which refuses before a renewal is read,
+sends none of them. Any other answer says nothing of the key, <code>403 not_permitted</code>, <code>403 certificate_retired</code> and <code>401 certificate_expired</code> among them, and so do a <code>5xx</code>, a <code>429</code> with no
+<code>Error</code>, no answer and a code no table names: keep the key and the body, and send the body again
+at the next daily check (step 10). An enrolment’s key is kept until a <code>201</code> or a <code>200</code> of it is
+kept, or a new code is typed: past its code’s 15 minutes no answer can bring its certificate, and
+the new code retires any the old one issued (step 11).</p>
 <h2 id="11-re-enrol-with-a-new-code"><a class="header" href="#11-re-enrol-with-a-new-code">11. Re-enrol with a new code</a></h2>
 <p>A device off longer than its certificate, past its <code>NotAfter</code>, re-enrols with a new code. So
 does a device told after three hourly tries that it needs one, and a device its listing party

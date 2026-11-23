@@ -1,6 +1,6 @@
 openapi: '3.1.0'
 info:
-  title: 'Middleware v0.4.0: what a terminal calls'
+  title: 'Middleware v0.5.0: what a terminal calls'
   version: '1.0.0'
   summary: The relay between a point of sale, a payment terminal and FUNDiMO.
   description: |-
@@ -21,7 +21,8 @@ info:
     and an example. A field's name follows ISO 20022 where `fields.json` or `terminal.md` names its
     element; every other name is the middleware's own. A later version may add fields to anything
     the middleware sends, and codes to any open list. An optional field sent as `null` reads as
-    absent.
+    absent. The normal backoff: wait 1 second, double the wait after each failure up to 30 seconds,
+    and add a little randomness; a terminal resets it once a connection has stayed open 10 seconds.
 
     `info.version` counts this document's contract, not the middleware's release. Its major is the
     path family every path is under, `v1` in `/v1/`, and its minor and patch stay 0. It moves only

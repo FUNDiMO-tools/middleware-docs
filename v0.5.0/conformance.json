@@ -1,0 +1,587 @@
+{
+  "DeadlineSeconds": 300,
+  "StepAssertion": {
+    "Id": "step.no_traffic",
+    "Fix": "Your own integration must send what the step's Instruction asks for before its deadline passes."
+  },
+  "Scenarios": [
+    {
+      "Id": "approved",
+      "Side": "pos",
+      "TerminalSuffix": "-approve",
+      "Fault": null,
+      "Instruction": "From your own POS code, send one sale to {terminal}, and read it until it settles.",
+      "Assertions": [
+        {
+          "Id": "approved.one_sale",
+          "Fix": "Your POS must create each sale under one IdempotencyKey, so exactly one create is answered 202."
+        },
+        {
+          "Id": "approved.no_refusal",
+          "Fix": "Your POS sent a message the middleware refused, so change what the answer's Error.Code and Error.Fields name."
+        },
+        {
+          "Id": "approved.result_seen",
+          "Fix": "Your POS must read the sale by its TransactionReference until TransactionStatus reads ACSP."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "declined",
+      "Side": "pos",
+      "TerminalSuffix": "-decline",
+      "Fault": null,
+      "Instruction": "From your own POS code, send one sale to {terminal}, and read it until it settles.",
+      "Assertions": [
+        {
+          "Id": "declined.one_sale",
+          "Fix": "Your POS must create each sale under one IdempotencyKey, so exactly one create is answered 202."
+        },
+        {
+          "Id": "declined.no_refusal",
+          "Fix": "Your POS sent a message the middleware refused, so change what the answer's Error.Code and Error.Fields name."
+        },
+        {
+          "Id": "declined.result_seen",
+          "Fix": "Your POS must read the sale by its TransactionReference until TransactionStatus reads RJCT with StatusReasonInformation.Reason AG07."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "timed_out",
+      "Side": "pos",
+      "TerminalSuffix": "-technical",
+      "Fault": null,
+      "Instruction": "From your own POS code, send one sale to {terminal}, and read it until it settles.",
+      "Assertions": [
+        {
+          "Id": "timed_out.one_sale",
+          "Fix": "Your POS must create each sale under one IdempotencyKey, so exactly one create is answered 202."
+        },
+        {
+          "Id": "timed_out.no_refusal",
+          "Fix": "Your POS sent a message the middleware refused, so change what the answer's Error.Code and Error.Fields name."
+        },
+        {
+          "Id": "timed_out.result_seen",
+          "Fix": "Your POS must read the sale by its TransactionReference until TransactionStatus reads RJCT with StatusReasonInformation.Reason AB11."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "unknown",
+      "Side": "pos",
+      "TerminalSuffix": "-late",
+      "Fault": null,
+      "Instruction": "From your own POS code, send one sale to {terminal}, and read it until it settles.",
+      "Assertions": [
+        {
+          "Id": "unknown.one_sale",
+          "Fix": "Your POS must create each sale under one IdempotencyKey, so exactly one create is answered 202."
+        },
+        {
+          "Id": "unknown.saw_unknown",
+          "Fix": "Your POS must keep reading a sale whose TransactionStatus reads PDNG, often enough to see it read UNKN."
+        },
+        {
+          "Id": "unknown.kept_reading",
+          "Fix": "Your POS must keep reading a sale whose TransactionStatus reads UNKN, because it may still resolve, until it reads ACSP."
+        },
+        {
+          "Id": "unknown.no_second_sale",
+          "Fix": "Your POS must not post the sale again under another IdempotencyKey on UNKN, because a payment may have been taken, so tell the cashier to check the terminal."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "card_field",
+      "Side": "pos",
+      "TerminalSuffix": "-card",
+      "Fault": null,
+      "Instruction": "From your own POS code, send one sale to {terminal}, and read it until it settles: the simulated terminal adds card fields to its outcome, and the middleware drops them.",
+      "Assertions": [
+        {
+          "Id": "card_field.one_sale",
+          "Fix": "Your POS must create each sale under one IdempotencyKey, so exactly one create is answered 202."
+        },
+        {
+          "Id": "card_field.dropped",
+          "Fix": "The fields_dropped line is the relay's and no POS can fail it by what it sends, so nothing in your POS needs to change."
+        },
+        {
+          "Id": "card_field.result_seen",
+          "Fix": "A dropped name in the answer would be the relay's fault and not your POS's, so all this asks of your POS is to read the sale until its TransactionStatus reads ACSP."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "duplicate_key",
+      "Side": "pos",
+      "TerminalSuffix": "-approve",
+      "Fault": null,
+      "Instruction": "From your own POS code, send one sale to {terminal}, send it again with the same IdempotencyKey and the same body, send it a third time with the same IdempotencyKey and another body, and read it until it settles.",
+      "Assertions": [
+        {
+          "Id": "duplicate_key.repeat",
+          "Fix": "Your POS must post the sale a second time with the same IdempotencyKey and the same body, which the middleware answers 200."
+        },
+        {
+          "Id": "duplicate_key.conflict",
+          "Fix": "Your POS must post a third time with the same IdempotencyKey and another body, which the middleware answers 409 idempotency_conflict."
+        },
+        {
+          "Id": "duplicate_key.one_instruction",
+          "Fix": "Your POS must use one IdempotencyKey for all three posts, so the terminal gets one instruction."
+        },
+        {
+          "Id": "duplicate_key.settled",
+          "Fix": "Your POS must name this step's terminal in the first sale, so it is answered 202, reaches approved and leaves the terminal free for the next step."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "resend",
+      "Side": "pos",
+      "TerminalSuffix": "-approve",
+      "Fault": {
+        "Kind": "LoseAnswer",
+        "When": "first_create"
+      },
+      "Instruction": "From your own POS code, send one sale to {terminal}, and read it until it settles: the sandbox loses the answer to your first create, so deal with that as your code would.",
+      "Assertions": [
+        {
+          "Id": "resend.same_key",
+          "Fix": "A retry after a lost answer must use the same IdempotencyKey."
+        },
+        {
+          "Id": "resend.one_instruction",
+          "Fix": "Your POS must retry a lost answer with the same IdempotencyKey and the same body, so the terminal gets one instruction."
+        },
+        {
+          "Id": "resend.result_seen",
+          "Fix": "Your POS must read the sale, or take the answer to the repeated create, until TransactionStatus reads ACSP."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "restart",
+      "Side": "pos",
+      "TerminalSuffix": "-slow",
+      "Fault": {
+        "Kind": "Outage",
+        "Seconds": 5,
+        "When": "first_read"
+      },
+      "Instruction": "From your own POS code, send one sale to {terminal}, and read it until it settles: a simulated restart begins at your first read, so deal with that as your code would.",
+      "Assertions": [
+        {
+          "Id": "restart.one_sale",
+          "Fix": "Your POS must create each sale under one IdempotencyKey, so exactly one create is answered 202."
+        },
+        {
+          "Id": "restart.no_second_sale",
+          "Fix": "Your POS must post nothing more once it holds a 202, during the outage or after it."
+        },
+        {
+          "Id": "restart.saw_outage",
+          "Fix": "Your POS must keep reading through the restart, so that a read is answered 503 sandbox_restarting."
+        },
+        {
+          "Id": "restart.result_seen",
+          "Fix": "Your POS must retry a read answered 503, by the same TransactionReference, until its TransactionStatus reads ACSP."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "lost_instruction",
+      "Side": "pos",
+      "TerminalSuffix": "",
+      "Fault": null,
+      "Instruction": "Not run: nothing changes for a POS: the terminal is asked, and the POS reads its answer as any late outcome.",
+      "Assertions": [],
+      "AppliesIfDeclared": null,
+      "NotApplicable": "Nothing changes for a POS: the terminal is asked, and the POS reads its answer as any late outcome."
+    },
+    {
+      "Id": "cancel",
+      "Side": "pos",
+      "TerminalSuffix": "",
+      "Fault": null,
+      "Instruction": "Not run: a POS need not offer a cancel; one that does tries it as `/docs/api/sandbox.md` walks it under The POS journey, Cancel a sale.",
+      "Assertions": [],
+      "AppliesIfDeclared": null,
+      "NotApplicable": "A POS need not offer a cancel; one that does tries it as `/docs/api/sandbox.md` walks it under The POS journey, Cancel a sale."
+    },
+    {
+      "Id": "approved",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "From your own terminal code on {terminal}, approve the sale the sandbox sends.",
+      "Assertions": [
+        {
+          "Id": "approved.outcome",
+          "Fix": "Your terminal must send an Outcome with TransactionStatus ACSP and the instruction's TransactionReference as received."
+        },
+        {
+          "Id": "approved.amount",
+          "Fix": "Your terminal must state, in TransactionDetails.AuthorisedAmount of every ACSP it sends for the sale, a resend included, the instruction's TotalAmount exactly as received: it adds nothing to it."
+        },
+        {
+          "Id": "approved.no_refusal",
+          "Fix": "Your terminal sent a frame the middleware refused, so change what the Refusal's ResponseReason names."
+        },
+        {
+          "Id": "approved.no_drop",
+          "Fix": "Your terminal sent a field the middleware does not take, so see the fields_dropped line and remove it or correct its value."
+        },
+        {
+          "Id": "approved.settled",
+          "Fix": "Your terminal must send an Outcome the middleware takes, with this sale's TransactionReference, so the sale moves to approved."
+        },
+        {
+          "Id": "approved.one_outcome",
+          "Fix": "Your terminal must send a sale's outcome at most once on each connection, and again only after a reconnect, never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "declined",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "From your own terminal code on {terminal}, decline the sale the sandbox sends.",
+      "Assertions": [
+        {
+          "Id": "declined.outcome",
+          "Fix": "Your terminal must send an Outcome with TransactionStatus RJCT, StatusReasonInformation.Reason AG07 and the instruction's TransactionReference as received."
+        },
+        {
+          "Id": "declined.no_refusal",
+          "Fix": "Your terminal sent a frame the middleware refused, so change what the Refusal's ResponseReason names."
+        },
+        {
+          "Id": "declined.no_drop",
+          "Fix": "Your terminal sent a field the middleware does not take, so see the fields_dropped line and remove it or correct its value."
+        },
+        {
+          "Id": "declined.settled",
+          "Fix": "Your terminal must send an Outcome the middleware takes, with this sale's TransactionReference, so the sale moves to declined."
+        },
+        {
+          "Id": "declined.one_outcome",
+          "Fix": "Your terminal must send a sale's outcome at most once on each connection, and again only after a reconnect, never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "timed_out",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "From your own terminal code on {terminal}, give up on the sale the sandbox sends, with no payment.",
+      "Assertions": [
+        {
+          "Id": "timed_out.outcome",
+          "Fix": "Your terminal must send an Outcome with TransactionStatus RJCT, StatusReasonInformation.Reason AB11 and the instruction's TransactionReference as received."
+        },
+        {
+          "Id": "timed_out.no_refusal",
+          "Fix": "Your terminal sent a frame the middleware refused, so change what the Refusal's ResponseReason names."
+        },
+        {
+          "Id": "timed_out.no_drop",
+          "Fix": "Your terminal sent a field the middleware does not take, so see the fields_dropped line and remove it or correct its value."
+        },
+        {
+          "Id": "timed_out.settled",
+          "Fix": "Your terminal must send an Outcome the middleware takes, with this sale's TransactionReference, so the sale moves to timed_out."
+        },
+        {
+          "Id": "timed_out.one_outcome",
+          "Fix": "Your terminal must send a sale's outcome at most once on each connection, and again only after a reconnect, never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "unknown",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "From your own terminal code on {terminal}, send nothing for the sale the sandbox sends until Note says `Now send it.`, then approve it.",
+      "Assertions": [
+        {
+          "Id": "unknown.went_unknown",
+          "Fix": "Your terminal must send nothing until Note says `Now send it.`, so the sale passes its deadline and reads unknown."
+        },
+        {
+          "Id": "unknown.late_outcome",
+          "Fix": "Your terminal must send the outcome however late, because a late outcome replaces UNKN and is the only way the POS learns the truth."
+        },
+        {
+          "Id": "unknown.settled",
+          "Fix": "Your terminal must send TransactionStatus ACSP for the sale after it reads unknown, so the sale moves from unknown to approved."
+        },
+        {
+          "Id": "unknown.one_outcome",
+          "Fix": "Your terminal must send a sale's outcome at most once on each connection, and again only after a reconnect, never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "card_field",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "From your own terminal code on {terminal}, answer the sale the sandbox sends with the fullest outcome the terminal builds, with every reference it has.",
+      "Assertions": [
+        {
+          "Id": "card_field.outcome",
+          "Fix": "Your terminal must send the fullest Outcome it builds, with the instruction's TransactionReference as received."
+        },
+        {
+          "Id": "card_field.has_reference",
+          "Fix": "Your terminal must send at least one PaymentReference key that passes its pattern, under the group of the payment's kind, Card, Bank, Wallet or NPP, because a receipt is printed from them and a POS matches settlement on them."
+        },
+        {
+          "Id": "card_field.no_drop",
+          "Fix": "Your terminal sent a field the middleware does not take, so see the fields_dropped line and remove it or correct its value."
+        },
+        {
+          "Id": "card_field.one_outcome",
+          "Fix": "Your terminal must send a sale's outcome at most once on each connection, and again only after a reconnect, never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "duplicate_key",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "Not run: the middleware sends one instruction per key, so a terminal never sees a duplicate key.",
+      "Assertions": [],
+      "AppliesIfDeclared": null,
+      "NotApplicable": "The middleware sends one instruction per key, so a terminal never sees a duplicate key. The rule that does bind a terminal, not charging twice on a repeated instruction, has no stimulus, because the middleware never repeats one."
+    },
+    {
+      "Id": "resend",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": {
+        "Kind": "Drop",
+        "AfterMilliseconds": 500,
+        "When": "after_instruction"
+      },
+      "Instruction": "From your own terminal code on {terminal}, hold the outcome of the sale the sandbox sends for 2 seconds after the instruction, so the connection drops first, then reconnect and send it.",
+      "Assertions": [
+        {
+          "Id": "resend.reconnected",
+          "Fix": "Your terminal must reconnect after a drop, because a drop does not end a sale."
+        },
+        {
+          "Id": "resend.outcome",
+          "Fix": "Your terminal must send its most recent outcome again after any reconnect, unchanged and whether or not it sent it before the drop, until a new Instruction, any Refusal, or 23 hours after it first sent it, because the middleware sends no acknowledgement and that resend is the only recovery for an outcome the middleware could not record."
+        },
+        {
+          "Id": "resend.no_conflict",
+          "Fix": "Your terminal must send the same frame unchanged, because a different TransactionStatus, StatusReasonInformation.Reason or PaymentReference value is a contradiction and the sale reads UNKN for good."
+        },
+        {
+          "Id": "resend.one_outcome",
+          "Fix": "Your terminal must send a sale's outcome at most once on each connection, and again only after a reconnect, never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "restart",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": {
+        "Kind": "Outage",
+        "Seconds": 5,
+        "When": "after_instruction"
+      },
+      "Instruction": "From your own terminal code on {terminal}, take the sale the sandbox sends, and when a simulated restart closes your connection, reconnect with the contract's backoff and send the outcome.",
+      "Assertions": [
+        {
+          "Id": "restart.backoff",
+          "Fix": "Your terminal must reconnect with the contract's backoff: wait 1 second, double it each failure up to 30 seconds, count a connection that closes within 10 seconds of opening as a failed connect, and add a little randomness."
+        },
+        {
+          "Id": "restart.reconnected",
+          "Fix": "Your terminal must keep reconnecting through the outage until an upgrade is answered 101."
+        },
+        {
+          "Id": "restart.outcome",
+          "Fix": "Your terminal must send the outcome after it reconnects, because an outcome that could not be sent is sent then."
+        },
+        {
+          "Id": "restart.no_conflict",
+          "Fix": "Your terminal must send the same frame unchanged, because a different TransactionStatus, StatusReasonInformation.Reason or PaymentReference value is a contradiction and the sale reads UNKN for good."
+        },
+        {
+          "Id": "restart.one_outcome",
+          "Fix": "Your terminal must send a sale's outcome at most once on each connection, and again only after a reconnect, never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "lost_instruction",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": {
+        "Kind": "LoseInstruction"
+      },
+      "Instruction": "From your own terminal code on {terminal}, keep your terminal running with Mw-Message-Functions: SSMQ declared: the sandbox takes {terminal} over for the sale, so the instruction never reaches your terminal, and when it reconnects and a StatusRequest asks about the sale, answer as the contract says for a sale it never received, with TransactionStatus RJCT and StatusReasonInformation.Reason AB11.",
+      "Assertions": [
+        {
+          "Id": "lost_instruction.declared",
+          "Fix": "Your terminal must name SSMQ in the Mw-Message-Functions header of every upgrade, so the middleware can ask it about a sale with a StatusRequest."
+        },
+        {
+          "Id": "lost_instruction.asked",
+          "Fix": "Your terminal must reconnect after the sandbox takes its connection, and stay connected with SSMQ declared until the middleware sends it a StatusRequest for the sale."
+        },
+        {
+          "Id": "lost_instruction.outcome",
+          "Fix": "Your terminal must answer a StatusRequest about a sale it never received with an Outcome holding TransactionStatus RJCT, StatusReasonInformation.Reason AB11 and the StatusRequest's TransactionReference as received."
+        },
+        {
+          "Id": "lost_instruction.no_refusal",
+          "Fix": "Your terminal sent a frame the middleware refused, so change what the Refusal's ResponseReason names."
+        },
+        {
+          "Id": "lost_instruction.one_outcome",
+          "Fix": "Your terminal must send a sale's outcome at most once on each connection, and again only after a reconnect, never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "cancel",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "From your own terminal code on {terminal}, with SSAB declared in Mw-Message-Functions, take the sale the sandbox sends, hold its payment and present no card, so it is still waiting when the sandbox cancels the sale with an Abort 3 seconds after the instruction, then stop and answer that Abort with TransactionStatus RJCT and StatusReasonInformation.Reason DS02.",
+      "Assertions": [
+        {
+          "Id": "cancel.declared",
+          "Fix": "Your terminal must name SSAB in the Mw-Message-Functions header of every upgrade, because until it does the middleware refuses a POS's cancel of a sale on it with 409 terminal_cannot_abort and sends it no Abort."
+        },
+        {
+          "Id": "cancel.outcome",
+          "Fix": "Your terminal must answer an Abort for a payment it can still stop by stopping it and sending an Outcome holding TransactionStatus RJCT, StatusReasonInformation.Reason DS02 and the Abort's TransactionReference as received, and must send DS02 only in answer to an Abort."
+        },
+        {
+          "Id": "cancel.no_refusal",
+          "Fix": "Your terminal sent a frame the middleware refused, so change what the Refusal's ResponseReason names."
+        },
+        {
+          "Id": "cancel.one_outcome",
+          "Fix": "Your terminal must send a sale's outcome at most once on each connection, and again only after a reconnect, never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "sign_in",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "From your own terminal code on {terminal}, with SASQ declared in Mw-Message-Functions, start your terminal holding no session at its fleet's payment system, asleep, its screen off and its application not in front, so that the sale the sandbox sends wakes it, it asks once with LoginNeeded, opens the LoginRequest, signs in with it and answers the sale. Report the outcome of your sign-in at your fleet's system with LoginResponse, naming the answer's LoginReference. A terminal that does not declare SASQ is not tested here.",
+      "Assertions": [
+        {
+          "Id": "sign_in.login_declared",
+          "Fix": "Your terminal must name SASQ in the Mw-Message-Functions header of every upgrade, a reconnect during the step included, because the middleware answers a LoginNeeded only on a connection that declared it."
+        },
+        {
+          "Id": "sign_in.login_asked",
+          "Fix": "Your terminal must wake on an Instruction while it holds no session and send one LoginNeeded on its connection before it sends the sale's outcome."
+        },
+        {
+          "Id": "sign_in.login_sent",
+          "Fix": "Your terminal must keep reading its connection after it sends LoginNeeded, so the middleware can deliver the LoginRequest that answers it."
+        },
+        {
+          "Id": "sign_in.login_reported",
+          "Fix": "Your terminal must report the outcome of its sign-in at its fleet's payment system in one LoginResponse naming the LoginReference of the LoginRequest it opened, with Response SUCC, or FAIL and the ResponseReason that fits, so the middleware takes it as the report of that answer."
+        },
+        {
+          "Id": "sign_in.outcome",
+          "Fix": "Your terminal must open the LoginRequest, sign in to its fleet's payment system with what it holds, and send an Outcome for the sale with the instruction's TransactionReference as received, whatever its host decided."
+        },
+        {
+          "Id": "sign_in.no_refusal",
+          "Fix": "Your terminal sent a frame the middleware refused, so change what the Refusal's ResponseReason names."
+        },
+        {
+          "Id": "sign_in.one_ask",
+          "Fix": "Your terminal must send one LoginNeeded on a connection and read its answer before its next frame, ask once more, at once, only after it reports that answer FAIL for a reason other than not_covered that follows a SUCC or is its first, never ask a third time on a connection, and never ask again on a timer."
+        }
+      ],
+      "AppliesIfDeclared": {
+        "Code": "SASQ",
+        "NotTested": "Sign-in was not tested: your terminal did not declare SASQ in Mw-Message-Functions. A terminal that needs the middleware to sign it in must declare SASQ on every upgrade and run again."
+      },
+      "NotApplicable": null
+    },
+    {
+      "Id": "sign_in_none",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "From your own terminal code on {terminal}, with SASQ declared in Mw-Message-Functions and no session held, take the sale the sandbox sends: the sandbox ends your store's sign-in attachment for the step, so your terminal's LoginNeeded is refused sign_in_not_available, and it asks no more on that connection and answers the sale with TransactionStatus RJCT and StatusReasonInformation.Reason AB11. A terminal that does not declare SASQ is not tested here.",
+      "Assertions": [
+        {
+          "Id": "sign_in_none.login_refused",
+          "Fix": "Your terminal must send LoginNeeded when it holds no session, though its store holds no sign-in credential, and take the middleware's Refusal sign_in_not_available as the answer that it cannot sign in."
+        },
+        {
+          "Id": "sign_in_none.outcome",
+          "Fix": "Your terminal must answer a sale it cannot take, having been refused sign_in_not_available, with an Outcome holding TransactionStatus RJCT, StatusReasonInformation.Reason AB11 and the instruction's TransactionReference as received."
+        },
+        {
+          "Id": "sign_in_none.one_ask",
+          "Fix": "Your terminal must send at most one LoginNeeded on a connection, read its answer before its next frame, and never ask again on a timer."
+        }
+      ],
+      "AppliesIfDeclared": {
+        "Code": "SASQ",
+        "NotTested": "Sign-in was not tested: your terminal did not declare SASQ in Mw-Message-Functions. A terminal that needs the middleware to sign it in must declare SASQ on every upgrade and run again."
+      },
+      "NotApplicable": null
+    }
+  ]
+}

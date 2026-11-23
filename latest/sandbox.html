@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-122325d1.js";
+            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-the-sandbox"><a class="header" href="#middleware-the-sandbox">Middleware: the sandbox</a></h1>
 <p>13-Nov-2026.</p>
@@ -268,7 +268,10 @@ a little randomness.</p>
 <ul>
 <li><code>SandboxKey</code> is your key, a <code>pos</code> key of your world’s register. It is shown this once, and
 the sandbox keeps only its digest, so a lost key is a new key and a new world. Send it as
-<code>Authorization: Bearer sbx_...</code>, and keep it out of logs and repositories, as any credential.</li>
+<code>Authorization: Bearer sbx_...</code>, and keep it out of logs and repositories, as any credential.
+You cannot end a key before its <code>ExpiryDateTime</code>. A key shown where others can read it, in a
+log, a repository or an agent’s session, opens your world alone and no live credential: treat
+it as spent, and take a new key for a new world.</li>
 <li><code>TesterIdentification</code> names you, and is no secret. Your world’s store and terminals are
 named after it.</li>
 <li><code>ExpiryDateTime</code> is when the key and the world end, 30 days on. After it the key is refused,
@@ -334,7 +337,7 @@ enrols (4. The POS journey, step 8). Another tester’s ids answer as if they di
 <tr><th>Terminal</th><th>Held by</th><th>On an instruction</th></tr>
 </thead>
 <tbody>
-<tr><td><code>-approve</code></td><td>A simulator</td><td>After 500 ms: <code>TransactionStatus</code> <code>ACSP</code>, <code>ResponseCode</code> <code>00</code>, <code>AdditionalInformation</code> <code>APPROVED</code>, <code>TransactionDetails.AuthorisedAmount</code> equal to the instruction’s <code>TotalAmount</code>, and a <code>PaymentReference</code> holding three card references under <code>Card</code></td></tr>
+<tr><td><code>-approve</code></td><td>A simulator</td><td>After 500 ms: <code>TransactionStatus</code> <code>ACSP</code>, <code>ResponseCode</code> <code>00</code>, <code>AdditionalInformation</code> <code>APPROVED</code>, <code>TransactionDetails.AuthorisedAmount</code> equal to the instruction’s <code>TotalAmount</code>, and a <code>PaymentReference</code> holding three card references under <code>Card</code>, made from the sale’s own <code>TransactionReference</code>, so each sale’s <code>RetrievalReferenceNumber</code> is its own, as a refund’s is</td></tr>
 <tr><td><code>-decline</code></td><td>A simulator</td><td>After 500 ms: <code>RJCT</code> with <code>StatusReasonInformation.Reason</code> <code>AG07</code>, <code>ResponseCode</code> <code>05</code>, <code>AdditionalInformation</code> <code>DECLINED</code></td></tr>
 <tr><td><code>-technical</code></td><td>A simulator</td><td>After 500 ms: <code>RJCT</code> with <code>Reason</code> <code>AB11</code>: the terminal gave up and took no payment</td></tr>
 <tr><td><code>-slow</code></td><td>A simulator</td><td>After 8 seconds: as <code>-approve</code></td></tr>
@@ -349,8 +352,9 @@ enrols (4. The POS journey, step 8). Another tester’s ids answer as if they di
 <p>A POS reads a sale’s <code>TransactionStatus</code>: <code>PDNG</code> while it waits, then <code>ACSP</code>, <code>RJCT</code> with its
 <code>StatusReasonInformation</code>, or <code>UNKN</code> when no outcome came by the deadline. An <code>UNKN</code> sale may
 still settle, so keep reading it. <code>mw://world</code> states the timers in force: how long a sale
-waits for its outcome, how long a terminal whose sale went <code>UNKN</code> stays claimed, how long a sale
-is kept, and how often the middleware sends a connected terminal a WebSocket Ping.</p>
+waits for its outcome, from the sale; how long a terminal whose sale went <code>UNKN</code> stays claimed,
+from the sale’s deadline, so 75 seconds from the sale here; how long a sale is kept; and how often
+the middleware sends a connected terminal a WebSocket Ping.</p>
 <p><strong>Every simulated <code>ACSP</code> states the amount.</strong> A simulator that approves sends
 <code>TransactionDetails.AuthorisedAmount</code>, the instruction’s <code>TotalAmount</code> as it came, as the
 terminal contract asks (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Outcome), so the sale reads it back beside
@@ -421,13 +425,14 @@ keeping nothing: asked about a sale made before, they send nothing.</p>
 <h2 id="3-the-mcp-server"><a class="header" href="#3-the-mcp-server">3. The MCP server</a></h2>
 <pre><code class="language-sh">claude mcp add --transport http mw-sandbox "$SANDBOX/mcp" --header "Authorization: Bearer sbx_..."
 </code></pre>
-<p>Then start a new session: a client reads its servers when a session starts, so an agent cannot
-give itself the key in the session it is in. Any MCP client on revision <code>2026-07-28</code> or
-<code>2025-11-25</code> will do, over Streamable HTTP at <code>POST /mcp</code>, with the key on every request. There
-is no session and no OAuth.</p>
+<p>The command keeps the key in that client’s configuration. Then start a new session: a client reads
+its servers when a session starts, so an agent cannot give itself the key in the session it is in.
+Any MCP client on revision <code>2026-07-28</code> or <code>2025-11-25</code> will do, over Streamable HTTP at
+<code>POST /mcp</code>, with the key on every request. There is no session and no OAuth.</p>
 <p>Or call it over plain HTTP, which needs no new session and puts the key in no client’s config.
 Keep the one line <code>Authorization: Bearer sbx_...</code>, with your key, in a file only you can read,
-here <code>~/.mw-sandbox-auth</code>, and send each request on its own, with no <code>initialize</code> before it.
+anywhere outside a repository, such as <code>~/.mw-sandbox-auth</code>, which the commands below use. Send
+each request on its own, with no <code>initialize</code> before it.
 In bash or zsh, the first line makes the file yours alone, at the second paste the key and press
 Enter, and the <code>curl</code> is any request, here your world:</p>
 <pre><code class="language-sh">touch ~/.mw-sandbox-auth &amp;&amp; chmod 600 ~/.mw-sandbox-auth
@@ -446,7 +451,9 @@ shell’s history.</p>
 <code>validate_message</code> and <code>explain_refusal</code> answer. Every other tool answers <code>key_required</code>,
 with the <code>curl</code> line in <code>Next</code>.</li>
 <li>A key of the <code>sbx_</code> shape that is unknown or past its expiry is answered <code>key_not_recognised</code>
-by every tool that needs a key, with how to get a new one in <code>Next</code>.</li>
+by every tool that needs a key, with how to get a new one in <code>Next</code>. <code>mw://world</code> read under
+such a key is JSON-RPC <code>-32602</code>, its <code>data</code> <code>{"Code": "key_not_recognised", "Next": "..."}</code>
+with the same <code>Next</code>.</li>
 <li>Any other credential, a token, <code>Basic</code>, or a live credential, is <code>401 credential_not_for_sandbox</code> on every request. If it was a live credential, rotate it.</li>
 </ul>
 <p><strong>The release the sandbox runs.</strong> The answer to <code>initialize</code> names the release of the
@@ -503,10 +510,10 @@ sandbox’s own address in each <code>Next</code> that names one.</p>
 <tr><td><code>explain_refusal</code></td><td>No</td><td><code>Code</code></td><td>What a code means, what to do next, and which side gives it</td></tr>
 <tr><td><code>send_sale</code></td><td>Yes</td><td><code>Message</code>, optional <code>WaitSeconds</code> from 0 to 25</td><td>Sends a sale as your world’s POS, and optionally waits for its result</td></tr>
 <tr><td><code>read_sale</code></td><td>Yes</td><td><code>TransactionReference</code>, optional <code>WaitSeconds</code></td><td>Reads one of your sales, optionally waiting for it to change</td></tr>
-<tr><td><code>terminal_next_instruction</code></td><td>Yes</td><td>Optional <code>WaitSeconds</code></td><td>The next instruction, <code>StatusRequest</code> or <code>Abort</code> sent to your <code>-manual</code> terminal</td></tr>
+<tr><td><code>terminal_next_instruction</code></td><td>Yes</td><td>Optional <code>WaitSeconds</code></td><td>The next instruction, <code>StatusRequest</code> or <code>Abort</code> sent to your <code>-manual</code> terminal, under the key <code>Instruction</code> whichever it is: its <code>MessageType</code> says which</td></tr>
 <tr><td><code>terminal_send_outcome</code></td><td>Yes</td><td><code>Outcome</code></td><td>Sends an outcome frame as your <code>-manual</code> terminal, and says whether it was <code>Sent</code>, any <code>Refusal</code>, and what was <code>Dropped</code></td></tr>
-<tr><td><code>read_log</code></td><td>Yes</td><td><code>Reference</code></td><td>The log lines of your sales a <code>TransactionReference</code> or a <code>SaleReferenceIdentification</code> names: the newest five, each with its lines in <code>seq</code> order. A <code>sale_state</code> line names the state in the middleware’s words, and <code>timed_out</code> is its word for <code>RJCT</code> with <code>AB11</code>, after ISO’s name for that code, whatever stopped the payment</td></tr>
-<tr><td><code>conformance_start</code></td><td>Yes</td><td><code>Side</code>, <code>ProductName</code>, <code>ProductVersion</code>, optional <code>Only</code></td><td>Starts a conformance run of your side (step 6)</td></tr>
+<tr><td><code>read_log</code></td><td>Yes</td><td><code>Reference</code></td><td>The log lines of your sales a <code>TransactionReference</code> or a <code>SaleReferenceIdentification</code> names: the newest five, each with its lines in <code>seq</code> order, and in <code>SignInLines</code> its terminal’s sign-in lines from the sale’s instruction until the sale settled or its hold let the terminal go, refused asks among them, and a <code>LoginNeeded</code> refused <code>unknown_frame_type</code> on a connection that did not declare <code>SASQ</code>. A <code>LoginReference</code> names one sign-in instead: <code>SignIn</code> holds the ask that drew it, its <code>LoginRequest</code>, and the report of it once taken. A reference of the <code>sal_</code> shape is read as a <code>TransactionReference</code>, and one of the <code>lgn_</code> shape as a <code>LoginReference</code>. A <code>sale_state</code> line names the state in the middleware’s words, and <code>timed_out</code> is its word for <code>RJCT</code> with <code>AB11</code>, after ISO’s name for that code, whatever stopped the payment</td></tr>
+<tr><td><code>conformance_start</code></td><td>Yes</td><td><code>Side</code>, <code>ProductName</code>, <code>ProductVersion</code>, optional <code>Only</code></td><td>Starts a conformance run of your side (step 6). <code>ProductName</code> and <code>ProductVersion</code> are each 1 to 40 characters: ASCII letters, digits, the space and <code>. , ' &amp; ( ) / + % # -</code>, no space at either end, and at most 8 digits, as <code>tools/list</code> states them. Another is <code>invalid_argument</code>, naming it</td></tr>
 <tr><td><code>conformance_status</code></td><td>Yes</td><td><code>RunIdentification</code>, optional <code>WaitSeconds</code></td><td>Judges the current step and reads the run, with its verdicts so far. A step not yet met stays waiting (step 6)</td></tr>
 <tr><td><code>conformance_report</code></td><td>Yes</td><td><code>RunIdentification</code></td><td>The signed report of a finished run</td></tr>
 </tbody>
@@ -608,6 +615,23 @@ types the code into must be. The app then sells on its own certificate and sends
 <p>A world’s kind does not change: a world of a server’s register answers <code>{"Role":"register"}</code>
 with <code>400 invalid_field</code>, and a world of a register on a device answers <code>{"Role":"server"}</code> the
 same.</p>
+<p><strong>Renewal, without waiting 15 days.</strong> A certificate lasts 30 days and renews from day 15. To try
+renewal now, ask the code with <code>"Due": true</code> beside its role, as in
+<code>{"Role":"server","Due":true}</code>. The <code>201</code> holds <code>"Due": true</code>, and the certificate the code enrols
+is issued 16 days back: it ends 14 days on, its <code>RenewFrom</code> has passed, and
+<code>GET /v1/certificates/self</code> answers <code>RenewNow</code> <code>true</code>. Renew it as the walk says
+(<code>mw://onboarding/server</code>, step 9, or <code>mw://onboarding/device</code>, step 10). The new certificate is
+issued now, for 30 days. The old one stays good until the new one is first used, and for an hour
+after: from that first use a renewal on the old one is <code>403 certificate_retired</code>, and past the
+hour so is any call on it. An identity is issued at most 5 certificates in 24 hours, its
+enrolments and renewals together, so to meet <code>429 renewal_rate</code>, renew the due certificate again
+before any newer one is used, with a new key each time, and on a device a new challenge: each
+renewal retires the unused one before it, and on an identity enrolled once that day the fifth is
+refused. <code>Due</code> is <code>true</code> or <code>false</code>, for a code of any role your world takes. A code for
+<code>-yours</code> or your register re-pairs the same identity, so its earlier certificates that day count
+toward the 5. A server’s world holds two servers, each enrolled once, and past them a server code
+is <code>409 too_many_keys</code>: take a new key for a new world. A <code>live</code> middleware has no
+<code>/sandbox/v1/codes</code>, so there a certificate is due from its day 15 alone.</p>
 <p><strong>One device, two apps.</strong> A device that runs a payment terminal’s app and a POS app is
 supported: two apps, each registered for its own role, each with its own key, code and
 certificate, as <code>-yours</code> and as your world’s register. In a world of a register on a device,
@@ -630,7 +654,7 @@ person reads them there and types them into the POS app, which sends them
 <tr><td>6</td><td>Sign in</td><td>With <code>SASQ</code> in <code>Mw-Message-Functions</code> on the upgrade, send a <code>LoginNeeded</code> holding a fresh P-256 key, then open the <code>LoginRequest</code>, verify its group and report it in a <code>LoginResponse</code>, as Step 6, below, walks</td><td><code>unknown_frame_type</code>: the upgrade did not declare <code>SASQ</code>. <code>recipient_key_invalid</code>: the fresh key, or on a certificate its signature. <code>sign_in_limited</code>: asked again within 60 seconds of an answer, or after the day’s 1440 answers. On the report, <code>missing_field</code>, <code>invalid_result</code> or <code>invalid_reference</code>: a key of it, as Step 6 writes them</td></tr>
 <tr><td>7</td><td>Take an instruction</td><td><code>send_sale</code> naming <code>&lt;tester&gt;-yours</code>: the sandbox is the POS</td><td><code>409 terminal_offline</code>: your terminal is not connected to <code>&lt;tester&gt;-yours</code></td></tr>
 <tr><td>8</td><td>Return an outcome</td><td>From your own code</td><td>A <code>Refusal</code> frame with its code. <code>explain_refusal</code> gives its meaning and <code>Next</code></td></tr>
-<tr><td>9</td><td>See both sides</td><td><code>read_log</code></td><td>A <code>fields_dropped</code> line names anything your terminal should not send</td></tr>
+<tr><td>9</td><td>See both sides</td><td><code>read_log</code></td><td>A <code>fields_dropped</code> line names anything your terminal should not send. The sale’s <code>SignInLines</code> hold each ask your terminal made while the sale held it, with the code of any refused</td></tr>
 <tr><td>10</td><td>Enrol, then run the scenarios</td><td><code>POST /sandbox/v1/codes</code> with <code>{"Role":"terminal"}</code>, <code>POST /v1/enrol</code>, then connect with the certificate. Then <code>conformance_start</code> with <code>Side: "terminal"</code></td><td>The step’s failing assertion, such as <code>card_field.no_drop</code> when your terminal sent a field the middleware does not take</td></tr>
 <tr><td>11</td><td>Keep the report</td><td><code>conformance_report</code>, saved</td><td><code>run_not_finished</code>, naming the state</td></tr>
 </tbody>
@@ -910,6 +934,11 @@ only when the middleware serves a new family of paths, so many releases may shar
 <code>ContractVersion</code>. To compare two reports, compare their <code>SandboxVersion</code>.</p>
 <p><code>SandboxVersion</code> is the release of the middleware that ran the run. A run lives in one process
 of the sandbox and is lost when the sandbox restarts, so one run never spans two releases.</p>
+<p>The sandbox keeps your 32 newest runs, the one running among them: a 33rd run lets the oldest
+ended one go as it starts. Within those 32, an ended run is kept at least 24 hours after it
+ends; once 24 hours have passed since your last run ended, all of them may go. A restart loses
+every run. A run gone any of these ways is <code>run_not_found</code>. Keep each report you need with
+<code>conformance_report</code> once its run ends.</p>
 <p><code>ReportVersion</code> counts the report’s own shape, not the release.</p>
 <h3 id="what-a-green-run-does-not-check"><a class="header" href="#what-a-green-run-does-not-check">What a green run does not check</a></h3>
 <p>A green run proves your integration did what each step asked, once. It cannot see what your
@@ -1003,8 +1032,9 @@ body is the edge’s own.</p>
 <tr><td><code>sale_not_found</code></td><td>A tool</td><td>No such sale in your world. From <code>read_log</code> by a <code>SaleReferenceIdentification</code>, also a sale whose lines have left the index: only a <code>TransactionReference</code> is asked of the middleware</td><td>On an id the middleware gave you, treat the sale as unknown: tell the cashier to check the terminal before another tender</td></tr>
 <tr><td><code>answer_lost</code></td><td><code>send_sale</code>, <code>read_sale</code> or <code>read_log</code></td><td>The tool’s request reached the relay and no answer it could read came back, so whether it took effect is not known</td><td>Call <code>send_sale</code> again with the same sale and the same <code>IdempotencyKey</code>, never a new one: if the sale was made, the relay answers <code>200</code> with it as it stands and makes no second one, and if not, the key is unspent. A read changes nothing: call <code>read_sale</code> or <code>read_log</code> again as it was</td></tr>
 <tr><td><code>log_not_held</code></td><td>A tool</td><td>By <code>TransactionReference</code>: the sale exists, and its lines have left the sandbox’s index. By a <code>SaleReferenceIdentification</code> the same sale reads <code>sale_not_found</code></td><td>Lines are kept until 30 minutes pass with no request of yours, within the bounds of the sandbox’s index, which a restart empties. Read a sale’s log soon after it settles</td></tr>
+<tr><td><code>sign_in_not_found</code></td><td>A tool</td><td>By a <code>LoginReference</code>: no line of your world’s log names it. Never issued to your world, or its lines have left the sandbox’s index: the two read the same</td><td>An ask the middleware refused has no <code>LoginReference</code>: read the sale it was asked during by its <code>TransactionReference</code>, whose <code>SignInLines</code> hold it; a refused ask made while no sale held your terminal is in no answer. Lines are kept until 30 minutes pass with no request of yours, within the bounds of the sandbox’s index, which a restart empties</td></tr>
 <tr><td><code>no_instruction</code></td><td>A tool</td><td>Nothing reached <code>-manual</code> in <code>WaitSeconds</code></td><td>Send a sale to your <code>-manual</code> terminal</td></tr>
-<tr><td><code>run_not_found</code></td><td>A tool</td><td>No such run in your world, or one lost to a restart of the sandbox</td><td>Runs live in memory, as the index does: start again. Every line <code>read_log</code> gives carries <code>boot_id</code>, one for each start of the sandbox, and its <code>seq</code> begins again at a restart. A <code>boot_id</code> other than the one on the lines you read while the run went says the sandbox restarted, and your code did not lose the run</td></tr>
+<tr><td><code>run_not_found</code></td><td>A tool</td><td>No such run in your world; one past your 32 newest; one let go once 24 hours had passed since your last run ended; or one lost to a restart of the sandbox</td><td>Runs live in memory, as the index does: start again, and keep each report with <code>conformance_report</code> once its run ends. Every line <code>read_log</code> gives carries <code>boot_id</code>, one for each start of the sandbox, and its <code>seq</code> begins again at a restart. A <code>boot_id</code> other than the one on the lines you read while the run went says the sandbox restarted, and your code did not lose the run</td></tr>
 <tr><td><code>run_in_progress</code></td><td>A tool</td><td>A run of yours is running</td><td>Finish it, or wait for its deadline</td></tr>
 <tr><td><code>run_not_finished</code></td><td>A tool</td><td><code>conformance_report</code> before the run ended</td><td>Read <code>conformance_status</code></td></tr>
 <tr><td><code>sandbox_rate</code></td><td>A tool, or <code>429</code> with this code at <code>/v1/*</code>, <code>/sandbox/v1/codes</code> and <code>/sandbox/v1/app-identities</code>. A <code>429</code> at <code>POST /v1/enrol</code> whose body is not an <code>Error</code> is the edge’s: the next row</td><td>Past a bound of yours: sales or tool calls a minute, requests in flight, codes or app identities an hour</td><td>Wait a minute, and retry with the same <code>IdempotencyKey</code>. If an earlier answer was lost, the sale may exist</td></tr>

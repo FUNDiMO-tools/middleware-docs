@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-122325d1.js";
+            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-linking-a-register-to-a-terminal"><a class="header" href="#middleware-linking-a-register-to-a-terminal">Middleware: linking a register to a terminal</a></h1>
 <p>11-Nov-2026.</p>
@@ -297,10 +297,15 @@ toward no limit. Each answer, and what to show, is in What the POS shows at each
 from its list, and answers <code>201</code>:</p>
 <pre><code class="language-json">{ "LinkIdentification": "lnk_...", "ExpiresInSeconds": 120 }
 </code></pre>
-<p><code>LinkIdentification</code> is the request’s id: keep it for steps 3 and 4. <code>ExpiresInSeconds</code> is how
-long the terminals show their words, 120 seconds by default. The answer holds no word. Only an
-unbound terminal is asked, so a terminal already linked is never disturbed, and a guess can
-never take one.</p>
+<p><code>LinkIdentification</code> is the request’s id, for steps 3 and 4. Store it with the register as soon as
+the <code>201</code> comes, with the time it came, as the register keeps a sale’s <code>IdempotencyKey</code>, so that a
+register that restarts, or a POS app that closes while staff read the word in the terminal’s app,
+goes back to the request at step 3 and still shows the time left. No route finds a register’s open
+request by any other key, and while it is open the register’s next ask is <code>409 link_in_progress</code>.
+<code>ExpiresInSeconds</code> is how long the terminals show their words, 120 seconds by default and 300 at
+most. Once they have passed, the request no longer stands in the way: the next ask the middleware
+takes opens a new one. The answer holds no word. Only an unbound terminal is asked, so a terminal
+already linked is never disturbed, and a guess can never take one.</p>
 <p>A pair is two different words of the middleware’s list, in order, joined by a dot, such as <code>rabbit.lamp</code>.
 The list holds 1,024 words of common English, each 3 to 6 lowercase letters, and no two of them
 are within one edit of each other. Each pair is drawn uniformly, and no request holds a pair and
@@ -382,7 +387,7 @@ what happened and what to do next, in its own words.</p>
 <tr><td><code>200</code></td><td></td><td>The word bound the register to the terminal</td><td>That the register is linked to the terminal, which shows the same</td></tr>
 <tr><td><code>400</code></td><td><code>invalid_field</code></td><td>At the word: <code>Word</code> is not a pair of two different words with a dot or one space between them. The request stays open, and nothing is counted</td><td>That the terminal shows two words, and to type both, in the order shown, with a dot or a space between them</td></tr>
 <tr><td><code>403</code></td><td><code>link_word_unknown</code></td><td>No terminal of the request showed the pair, in that order. The request has ended, every terminal has cleared, and the wrong pair counts toward your vendor’s limit at the store</td><td>That the words did not match, and a button to ask again, which opens a new request with new words</td></tr>
-<tr><td><code>409</code></td><td><code>link_in_progress</code></td><td>Another request is open at this store, or for this register</td><td>That another register at the store is linking now: try again in a minute</td></tr>
+<tr><td><code>409</code></td><td><code>link_in_progress</code></td><td>A request is open at this store, or for this register: one this register opened, or another register’s at the store. Nothing was written</td><td>That a link is under way here. A register that holds the <code>LinkIdentification</code> of its own open request goes back to it, and asks for the two words the terminal shows (step 3). Otherwise, to try again once that request’s time has passed, two minutes at the default settings</td></tr>
 <tr><td><code>409</code></td><td><code>no_terminal_to_link</code></td><td>No terminal of the store is paired and unbound</td><td>That no terminal here is waiting to link: check the terminal is switched on, paired at this store and connected, and not already linked to another register</td></tr>
 <tr><td><code>409</code></td><td><code>too_many_terminals</code></td><td>More terminals of the store are paired and unbound than one request can ask, 523,776. Nothing was written</td><td>That too many terminals here are waiting to link: have the store’s fleet owner bind or remove terminals of the store, then ask again</td></tr>
 <tr><td><code>410</code></td><td><code>link_expired</code></td><td>The request has ended: its time passed, it was closed by a wrong pair or a refusal, or the terminal it bound has been unlinked since</td><td>That the words have timed out, and a button to ask again</td></tr>

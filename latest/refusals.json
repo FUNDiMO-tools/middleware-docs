@@ -249,7 +249,7 @@
     "Channel": "Error.Code",
     "Code": "link_in_progress",
     "Meaning": "A request to link is already open at this store, or for this register. Nothing was written.",
-    "Next": "Try again in a minute."
+    "Next": "A register that holds the LinkIdentification of its own open request goes back to it: GET /v1/links/{LinkIdentification}, then its word. Otherwise try again once that request's ExpiresInSeconds have passed, 120 seconds by default."
   },
   {
     "Channel": "Error.Code",
@@ -421,6 +421,12 @@
   },
   {
     "Channel": "Error.Code",
+    "Code": "sign_in_not_found",
+    "Meaning": "No line of this world's log names this LoginReference.",
+    "Next": "A LoginReference is read while its lines are held: until 30 minutes pass with no request of yours, within the bounds of the sandbox's index, which a restart empties. An ask the middleware refused has none: read_log the sale it was asked during, by its TransactionReference, and its SignInLines hold the ask; one made while no sale held the terminal is in no answer."
+  },
+  {
+    "Channel": "Error.Code",
     "Code": "no_instruction",
     "Meaning": "No instruction came for the -manual terminal in the time waited.",
     "Next": "Send a sale to your world's -manual terminal, with send_sale or from your own code, then call this tool again."
@@ -435,7 +441,7 @@
     "Channel": "Error.Code",
     "Code": "run_not_found",
     "Meaning": "No conformance run of this world has that RunIdentification.",
-    "Next": "Runs live in memory, and a restart of the sandbox loses them: start again with conformance_start. Every line read_log gives carries boot_id, one for each start of the sandbox: a boot_id other than the one on the lines you read while the run went says the sandbox restarted, and your code did not lose the run."
+    "Next": "Runs live in memory: the sandbox keeps your 32 newest, and a run may be gone once 24 hours have passed since your last one ended, or after a restart of the sandbox. Start again with conformance_start, and keep each report with conformance_report once its run ends. Every line read_log gives carries boot_id, one for each start of the sandbox: a boot_id other than the one on the lines you read while the run went says the sandbox restarted, and your code did not lose the run."
   },
   {
     "Channel": "Error.Code",

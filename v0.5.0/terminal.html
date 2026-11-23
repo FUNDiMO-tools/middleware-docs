@@ -1,0 +1,1675 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Terminal contract - FUNDiMO middleware API</title>
+
+
+        <!-- Custom HTML head -->
+        <link rel="stylesheet" href="theme/fonts.css">
+        <script>
+            (function () {
+                var nearer = { rust: 'light', navy: 'coal', ayu: 'coal' };
+                function remap() {
+                    try {
+                        var saved = (localStorage.getItem('mdbook-theme') || '').replace(/"/g, '');
+                        if (nearer[saved]) { localStorage.setItem('mdbook-theme', nearer[saved]); }
+                    } catch (e) { }
+                }
+                remap();
+                window.addEventListener('storage', remap);
+                window.addEventListener('pageshow', remap);
+                document.addEventListener('DOMContentLoaded', function () {
+                    var dark = document.getElementById('mdbook-theme-coal');
+                    if (dark) { dark.textContent = 'Dark'; }
+                    Object.keys(nearer).forEach(function (name) {
+                        var button = document.getElementById('mdbook-theme-' + name);
+                        if (button) { button.parentNode.remove(); }
+                    });
+                });
+            })();
+        </script>
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/site-acfedb15.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "coal";
+            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-3b0d6c91.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div class="mw-brand">
+                    <a class="mw-wordmark" href="https://fundimo.com.au/"><img class="mw-on-light" src="theme/fundimo.png" alt="FUNDiMO" width="1142" height="277"><img class="mw-on-dark" src="theme/fundimo-on-dark.png" alt="FUNDiMO" width="1200" height="290"></a>
+                    <span class="mw-product">Middleware API</span>
+                </div>
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">FUNDiMO middleware API</h1>
+
+                    <div class="right-buttons">
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
+
+<h1 id="middleware-the-terminal-contract"><a class="header" href="#middleware-the-terminal-contract">Middleware: the terminal contract</a></h1>
+<p>Version 5, 13-Nov-2026. This count numbers the frames of this page alone. It ends at 5. From
+now on, the frames change with a release of the middleware, and that release is not this count.
+Read the release in <code>serverInfo.version</code> from the sandbox’s MCP server, or in <code>SandboxVersion</code>
+in a conformance report. The release of the middleware a terminal connects to is in that host’s
+own <code>GET /v1/health</code>, in <code>Version</code>.</p>
+<p>Version 5 adds the refund. An <code>Instruction</code> may now carry <code>TransactionType</code> <code>RFND</code> and an
+<code>OriginalTransaction</code>, the sale to refund: refund <code>TotalAmount</code> against that sale, and report
+it in an <code>Outcome</code> as a sale’s (A refund, below). The middleware sends a refund only to a
+terminal that says on its upgrade that it takes refunds, in the header
+<code>Mw-Transaction-Types: CRDP, RFND</code> (Connect, below). A terminal built to version 4 sends no
+such header, so it is never sent a refund: it would ignore the two keys it does not read and
+charge the refund as a sale. Declare <code>RFND</code> only once the terminal reads <code>TransactionType</code>.</p>
+<p>Version 4 makes the word a terminal shows while a register links a pair: <code>LinkWord</code>’s <code>Word</code>
+holds two different words of the middleware’s list, in order, joined by a dot, such as
+<code>rabbit.lamp</code>. A terminal built to version 3 that shows <code>Word</code> as it comes shows the pair;
+one that checks the frame against version 3’s pattern refuses it, so build it to this
+version (Linking to a register, below).</p>
+<p>Version 3 states the outcome in ISO 20022’s payment terms: a <code>TransactionStatus</code> of <code>ACSP</code>
+or <code>RJCT</code>, a <code>StatusReasonInformation</code> whose <code>Reason</code> says why no payment was taken, and the
+references grouped by the kind of payment, <code>Card</code>, <code>Bank</code>, <code>Wallet</code> and <code>NPP</code>. An outcome
+built to version 2 holds no <code>TransactionStatus</code>, so the middleware refuses it as <code>missing_field</code>:
+build the outcome to this version (Outcome, below).</p>
+<p>Version 2 adds the client certificate a live terminal presents, and the two frames a
+terminal is sent while a register links to it, <code>LinkWord</code> and <code>LinkEnded</code>. A terminal built
+to version 1 ignores both frames, as it ignores any frame it does not know, and shows no
+word.</p>
+<p>This is the contract a payment terminal implements to take payments through the middleware.
+The middleware relays a sale, or a refund of one, from a point of sale (POS) to a terminal, and
+the terminal’s outcome back to the POS. A terminal that needs a session at its fleet’s own
+payment system can ask the middleware for what that system takes to sign it in, and report
+what that system answered in a <code>LoginResponse</code> (Signing in, below). You can build a
+terminal’s side from this document alone. The schema of each frame,
+<code>TerminalInstruction</code>, <code>TerminalOutcome</code>, <code>TerminalRefusal</code>, <code>TerminalLinkWord</code>,
+<code>TerminalLinkEnded</code>, <code>TerminalStatusRequest</code>, <code>TerminalAbort</code>, <code>TerminalLoginNeeded</code>,
+<code>TerminalLoginRequest</code> and <code>TerminalLoginResponse</code>, is also in <a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a>
+beside it, for a client that validates what it sends and receives.</p>
+<p>An instruction is a sale, or with <code>TransactionType</code> <code>RFND</code> a refund, and only a terminal that
+declared <code>RFND</code> is sent a refund. Field names are ISO 20022 element names as written, in
+PascalCase. Every field below says who sends it: <code>mw</code> or <code>terminal</code>. Every amount is a
+JSON string in decimal major units with a dot and exactly two fraction digits, such as
+<code>"12.50"</code>. It is never a JSON number and never negative, and one <code>Currency</code>, <code>AUD</code>, governs
+every amount in a sale.</p>
+<h2 id="in-short"><a class="header" href="#in-short">In short</a></h2>
+<ol>
+<li>Open a WebSocket to <code>/v1/terminals/{POIIdentification}/connect</code>, presenting the
+terminal’s credential on the upgrade, and hold it while the terminal is on. Reconnect
+whenever it closes.</li>
+<li>If the terminal takes refunds, say so on every upgrade, beside the credential:
+<code>Mw-Transaction-Types: CRDP, RFND</code>. A terminal that says nothing is sent sales alone. Once
+it answers a <code>StatusRequest</code>, say that too: <code>Mw-Message-Functions: SSMQ</code>. Once it also
+answers an <code>Abort</code>, add <code>SSAB</code>: <code>Mw-Message-Functions: SSAB, SSMQ</code>. Once it does all that
+Signing in, below, says, add <code>SASQ</code>: <code>Mw-Message-Functions: SASQ, SSAB, SSMQ</code>.</li>
+<li>An <code>Instruction</code> frame arrives. Store its <code>TransactionReference</code>, then charge
+<code>TotalAmount</code>, or with <code>TransactionType</code> <code>RFND</code> refund it (A refund, below).</li>
+<li>When the payment ends, store the <code>Outcome</code> frame, then send it.</li>
+<li>If the middleware answers with a <code>Refusal</code>, read its code. Otherwise the outcome counts as
+taken once any later frame but a Close comes from the middleware on that connection. Taken or
+not, send your most recent outcome again after any reconnect, until a new <code>Instruction</code>,
+a <code>Refusal</code> for it other than <code>terminal_not_permitted</code>, or 23 hours.</li>
+<li>If a <code>LinkWord</code> frame arrives, show its word until a <code>LinkEnded</code> comes or its seconds
+pass (Linking to a register, below).</li>
+<li>If a <code>StatusRequest</code> frame arrives, answer it from what the terminal stored
+(StatusRequest, below).</li>
+<li>If an <code>Abort</code> frame arrives, stop the payment its <code>TransactionReference</code> names if it has
+not reached the host, and send <code>RJCT</code> with <code>DS02</code>. Otherwise answer it from what the
+terminal holds (Abort, below).</li>
+<li>If the terminal declared <code>SASQ</code> and holds no session at its fleet’s payment system, at
+connect or when an <code>Instruction</code> arrives, wake if it sleeps, send one <code>LoginNeeded</code> with a
+fresh key, open the <code>LoginRequest</code> that answers it, sign in with what it holds, and report
+what its fleet’s payment system answered in one <code>LoginResponse</code> (Signing in, below).</li>
+</ol>
+<p>The sections below say what each step means, and what to do when a step goes wrong.</p>
+<h2 id="address"><a class="header" href="#address">Address</a></h2>
+<p>A terminal is tested in the middleware’s sandbox, which serves this document. The sandbox’s start
+page, <code>mw://start</code> through its MCP server and <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a> over HTTP, walks a
+terminal from a first key to a signed conformance report. <code>POST /sandbox/v1/keys</code> needs no
+credential, and answers a sandbox key and a world of nine terminals, one of them
+<code>&lt;tester&gt;-yours</code>, which nothing in the sandbox holds and your terminal connects as.</p>
+<p>A terminal connects to the address the sandbox served this document from, its scheme made
+WebSocket’s: <code>ws://</code> where that address is <code>http://</code>, and <code>wss://</code> where it is <code>https://</code>, on the
+same host and port. The path is <code>/v1/terminals/{POIIdentification}/connect</code>, with the
+terminal’s own id in it (The id, below), and its credential goes on the upgrade (Connect,
+below). Two connections for one id replace each other, because each reconnects when it is
+closed, so connect each terminal under its own id.</p>
+<p>A <code>live</code> middleware is <code>wss://</code> on port 443. <a href="environments.html"><code>/docs/api/environments.md</code></a> names the base URL of
+each environment open to an integration.</p>
+<h2 id="the-id"><a class="header" href="#the-id">The id</a></h2>
+<p><code>POIIdentification</code> is the terminal’s id, and matches <code>^[A-Za-z0-9_-]{1,64}$</code>. The middleware
+issues it, <code>poi_</code> then 32 lowercase hex characters, when the terminal’s fleet lists the
+device, and the POS names the same id in its sale. Only a seed, which a sandbox reads at
+boot, may choose one instead. A listed terminal may connect once it is <code>paired</code>: in the
+sandbox, a seed pairs it. It must not be a card or account number: the middleware cannot detect one
+in it, and the id is logged.</p>
+<h2 id="connect"><a class="header" href="#connect">Connect</a></h2>
+<p><code>GET /v1/terminals/{POIIdentification}/connect</code> with a WebSocket upgrade (RFC 6455):
+<code>Connection: Upgrade</code>, <code>Upgrade: websocket</code>, <code>Sec-WebSocket-Version: 13</code> and a
+<code>Sec-WebSocket-Key</code>. Every message either way is a text frame holding one JSON object in
+UTF-8, at most 65,536 bytes. The only other frames are WebSocket’s own Ping, Pong and
+Close.</p>
+<p><strong>The credential.</strong> A live terminal presents its client certificate at the TLS handshake of
+the upgrade, with the issuing certificate beside it, as <code>CertificateChain</code> gave them, and
+sends no <code>Authorization</code> header. The middleware’s own CA issues it when the terminal enrols:
+<code>POST /v1/enrol</code> with the <code>PairingCode</code> its listing showed, a CSR for a P-256 key the
+terminal made in its keystore, its <code>SerialNumber</code>, and its Android Key Attestation chain.
+A terminal’s code is five words of <a href="words.txt"><code>docs/api/words.txt</code></a>, such as
+<code>bronze.farm.loop.prism.tempo</code>, and <a href="onboarding-device.html"><code>docs/api/onboarding-device.md</code></a> walks how an app reads
+them. The certificate names the terminal’s <code>POIIdentification</code>, which must be <code>paired</code>, and lasts
+30 days. Once a day, <code>GET /v1/certificates/self</code> under it answers <code>RenewNow</code>. When that is
+<code>true</code>, ask <code>POST /v1/certificates/challenge</code>, make a new key with that challenge, renew
+with <code>POST /v1/certificates/renew</code>, use the new certificate from the next connection, and
+delete the old key once a connection on the new one has succeeded.
+<a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a> holds each of these routes.</p>
+<p>A sandbox terminal may present its sandbox key on the upgrade instead, as
+<code>Authorization: Bearer sbx_...</code>: a <code>pos</code> key of the terminal’s own vendor, on a
+<code>POIIdentification</code> that is <code>paired</code> for that vendor. A <code>pos</code> key names a register of its
+own vendor, and only a vendor holding <code>pos</code> may list one, so in a sandbox the terminal’s
+fleet vendor must also hold the <code>pos</code> role and a register, whose <code>pos</code> key the terminal
+presents. FUNDiMO issues the key, and it is shown once. A <code>live</code> middleware refuses every
+sandbox key. One credential a request: a certificate and an <code>Authorization</code> header together
+are refused. The middleware checks the credential first, then the id, then the upgrade. No frame
+changes for it.</p>
+<p><strong>What the terminal takes.</strong> A terminal that takes refunds says so on the upgrade, beside its
+credential, in the header <code>Mw-Transaction-Types</code>: ISO 20022 codes of <code>TransactionType</code>,
+separated by commas with optional spaces, such as <code>Mw-Transaction-Types: CRDP, RFND</code>. <code>CRDP</code> is
+a sale and <code>RFND</code> a refund. The middleware sends a refund only on a connection whose upgrade
+declared <code>RFND</code>: a POS that asks for a refund on a terminal connected without it is refused
+<code>409 terminal_cannot_refund</code>, and the terminal is sent nothing. Absent, empty, over 256 bytes, or
+naming no code the middleware knows, the header reads as <code>CRDP</code> alone. A code it does not know is
+ignored, codes are matched exactly, case and all, and <code>CRDP</code> is always in the set, so a terminal
+that declares <code>RFND</code> alone is still sent sales. Sent more than once, its values are read as one
+list. The middleware keeps what a connection declared for that connection alone, and a new one
+carries its own, so send the header on every upgrade. It reads the header only once the
+credential has passed, and a refused upgrade reads it not at all. ISO 20022 has no element for
+it: the name is the middleware’s own.</p>
+<p><strong>What the terminal answers, and what it asks.</strong> A terminal says on the upgrade which of the
+middleware’s requests it answers, and whether it asks to be signed in, in the header
+<code>Mw-Message-Functions</code>, read as <code>Mw-Transaction-Types</code> is: codes
+separated by commas with optional spaces, read as one list when the header is sent more than
+once, matched exactly, case and all, a code the middleware does not know ignored, and kept for
+that connection alone, so send it on every upgrade. Its
+codes are ISO 20022’s <code>MessageFunction</code>, of <code>Header41</code>: “Identifies the type of process related
+to the message.” <code>SSMQ</code>, “Request the status of a previous message for which the Sale system
+has no response.”, says the terminal answers a <code>StatusRequest</code> (StatusRequest, below), such as
+<code>Mw-Message-Functions: SSMQ</code>. <code>SSAB</code>, “Abort the current process or the last request.”, says the
+terminal answers an <code>Abort</code> (Abort, below), such as <code>Mw-Message-Functions: SSAB, SSMQ</code> for a
+terminal that answers both. <code>SASQ</code>, “Request the management of a session: login, logout and
+diagnosis services. Initiated by the Sale system.”, says the terminal asks to be signed in to its
+fleet’s payment system, and can be woken (Signing in, below), such as
+<code>Mw-Message-Functions: SASQ, SSAB, SSMQ</code> for a terminal that does all three. The middleware sends
+an <code>Abort</code> only on a connection whose upgrade declared <code>SSAB</code>: a POS that asks to cancel a sale on
+a terminal connected without it is refused <code>409 terminal_cannot_abort</code>, and the terminal is sent
+nothing. The middleware answers a <code>LoginNeeded</code> only on a connection whose upgrade declared
+<code>SASQ</code>: on any other it is refused <code>unknown_frame_type</code>. Absent, empty, over 256 bytes, or naming
+no code the middleware knows, the header declares none, the terminal is sent no <code>StatusRequest</code>
+and no <code>Abort</code>, and its <code>LoginNeeded</code> is refused. Declare <code>SSMQ</code> only once the terminal answers a
+<code>StatusRequest</code>, <code>SSAB</code> only once it answers an <code>Abort</code>, and <code>SASQ</code> only once it does all that
+Signing in, below, says. The middleware reads the header only once the credential has passed,
+and a refused upgrade reads it not at all. ISO 20022 has no element for the header itself: its
+name is the middleware’s own.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status</th><th><code>Error.Code</code></th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>101</code></td><td></td><td>Upgraded. Replaces any current connection for that id</td><td>Hold it. Reset the reconnect backoff only once it has stayed open 10 seconds (Reconnect, below)</td></tr>
+<tr><td><code>400</code></td><td><code>invalid_field</code></td><td><code>POIIdentification</code> fails its pattern, with <code>Fields: ["POIIdentification"]</code></td><td>Fix the id. Retrying will not help</td></tr>
+<tr><td><code>400</code></td><td><code>invalid_upgrade</code></td><td>A bad WebSocket version or key</td><td>Fix the client</td></tr>
+<tr><td><code>401</code></td><td><code>certificate_required</code></td><td>No credential came</td><td>Present the certificate, or in the sandbox the key. A terminal with no certificate enrols first</td></tr>
+<tr><td><code>401</code></td><td><code>certificate_expired</code>, <code>certificate_invalid</code></td><td>The certificate is past its <code>NotAfter</code>, or is not one the middleware holds; or an <code>Authorization</code> header of another scheme, or beside a certificate</td><td>The holder’s table below: back off an hour, and after three tell the installer</td></tr>
+<tr><td><code>401</code></td><td><code>sandbox_key_invalid</code></td><td>A key that is malformed, unknown or retired</td><td>Check the key. Wait one hour before the next connect, and keep any outcome you hold</td></tr>
+<tr><td><code>401</code></td><td><code>sandbox_key_on_live</code></td><td>A sandbox key sent to a <code>live</code> middleware</td><td>A sandbox key works in the sandbox alone. Wait one hour before the next connect, and keep any outcome you hold</td></tr>
+<tr><td><code>403</code></td><td><code>not_permitted</code></td><td>The credential is good, and may not hold this terminal’s connection: it is not this terminal’s certificate or a <code>pos</code> key of its vendor, or the terminal is not <code>paired</code></td><td>Back off to one hour before the next connect, and keep any outcome you hold</td></tr>
+<tr><td><code>403</code></td><td><code>certificate_retired</code></td><td>The certificate presented is retired: a newer one of this identity is in use</td><td>The holder’s table below</td></tr>
+<tr><td><code>426</code></td><td><code>upgrade_required</code></td><td>A <code>GET</code> with no <code>Upgrade</code> header</td><td>Fix the client</td></tr>
+<tr><td><code>503</code></td><td><code>store_unavailable</code>, <code>edge_not_trusted</code></td><td>The middleware’s store did not answer while it checked the credential or the terminal, or the upgrade did not come through a trusted edge. It is no verdict on either</td><td>Reconnect with the backoff (Reconnect, below)</td></tr>
+<tr><td>Anything else</td><td></td><td></td><td>Reconnect with the backoff</td></tr>
+</tbody>
+</table>
+</div>
+<p>A <code>401</code> or a <code>403</code> is the middleware’s verdict on the credential, and a <code>503</code> is not. What to do
+after each is the holder’s table below, and the terminal keeps any outcome it holds, to send
+once a connection is accepted. After a <code>503</code>, reconnect with the normal backoff.</p>
+<h2 id="what-a-holder-of-a-dead-certificate-does"><a class="header" href="#what-a-holder-of-a-dead-certificate-does">What a holder of a dead certificate does</a></h2>
+<p>A refusal at the TLS handshake, or on the upgrade, is read by this table. A live terminal
+holds a certificate, so it is the holder here.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What the terminal sees</th><th>What it does next</th></tr>
+</thead>
+<tbody>
+<tr><td>A close, a reset, a timeout, or any failure with no TLS alert</td><td>The normal backoff (Reconnect, below), which resets only once a connection has stayed open 10 seconds. It says nothing about a certificate, and a terminal reconnects at least hourly on a network anyone in the shop can disturb</td></tr>
+<tr><td>A TLS alert naming the certificate: <code>certificate_expired</code>, <code>bad_certificate</code>, <code>certificate_unknown</code>, <code>unknown_ca</code> or <code>decrypt_error</code>. On <code>direct</code> alone</td><td>Back off an hour. After three, an hour apart, tell the installer the terminal needs a new code, and keep trying hourly</td></tr>
+<tr><td><code>401 certificate_expired</code> or <code>401 certificate_invalid</code></td><td>Back off an hour. After three, an hour apart, tell the installer the terminal needs a new code, and keep trying hourly</td></tr>
+<tr><td><code>401 certificate_required</code></td><td>A client’s own bug, or a route it has no certificate for: enrol first</td></tr>
+<tr><td><code>403 certificate_retired</code>, holding a newer certificate than the one presented</td><td>Drop that connection and retry on the newer one, with the same idempotency key where the request carried one. Ordinary, past an overlap</td></tr>
+<tr><td><code>403 certificate_retired</code> on its newest certificate</td><td>Stop, keep any outcome, and tell a person: something else holds a newer certificate of this identity</td></tr>
+<tr><td><code>403 not_permitted</code></td><td>Back off to one hour, keeping the outcome. The certificate was good and the row refused it, which is what a removal or a re-pair reads as</td></tr>
+<tr><td><code>403 challenge_not_valid</code></td><td>Ask for a new challenge, with a new key</td></tr>
+<tr><td><code>429</code>, <code>503</code>, <code>edge_not_trusted</code> among them</td><td>The normal backoff. <code>503 edge_not_trusted</code> is an edge fault, and the terminal’s certificate is not in question</td></tr>
+</tbody>
+</table>
+</div>
+<p>A client certificate from a second CA bearing the middleware’s own names is refused at the
+handshake with <code>decrypt_error</code>, beside <code>unknown_ca</code> for a CA the middleware does not know at all, so
+a terminal reads either as a TLS alert naming the certificate. A TLS alert comes only where
+the middleware ends TLS itself, <code>direct</code>: behind a load balancer no handshake fails on the
+certificate, and its refusal comes on the upgrade instead.</p>
+<p>A holder never deletes its key or its certificate on any of these. A device can recover from
+a mistake of the middleware’s by a fix on the middleware’s side, and a key deleted cannot. A new key is made
+only when a person brings a new code. A terminal decides none of this by its own clock.</p>
+<p>A non-2xx answer from the middleware has the body
+<code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>.</p>
+<h2 id="hold"><a class="header" href="#hold">Hold</a></h2>
+<p>Keep the connection open while the terminal is on. The middleware sends a WebSocket Ping every
+<code>MW_WS_PING_SECS</code>, 30 seconds by default. Answer each with a Pong, which most WebSocket
+libraries do by themselves. The middleware treats 2.5 intervals with no frame of any kind from the
+terminal as a dead connection, and closes it. Treat the same silence the same way: assume
+the default, and close and reconnect after 75 seconds with no frame from the middleware.</p>
+<p>A WebSocket library may answer each Ping itself and never show it, as OkHttp does. On one, the
+middleware’s Pings cannot be counted, so send your own: set the library’s ping,
+<code>pingInterval(30, TimeUnit.SECONDS)</code> on OkHttp’s client, and read the library failing the
+socket for want of a Pong as that silence, and reconnect. The middleware answers each Ping with
+a Pong, and counts it as a frame from the terminal. Since such a library shows none of the
+middleware’s Pings, the later frame of Resending is safe, below, is the next text frame from the
+middleware: an <code>Instruction</code>, a <code>StatusRequest</code>, an <code>Abort</code>, a <code>LinkWord</code>, a <code>LinkEnded</code> or a
+<code>LoginRequest</code>. An <code>Instruction</code> that comes is the next payment as well.</p>
+<h2 id="reconnect"><a class="header" href="#reconnect">Reconnect</a></h2>
+<p>After any close, and after a failed connect the table above does not say to fix, reconnect
+with a backoff: wait 1 second, double the wait after each failure up to 30 seconds, and add
+a little randomness. A connection that closes within 10 seconds of opening counts as a
+failed connect, so the next wait still doubles. Reset the backoff to 1 second only once a
+connection has stayed open 10 seconds. This keeps a store outage, where the middleware closes the
+connection on each outcome it cannot record, from becoming a reconnect every second. After a
+refusal on connect, the holder’s table says how long to wait (What a holder of a dead
+certificate does, above).</p>
+<p>A new connection for the same id takes over from the old one, and the middleware closes the old
+one itself: it sends what was already queued for it, then a WebSocket Close, or drops it if
+it takes no writes. A frame already queued for the old connection goes out on it or not at
+all, never on the new one, so open a second connection only to replace the first.</p>
+<p>The middleware keeps reading the old connection until the terminal closes its side, for at most 2.5
+times <code>MW_WS_PING_SECS</code> after the takeover, 75 seconds by default. An outcome read there
+is logged and applied as on any connection, so an outcome sent on the old connection as the
+new one opened still settles its sale. Three things differ there:</p>
+<ul>
+<li>A <code>Refusal</code> can be lost. The middleware stops queueing frames for the old connection as the new
+one opens, and a <code>Refusal</code> it cannot queue gets a <code>delivery_failed</code> line in its log and is
+never sent.</li>
+<li>A frame that ends the old connection, a frame or message over 65,536 bytes or a frame
+that breaks the WebSocket protocol, leaves no line of its own: the connection’s one
+<code>terminal_disconnected</code> line gives the reason <code>replaced</code>, not that frame’s.</li>
+<li>A frame still unread when that time is up is never read, and leaves no line.</li>
+</ul>
+<p>So send nothing more on a connection once a new one is open, and send your most recent
+outcome again on the new one, as Resending is safe, below, says.</p>
+<p>A drop does not end a sale. An outcome that could not be sent before a drop is sent after
+the reconnect. A hosted middleware will close connections of its own accord, so the reconnect
+is not optional.</p>
+<p>The middleware also closes the connection when its store cannot take an outcome the terminal sent,
+because the store is down or slow. Its log’s <code>terminal_disconnected</code> line then gives the
+reason <code>store_unavailable</code>, and the outcome may not have been recorded. Send it again after
+the reconnect, as Resending is safe, below, says.</p>
+<p>The middleware closes a connection whose terminal stops being <code>paired</code>, or whose credential is
+retired, within <code>MW_WS_PING_SECS</code>, and its log’s <code>terminal_disconnected</code> line gives the
+reason <code>revoked</code>. While that lasts, the next connect is refused: <code>403 not_permitted</code> backs off
+to one hour, and a retired credential’s refusal is read by the holder’s table above. Keep any
+outcome you hold.</p>
+<p>A hosted middleware may run two instances for a while, and a POS’s sale can reach the one your
+connection is not on. That instance answers the POS <code>409 terminal_offline</code>, and the one your
+connection is on closes it within a few seconds; its log’s <code>terminal_disconnected</code> line gives the
+reason <code>moved</code>. Reconnect as after any close: your next connection reaches the instance taking
+new requests.</p>
+<h2 id="linking-to-a-register"><a class="header" href="#linking-to-a-register">Linking to a register</a></h2>
+<p>A register links to a terminal at the counter, by a word the terminal shows. The register
+asks the middleware, the middleware gives each unbound <code>paired</code> terminal of the store a different word, and
+the staff member types the word they see on the terminal in their hand into the register.
+The word is a pair: two different words of the middleware’s list, in order, joined by a dot, such as
+<code>rabbit.lamp</code>, and the staff member types the two with the dot or a space between them. The POS
+never sees a word: the word is the whole proof that the person at the register holds that
+terminal. Two frames reach the terminal, and neither needs anything back.</p>
+<pre><code class="language-json">{ "MessageType": "LinkWord", "Word": "rabbit.lamp", "ExpiresInSeconds": 120 }
+{ "MessageType": "LinkEnded", "Linked": true }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>mw</code></td><td><code>LinkWord</code> or <code>LinkEnded</code></td></tr>
+<tr><td><code>Word</code></td><td><code>mw</code></td><td>On <code>LinkWord</code>: the word to show, two different words of the middleware’s list, each 3 to 6 lowercase letters, in order, joined by a dot, <code>^[a-z]{3,6}\.[a-z]{3,6}$</code></td></tr>
+<tr><td><code>ExpiresInSeconds</code></td><td><code>mw</code></td><td>On <code>LinkWord</code>: how long to show it, in whole seconds from when the terminal read the frame, 1 to 300</td></tr>
+<tr><td><code>Linked</code></td><td><code>mw</code></td><td>On <code>LinkEnded</code>: <code>true</code> on the terminal the register linked, and <code>false</code> on every other</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Show the word until a <code>LinkEnded</code> comes or <code>ExpiresInSeconds</code> pass</strong>, whichever is first,
+large enough to read across a counter. Count the seconds from when the terminal read the
+frame, so a lost <code>LinkEnded</code> leaves nothing on the screen and no clock is compared. On
+<code>LinkEnded</code>, clear the word, and if <code>Linked</code> is <code>true</code> show that the terminal linked. A later
+<code>LinkWord</code> replaces the word shown.</p>
+<p>A terminal shows a word only while a register is asking, and the request times out by
+itself, so a terminal has no menu to open and nothing to choose. The middleware sends no word to a
+terminal in a sale until the sale ends, and to a bound terminal none at all. Never log the
+word, and never send it back: the middleware’s own log holds it as <code>&lt;withheld&gt;</code>.</p>
+<h2 id="instruction"><a class="header" href="#instruction">Instruction</a></h2>
+<p>The middleware to the terminal. One frame starts one payment: a sale, or with
+<code>TransactionType</code> <code>RFND</code> a refund (A refund, below).</p>
+<pre><code class="language-json">{ "MessageType": "Instruction", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "SaleReferenceIdentification": "INV-1001", "TransactionDetails": { "Currency": "AUD", "TotalAmount": "12.50", "SaleItem": [ { "ProductDescription": "Flat white", "ProductQuantity": 2, "UnitPrice": "6.25", "ProductAmount": "12.50" } ] } }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>mw</code></td><td><code>Instruction</code></td></tr>
+<tr><td><code>TransactionType</code></td><td><code>mw</code></td><td><code>RFND</code> on a refund’s instruction, and absent on a sale’s, which reads as <code>CRDP</code>. Read it first. Sent only to a terminal that declared <code>RFND</code> (Connect, above)</td></tr>
+<tr><td><code>TransactionReference</code></td><td><code>mw</code></td><td>The sale, or with <code>RFND</code> the refund, <code>sal_</code> then 32 lowercase hex characters. Keep it and return it as received</td></tr>
+<tr><td><code>SaleReferenceIdentification</code></td><td><code>mw</code></td><td>The POS’s reference</td></tr>
+<tr><td><code>CashierIdentification</code></td><td><code>mw</code></td><td>The POS’s identifier for the user of the POS who made the sale or the refund, present only if the POS sent one: show, print or pass it on, or ignore it</td></tr>
+<tr><td><code>TransactionDetails</code></td><td><code>mw</code></td><td>What to charge, or with <code>RFND</code> to refund, and the items when there are any</td></tr>
+<tr><td><code>TransactionDetails.Currency</code></td><td><code>mw</code></td><td><code>AUD</code></td></tr>
+<tr><td><code>TransactionDetails.TotalAmount</code></td><td><code>mw</code></td><td><strong>Charge this amount and show it as the total</strong>, or with <code>RFND</code> refund it, adding nothing to it</td></tr>
+<tr><td><code>TransactionDetails.SaleItem</code></td><td><code>mw</code></td><td>Present only when the sale has items, in the POS’s order</td></tr>
+<tr><td><code>SaleItem[].ProductDescription</code></td><td><code>mw</code></td><td>The name to show</td></tr>
+<tr><td><code>SaleItem[].ProductQuantity</code></td><td><code>mw</code></td><td>A JSON integer, for display</td></tr>
+<tr><td><code>SaleItem[].UnitPrice</code></td><td><code>mw</code></td><td>The price of one unit, an amount</td></tr>
+<tr><td><code>SaleItem[].UnitPriceSign</code></td><td><code>mw</code></td><td>Present only if the POS sent it. A boolean: <code>false</code> means show the price as negative, and absent means plus</td></tr>
+<tr><td><code>SaleItem[].ProductAmount</code></td><td><code>mw</code></td><td>The line’s total, an amount</td></tr>
+<tr><td><code>SaleItem[].ProductAmountSign</code></td><td><code>mw</code></td><td>As <code>UnitPriceSign</code>, for <code>ProductAmount</code></td></tr>
+<tr><td><code>OriginalTransaction</code></td><td><code>mw</code></td><td>With <code>RFND</code> alone: the sale to refund, as the middleware holds it. Absent on a sale’s</td></tr>
+<tr><td><code>OriginalTransaction.TransactionReference</code></td><td><code>mw</code></td><td>The sale refunded, <code>sal_</code> then 32 lowercase hex characters: the <code>TransactionReference</code> its own instruction carried. The outcome returns the refund’s <code>TransactionReference</code>, never this one</td></tr>
+<tr><td><code>OriginalTransaction.POIIdentification</code></td><td><code>mw</code></td><td>The terminal that took the sale, which may be another than this one</td></tr>
+<tr><td><code>OriginalTransaction.SaleReferenceIdentification</code></td><td><code>mw</code></td><td>The POS’s reference for the sale</td></tr>
+<tr><td><code>OriginalTransaction.TransactionDateTime</code></td><td><code>mw</code></td><td>The sale’s approving outcome’s <code>TransactionDateTime</code>, as that terminal stated it, for a host whose original data needs it. Absent when it sent none</td></tr>
+<tr><td><code>OriginalTransaction.PaymentReference</code></td><td><code>mw</code></td><td>What the sale’s approving outcome carried that passed, under the same groups and keys (References by kind, below), less <code>Card.AcquirerMerchantIdentification</code>. Absent when nothing is left</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>What to charge.</strong> The terminal charges <code>TotalAmount</code> and shows it as the total, whatever
+the items say, and takes the payment whether or not it can show the items. It adds nothing to
+<code>TotalAmount</code>: no surcharge, tip or fee, neither its own nor one its merchant settings would
+apply to a payment it starts itself, so switch those settings off for a payment the middleware
+instructs. A store’s own surcharge on the bill, such as 15% on a public holiday, is already
+inside <code>TotalAmount</code>: the POS added it before it sent the sale, so never add it again. No card
+payment surcharge is taken through the middleware. A refund refunds exactly <code>TotalAmount</code>
+(A refund, below). The approval states what the host approved, in
+<code>TransactionDetails.AuthorisedAmount</code> (Outcome, below), and the middleware logs one other than
+<code>TotalAmount</code> as the terminal breaking this contract.</p>
+<p><strong>The items.</strong> Show the items if the terminal can, and ignore <code>SaleItem</code> if it cannot. They
+never change what is charged, and a terminal never adds them up. Assume no length or
+alphabet for <code>ProductDescription</code>, and clip what cannot be shown: the schema gives that
+field no pattern, so the bound can widen later. The POS’s <code>ProductCode</code>, tax, discounts,
+product identifiers and the basket’s header stay in the middleware.</p>
+<p><strong>What a terminal ignores.</strong> Ignore any key a frame the middleware sends does not name, at any
+depth, on an <code>Instruction</code>, a <code>Refusal</code>, a <code>LinkWord</code>, a <code>LinkEnded</code>, a <code>StatusRequest</code>, an
+<code>Abort</code> and a <code>LoginRequest</code>, and in the <code>SignedValue</code> group a <code>LoginRequest</code> opens to: a later
+version may add some. Ignore a frame of any <code>MessageType</code> the terminal does not know.</p>
+<p><strong>The middleware sends each instruction once.</strong> A drop does not bring it back. Instead, the
+middleware asks about an instruction lost in a drop on a later connection of the terminal, by
+a <code>StatusRequest</code>, when that connection declared <code>SSMQ</code> (StatusRequest, below). If a
+<code>TransactionReference</code> the terminal has already started arrives again, do not charge again:
+resend its stored outcome if it has one. An instruction the terminal cannot act on, such as a
+<code>Currency</code> it does not support, gets <code>RJCT</code> with <code>Reason</code> <code>AB11</code>, because no payment was taken.</p>
+<p><strong>Keep the reference first.</strong> Store the <code>TransactionReference</code> before taking the card, so a
+crash or a reboot can still report. On restart, find out from the host what happened, then
+send the outcome.</p>
+<h2 id="a-refund"><a class="header" href="#a-refund">A refund</a></h2>
+<p>An <code>Instruction</code> with <code>TransactionType</code> <code>RFND</code> is a refund: a sale running the other way, sent
+and settled as a sale is. The POS asks for it against a sale the middleware approved, and the
+middleware adds what it kept of that sale, under <code>OriginalTransaction</code>:</p>
+<pre><code class="language-json">{ "MessageType": "Instruction", "TransactionType": "RFND", "TransactionReference": "sal_02a8f3c4d5e6f708192a3b4c5d6e7f80", "SaleReferenceIdentification": "CN-1001", "TransactionDetails": { "Currency": "AUD", "TotalAmount": "6.25", "SaleItem": [ { "ProductDescription": "Flat white", "ProductQuantity": 1, "UnitPrice": "6.25", "ProductAmount": "6.25" } ] }, "OriginalTransaction": { "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "POIIdentification": "T-APPROVE", "SaleReferenceIdentification": "INV-1001", "TransactionDateTime": "2026-11-06T15:12:40+11:00", "PaymentReference": { "Card": { "RetrievalReferenceNumber": "631012345678", "SystemTraceAuditNumber": "000123", "AuthorisationCode": "A1B2C3", "AcquirerPOIIdentification": "12345678", "RefundReference": "klujhadsc9ph87asd" } } } }
+</code></pre>
+<p><code>TransactionType</code> is ISO 20022’s <code>TransactionType</code> (<code>TxTp</code>) of <code>PaymentTransaction183</code>: “Type
+of transaction being undertaken for the main service.” Its codes are ISO’s
+<code>CardPaymentServiceType16Code</code>: <code>CRDP</code>, “Card payment.”, and <code>RFND</code>, “Refund transaction.” ISO
+names them for cards, and this contract uses them for every rail. <code>OriginalTransaction</code> is
+ISO’s <code>OriginalTransaction</code> (<code>OrgnlTx</code>): “Identification of the original transaction.” Each
+definition is ISO’s, from M3 (Sources, below).</p>
+<p><strong>Declare it first.</strong> The middleware sends a refund only on a connection whose upgrade said the
+terminal takes refunds, <code>Mw-Transaction-Types: CRDP, RFND</code> (Connect, above). A terminal that
+declares nothing is sent sales alone, so one built to an earlier version, which would ignore
+<code>TransactionType</code> and charge the amount, is never sent a refund.</p>
+<p><strong>Read <code>TransactionType</code> first.</strong> With <code>RFND</code>, store the <code>TransactionReference</code>, which is the
+refund’s own, then refund <code>TotalAmount</code>, the amount to refund, against the sale
+<code>OriginalTransaction</code> names. Refund by its references where the host can retrieve the original
+transaction, and with the card presented where it cannot, never replaying the sale’s
+authentication data. A payment over NPP, PayTo included, or through a wallet or payment app, is
+refunded through the app or provider that took it, by the ids of its group in
+<code>OriginalTransaction.PaymentReference</code>. The refund’s terminal need not be the sale’s:
+<code>OriginalTransaction.POIIdentification</code> names the one that took it, and a host whose references
+do not reach across its own terminals declines. A code the terminal does not take, or a refund
+it cannot make for this kind of payment, gets <code>RJCT</code> with <code>Reason</code> <code>AB11</code>, and moves no money.</p>
+<p><strong>The outcome is a sale’s.</strong> Report the refund in an <code>Outcome</code> under the refund’s own
+<code>TransactionReference</code>, never the sale’s: <code>ACSP</code> when the whole <code>TotalAmount</code> was refunded,
+<code>RJCT</code> with <code>AG07</code> when the host declined the refund, <code>RJCT</code> with <code>DS02</code> when the terminal
+stopped the refund, before it reached the host, in answer to an <code>Abort</code> (Abort, below), and
+<code>RJCT</code> with <code>AB11</code> for every other way no refund was made (Which <code>TransactionStatus</code> to send,
+below). The refund’s own references, such as the host’s new retrieval reference, go under the
+groups and keys of References by kind, below. Store the outcome, send it, and send it again after
+any reconnect, as a sale’s (Resending is safe, below). A <code>TransactionReference</code> the terminal
+already started is never refunded twice.</p>
+<p><strong>No total is kept.</strong> The middleware keeps no total of a sale’s refunds: it relays every refund,
+whole or part, however many the sale has had, and does not compare a refund’s amount with the
+sale’s. A host that caps a sale’s refunds declines the one past its cap, and the terminal sends
+<code>RJCT</code> with <code>AG07</code>.</p>
+<p><strong>A refund’s <code>UNKN</code> is a sale’s.</strong> A refund has a sale’s deadline and hold: with no outcome by
+<code>MW_SALE_DEADLINE_SECS</code>, the POS reads <code>UNKN</code>, and a late outcome replaces it unless the terminal
+contradicted itself. The middleware sends a refund’s instruction once and holds no amount for it.
+A refund the terminal never received is asked about on a later connection, by a
+<code>StatusRequest</code>, as a sale’s is (StatusRequest, below). Until the terminal answers, the POS reads
+<code>UNKN</code>, and the cashier checks the terminal before refunding another way. Always send a refund’s
+outcome, however late.</p>
+<h2 id="one-payment-at-a-time"><a class="header" href="#one-payment-at-a-time">One payment at a time</a></h2>
+<p>The middleware sends no second instruction while a sale or a refund holds the terminal. If
+one arrives anyway, do not start it and do not queue it: store <code>RJCT</code> with <code>AB11</code> as the
+outcome of its <code>TransactionReference</code>, and send it. No payment was taken for it, and the POS
+reads that as a definite answer. Queueing is how a customer pays twice. A terminal with a
+payment it cannot yet resolve is still busy, even after the middleware’s hold ends, so the same
+applies.</p>
+<h2 id="deadline"><a class="header" href="#deadline">Deadline</a></h2>
+<p>Send the outcome as soon as it is known. If the middleware has heard nothing by
+<code>MW_SALE_DEADLINE_SECS</code>, 120 seconds by default, it tells the POS <code>UNKN</code>. The terminal
+stays claimed for <code>MW_TERMINAL_HOLD_SECS</code> more, 180 seconds by default, so no new sale
+reaches it while it may still be mid-payment.</p>
+<p><strong>Always send the outcome, however late.</strong> A late outcome replaces <code>UNKN</code>, and is the only
+way the POS learns the truth.</p>
+<p>The middleware holds a sale for <code>MW_SALE_RETENTION_SECS</code>, 86,400 seconds by default, which is
+24 hours, after it settled or went <code>UNKN</code>. After that, an outcome for it gets <code>not_held</code>.</p>
+<h2 id="statusrequest"><a class="header" href="#statusrequest">StatusRequest</a></h2>
+<p>The middleware to the terminal: a question about a sale or a refund the middleware still holds
+open for the terminal, made while an earlier connection held it, whose <code>Instruction</code> may have
+been lost. The terminal answers with an ordinary <code>Outcome</code>, or with nothing: no new frame
+goes back.</p>
+<pre><code class="language-json">{ "MessageType": "StatusRequest", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "SecondsSinceInstruction": 34 }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>mw</code></td><td><code>StatusRequest</code></td></tr>
+<tr><td><code>TransactionReference</code></td><td><code>mw</code></td><td>The sale or the refund asked about, <code>sal_</code> then 32 lowercase hex characters: the <code>TransactionReference</code> its <code>Instruction</code> carried</td></tr>
+<tr><td><code>SecondsSinceInstruction</code></td><td><code>mw</code></td><td>A JSON integer from 0: the whole seconds from the sale’s creation to this frame, by the middleware’s clock, rounded up</td></tr>
+</tbody>
+</table>
+</div>
+<p>ISO 20022 names the exchange a status request asks about by <code>ExchangeIdentification</code>:
+“Transaction identification.” This frame names it by the key its <code>Instruction</code> carried,
+<code>TransactionReference</code>. <code>SecondsSinceInstruction</code> is the middleware’s own, since ISO’s request
+carries no time, and so is the frame’s name.</p>
+<p><strong>When it comes.</strong> The middleware sends a <code>StatusRequest</code> only on a connection whose upgrade
+declared <code>SSMQ</code> in <code>Mw-Message-Functions</code> (Connect, above). A terminal that declared none is
+sent none.</p>
+<p>From the connection’s first ping, <code>MW_WS_PING_SECS</code> after it opened, 30 seconds by default, the
+middleware asks about each sale and refund of the terminal that it still holds open, <code>PDNG</code> or
+<code>UNKN</code>, and that was made in the last 23 hours, oldest first.</p>
+<p>It asks only about a sale made while an earlier connection held the terminal. A sale made while
+this connection held it is never asked about on it, whether or not its <code>Instruction</code> went out.</p>
+<p>It sends at most 4 at each ping, and asks about a sale at most once a connection, until none is
+left. A <code>StatusRequest</code> changes no sale and moves no timer: the deadline and the hold run as
+they would without it.</p>
+<p><strong>How a terminal answers.</strong> A terminal keeps every <code>TransactionReference</code> it received, with its
+outcome once it has one, for at least 24 hours, and knows how far back its store of references
+reaches. It answers a <code>StatusRequest</code> by what it holds for the reference:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What the terminal holds for the <code>TransactionReference</code></th><th>What it does</th></tr>
+</thead>
+<tbody>
+<tr><td>An outcome</td><td>Sends that outcome, unless it already sent it on this connection</td></tr>
+<tr><td>A payment it has not finished</td><td>Sends nothing until it knows, then that outcome, once (The paths, step by step, below)</td></tr>
+<tr><td>No record, and its store of references reaches back further than <code>SecondsSinceInstruction</code></td><td>Stores <code>RJCT</code> with <code>AB11</code> as that reference’s outcome, and sends it. An <code>Instruction</code> of that reference that comes later is never started, and is answered with that outcome on the terminal’s current connection, unless it already sent it on that connection</td></tr>
+<tr><td>No record, and its store does not reach back that far</td><td>Sends nothing: it cannot prove it never received the <code>Instruction</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>How far back the store reaches.</strong> A terminal’s store of references reaches back to the latest
+of three times: when the store began; when it stored the newest reference it dropped, by its
+limit on how many it keeps or by age, the oldest first; and when it lost any reference another
+way, such as one it received and could not store. A reset that clears the store begins it
+again. So does a restart, unless the whole store, with those times, survives it. A terminal
+measures how long ago those times were on a clock that never jumps, such as a monotonic clock,
+and never by the time of day: a time of day set forward makes the store look older than it is.
+So a terminal never answers <code>RJCT</code> with <code>AB11</code> for a reference it may have received.</p>
+<p>The answer is an ordinary <code>Outcome</code>, and the middleware applies it as any outcome: a late one
+replaces <code>UNKN</code>, a repeat changes nothing, and a different result is a contradiction (Resending
+is safe, below). So send an outcome at most once on one connection, whether a <code>StatusRequest</code>
+asked for it or not.</p>
+<p><strong>Why the two times.</strong> <code>SecondsSinceInstruction</code> lets a terminal compare the request with how
+far back its own store of references reaches, so no two clocks are compared. The middleware asks only about
+sales of the last 23 hours, and a terminal keeps 24, so a terminal never takes a reference it
+has pruned for one it never received. A store that does not reach back that far, on a new
+device, after a re-pair or a reinstall, or once the store was cleared, cannot prove that the
+<code>Instruction</code> never came. So the terminal sends nothing, and the sale reads <code>UNKN</code> until a late
+outcome or retention.</p>
+<p><strong>What a conformance run shows.</strong> The sandbox’s conformance run stages one case: it takes the
+terminal’s connection itself while a sale is made, so the sale’s <code>Instruction</code> never reaches the
+terminal, then closes it. It judges that the terminal declared <code>SSMQ</code>, was sent a
+<code>StatusRequest</code> for the sale on its own connection, and answered <code>RJCT</code> with <code>AB11</code>, once. A
+green run does not prove the rest of this contract’s recovery:</p>
+<ul>
+<li>that a terminal that does not know whether a payment was taken finds out by an enquiry to its
+host, or by a reversal the host confirmed (The paths, step by step, below);</li>
+<li>that it reports before the hold ends, 300 seconds from the instruction at the default
+settings, where its host answers;</li>
+<li>that it sends nothing for a payment it has not finished, then that outcome once it knows;</li>
+<li>that it sends nothing where its store of references does not reach back past
+<code>SecondsSinceInstruction</code>;</li>
+<li>that it answers a second instruction while a payment runs with <code>RJCT</code> and <code>AB11</code> (One
+payment at a time, above).</li>
+</ul>
+<h2 id="abort"><a class="header" href="#abort">Abort</a></h2>
+<p>The middleware to the terminal: stop the payment of a sale or a refund, because its POS asked to
+cancel it. The terminal answers with an ordinary <code>Outcome</code>, or with nothing: no new frame goes
+back.</p>
+<pre><code class="language-json">{ "MessageType": "Abort", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a" }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>mw</code></td><td><code>Abort</code></td></tr>
+<tr><td><code>TransactionReference</code></td><td><code>mw</code></td><td>The sale or the refund to stop, <code>sal_</code> then 32 lowercase hex characters: the <code>TransactionReference</code> its <code>Instruction</code> carried</td></tr>
+</tbody>
+</table>
+</div>
+<p>The frame is named after ISO 20022’s <code>SaleToPOIAbort</code>: “The SaleToPOIAbort message is sent by a
+sale system to abort process on POI.” ISO names the exchange to abort by <code>ExchangeIdentification</code>
+of <code>AbortData7</code>: “Message identifier.” This frame names it by the key its <code>Instruction</code> carried,
+<code>TransactionReference</code>. ISO’s abort also requires an <code>AbortReason</code>, free text, and this frame
+carries no reason, since free text is where card and personal data slip in. Each definition is
+ISO’s, from M3 (Sources, below).</p>
+<p><strong>When it comes.</strong> The middleware sends an <code>Abort</code> only on a connection whose upgrade declared
+<code>SSAB</code> in <code>Mw-Message-Functions</code> (Connect, above). A terminal that declared none is sent none.</p>
+<p>It sends one when a POS asks to cancel a sale or a refund, with
+<code>POST /v1/sales/{TransactionReference}/abort</code>, while the sale still holds the terminal: <code>PDNG</code>,
+or <code>UNKN</code> inside the terminal’s hold. It sends one frame for each request it admits, so the same
+reference can come more than once, and queues it behind any frame already waiting on the
+connection, so an <code>Abort</code> never overtakes its own <code>Instruction</code> on that connection.</p>
+<p><strong>How a terminal answers.</strong> A terminal answers an <code>Abort</code> by what it holds for the reference:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What the terminal holds for the <code>TransactionReference</code></th><th>What it does</th></tr>
+</thead>
+<tbody>
+<tr><td>Its current payment, not yet sent to its host</td><td>Stops the payment, shows it cancelled, and sends <code>RJCT</code> with <code>DS02</code></td></tr>
+<tr><td>Its current payment, already with its host</td><td>Carries on, and sends the host’s outcome, or finds it out from the host, as for any payment whose result it does not know (The paths, step by step, below)</td></tr>
+<tr><td>An outcome, its payment ended</td><td>Sends that outcome, unless it already sent it on this connection: a sale the middleware still holds open has lost it</td></tr>
+<tr><td>No record</td><td>Sends nothing: an <code>Instruction</code> lost in a drop is asked about by a <code>StatusRequest</code> on a later connection (StatusRequest, above)</td></tr>
+</tbody>
+</table>
+</div>
+<p>The answer is an ordinary <code>Outcome</code>, and the middleware applies it as any outcome: a repeat
+changes nothing, and a different result is a contradiction (Resending is safe, below). So send an
+outcome at most once on one connection, however many <code>Abort</code> frames name its reference.</p>
+<p><strong>Only the payment it names.</strong> An <code>Abort</code> acts only on the payment its <code>TransactionReference</code>
+names, and never stops a payment for any other reference. An outcome can end the sale between
+the middleware’s check and its sending of the <code>Abort</code>, so an <code>Abort</code> can arrive after its sale
+ended, while the terminal runs another sale’s payment: it leaves that payment alone, and the
+terminal answers the <code>Abort</code> by the table above, from what it holds for the reference.</p>
+<p><strong><code>DS02</code> answers an <code>Abort</code> alone.</strong> A terminal sends <code>DS02</code> only in answer to an <code>Abort</code>, and a
+cancel at the terminal, by the customer or the staff, stays <code>AB11</code> (Which <code>TransactionStatus</code> to
+send, below).</p>
+<p><strong>The deadline does not move.</strong> An <code>Abort</code> moves no timer: the deadline and the hold run as they
+would without it. A <code>DS02</code> after the deadline is a late outcome, and replaces the <code>UNKN</code> the POS
+reads, as any late outcome does. The terminal stays claimed until its outcome or the hold’s end,
+so send the <code>DS02</code> as soon as the payment stops.</p>
+<p><strong>A refund.</strong> A refund is aborted as a sale is, by its own <code>TransactionReference</code>. Its <code>DS02</code>
+means no refund was made. A refund already with its host carries on, and the host’s answer
+stands.</p>
+<p><strong>What a conformance run shows.</strong> The sandbox’s conformance run stages one case, <code>cancel</code>: it
+sends the terminal a sale, whose payment the tester holds with no card presented, and asks to
+cancel it 3 seconds after the <code>Instruction</code>. It judges that the terminal declared <code>SSAB</code>, and
+answered the <code>Abort</code> with <code>RJCT</code> and <code>DS02</code>, once, with no <code>Refusal</code>. A green run does not prove
+the rest of this contract’s abort:</p>
+<ul>
+<li>that a terminal whose payment is already with its host carries on and sends the host’s
+outcome, never <code>DS02</code>;</li>
+<li>that it sends <code>DS02</code> only in answer to an <code>Abort</code>, and <code>AB11</code> for a cancel at the terminal;</li>
+<li>that an <code>Abort</code> never stops a payment for another reference;</li>
+<li>that, for a reference whose payment ended, it sends that outcome, unless it already sent it on
+this connection;</li>
+<li>that, for a reference it holds no record of, it sends nothing.</li>
+</ul>
+<h2 id="signing-in"><a class="header" href="#signing-in">Signing in</a></h2>
+<p>A terminal may need a session at its fleet’s own payment system before it can take a payment,
+and may hold none: after its process starts, or once that system ended the session. A terminal
+that declared <code>SASQ</code> (Connect, above) asks the middleware for what that system takes for a
+sign-in, with a <code>LoginNeeded</code>. The middleware answers on the same connection with a
+<code>LoginRequest</code>, made from the credential the fleet set for the terminal’s store and sealed to a
+key the terminal made for that one asking, or with a <code>Refusal</code> saying why not. The terminal opens
+the answer, takes it to its fleet’s payment system itself, and reports what that system answered
+in a <code>LoginResponse</code>. The middleware never sees the session and cannot end it: ending one is the
+fleet’s. A POS changes nothing for it: it sends no new field and reads no new code, and a sale to
+a terminal that signs in reads as any sale.</p>
+<p><code>SASQ</code> is ISO 20022’s <code>RetailerMessage1Code</code> <code>SASQ</code>: “Request the management of a session:
+login, logout and diagnosis services. Initiated by the Sale system.” ISO 20022 has no message by
+which a terminal asks for a login: <code>LoginNeeded</code> is the middleware’s own name. <code>LoginRequest</code> is
+named after ISO 20022’s <code>LoginRequest</code>, of <code>SessionManagementRequest9</code>, “Content of the Login
+Request message.”, and carries none of its elements. <code>LoginResponse</code> is named after ISO 20022’s
+<code>LoginResponse</code>, the block a POI sends to answer a login, of <code>SessionManagementResponse9</code>,
+“Content of the Login Response message.”, and carries none of its elements either. Each
+definition is ISO’s, from M3 (Sources, below).</p>
+<h3 id="when-to-ask"><a class="header" href="#when-to-ask">When to ask</a></h3>
+<p><strong>Declare it.</strong> Send <code>SASQ</code> in <code>Mw-Message-Functions</code> on every upgrade, once the terminal does
+all this section says. Declaring <code>SASQ</code> declares that the terminal can be woken.</p>
+<p><strong>Wake.</strong> Given an <code>Instruction</code> while it is asleep, its screen off or its application not in
+front, a terminal that declared <code>SASQ</code> turns the screen on and brings its payment screen to the
+front over the lock screen, then asks if it holds no session. The middleware cannot see the
+screen, and neither can a conformance run, so this is the contract’s rule alone.</p>
+<p><strong>Ask.</strong> A terminal asks only while it holds no session at its fleet’s payment system: on an
+<code>Instruction</code>, or at connect where it knows it holds none, which takes the round trip off the
+sale’s path. It asks at most once a connection, unless its fleet’s payment system refused what it
+was sent. For each asking it makes a fresh P-256 key pair in memory, not in its keystore, and
+sends one <code>LoginNeeded</code> holding the public key, then reads the answer before its next frame, as
+Refusal, below, asks of every frame.</p>
+<h3 id="the-ask-loginneeded"><a class="header" href="#the-ask-loginneeded">The ask: <code>LoginNeeded</code></a></h3>
+<p>The terminal to the middleware, on a connection whose upgrade declared <code>SASQ</code>:</p>
+<pre><code class="language-json">{ "MessageType": "LoginNeeded", "RecipientKey": { "PublicKey": "BP6MGc4JBRkevCmKkkV5JTHybwzs4kYGOei8Oct_cGqCanebTPlpuKDlOcf2L7PTCtaqj4DjDx0Siq_WiiznLqA", "Signature": "MEQCIBERERERERERERERERERERERERERERERERERERERERERAiAiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg" } }
+</code></pre>
+<p>Its <code>PublicKey</code> is the worked vector’s (The worked vector, below), and its <code>Signature</code> is filler
+of a signature’s shape, made by no key.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>terminal</code></td><td><code>LoginNeeded</code></td></tr>
+<tr><td><code>RecipientKey</code></td><td><code>terminal</code></td><td>The key the answer is sealed to: the public part of a fresh P-256 key pair the terminal made for this one asking, in memory and not in its keystore. Absent, or not an object, and the ask is refused <code>recipient_key_invalid</code></td></tr>
+<tr><td><code>RecipientKey.PublicKey</code></td><td><code>terminal</code></td><td>The key’s 65 bytes as RFC 9180 § 7.1.1 serialises a P-256 key, uncompressed: <code>0x04</code>, then X and Y, which are the last 65 bytes of the key’s SubjectPublicKeyInfo. In base64url with no padding, 87 characters</td></tr>
+<tr><td><code>RecipientKey.Signature</code></td><td><code>terminal</code></td><td>A DER ECDSA P-256 SHA-256 signature by the key of the certificate the connection presented, over the bytes below, in base64url with no padding. Required on a connection made with a certificate. Absent on a sandbox key’s connection</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>The key and its signature.</strong> The fresh key’s public part is its 65 bytes, uncompressed, in
+base64url with no padding: 87 characters. On a connection made with a certificate, the terminal
+signs the fresh public key with the key of the certificate the connection presented: the keystore
+key it signs the connection’s TLS with, which needs no person to unlock it, so it signs while the
+device sleeps. During a renewal’s overlap, that is the certificate the connection presented, and
+not the newer one. The signature is DER ECDSA P-256 SHA-256, as a keystore’s <code>SHA256withECDSA</code>
+makes it, in base64url with no padding, over <code>mw-signin-recipient-v1</code>, a zero byte, the
+<code>POIIdentification</code>’s bytes, a zero byte and the 65 bytes of the public key. On a sandbox key’s
+connection, which has no enrolled key, send no signature: one sent there is ignored, unchecked.</p>
+<p>A <code>PublicKey</code> that is not 65 bytes in base64url, does not start <code>0x04</code> or is not a point on P-256,
+and on a certificate’s connection a <code>Signature</code> that is absent, malformed or does not verify, are
+refused <code>recipient_key_invalid</code>, and nothing is counted. A key’s shape is checked before anything
+is read; its <code>Signature</code> is checked after the connection’s standing, so a terminal that may no
+longer hold its connection is answered <code>terminal_not_permitted</code> first. Any other key of an ask is
+dropped by its path and named in the middleware’s log, its value unread. The log holds
+<code>PublicKey</code> and <code>Signature</code> as <code>&lt;withheld&gt;</code>.</p>
+<h3 id="the-answer-loginrequest"><a class="header" href="#the-answer-loginrequest">The answer: <code>LoginRequest</code></a></h3>
+<p>The middleware to the terminal, on the connection that asked, once for each ask it answers. The
+terminal reports what it did with it in one <code>LoginResponse</code> (The report, below):</p>
+<pre><code class="language-json">{ "MessageType": "LoginRequest", "Sealed": { "Suite": { "Kem": "0x0010", "Kdf": "0x0001", "Aead": "0x0001" }, "EncapsulatedKey": "BKknGcYZXVCFEE9GmouYFNWDj_crYFAeLERm5eZ7MlrJhTbXthoa9LeOW3-VHAkAvoY8QDzmXJv8uTgmVyItGMQ", "Ciphertext": "lBCfkZ_DE_rUYr4T8YvnPkwWL-HGT2pnyH-9m9966nZyzqH9DDcJvw8t5m2Axq_0jy7Rpl0Ikp1eSwtuyjMilpbQHFbebpvOk_WCMtWZVtgzXxVKbQP_5aZwD-ClLG-3cfl2CiUm_QYJWIJ93O3aII6uQKYYTKY3SFZZPccdgJdiD0clDN4ET8Q8S6S5UfDaYMJUenbeiXxsFTnDRIsUzpfRPyguEBLpb9vrnNkf2NFvMwRZTb6rfnB84Z0kITHiiIDpSAAgSDaE5f3VSPPakIIR_9-b2_ruJJAprjwvKhBKg2CSeZKkV_3L16mbFpGn3F-VyaHcBQ" } }
+</code></pre>
+<p>It is the worked vector’s (The worked vector, below), a vector of the seal, whose plaintext
+holds the group’s first four keys alone. An answer’s <code>Ciphertext</code>, opened, gives the
+<code>SignedValue</code> group: its four keys, <code>Adapter</code>, <code>KeyIdentification</code>, <code>Challenge</code> and <code>Signature</code>,
+then <code>LoginReference</code>, then each of <code>AcceptorIdentification</code>, <code>UserName</code> and
+<code>ApplicationIdentification</code> the terminal’s store holds, in that order. A key absent is a value
+the store does not hold. Here, the group of a store that holds all three:</p>
+<pre><code class="language-json">{ "Adapter": "signed_value", "KeyIdentification": "key-example-1", "Challenge": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "Signature": "WlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlo=", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "AcceptorIdentification": "merchant-example-1", "UserName": "user-example-1", "ApplicationIdentification": "app-example-1" }
+</code></pre>
+<p>Its <code>Challenge</code> is the worked vector’s, its <code>Signature</code> is filler of a signature’s shape, made by
+no key, and its other values are made up, no fleet’s. A store that holds none of the three is
+sent the four keys and <code>LoginReference</code> alone.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>mw</code></td><td><code>LoginRequest</code></td></tr>
+<tr><td><code>Sealed</code></td><td><code>mw</code></td><td>The answer, sealed to the ask’s <code>RecipientKey</code> (Opening the answer, below). ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
+<tr><td><code>Sealed.Suite</code></td><td><code>mw</code></td><td>RFC 9180’s ids, as the RFC writes them, <code>0x</code> and four hex digits in upper case: <code>Kem</code> <code>0x0010</code>, <code>Kdf</code> <code>0x0001</code> and <code>Aead</code> <code>0x0001</code> in this version. A later suite is another value, and a terminal refuses a suite it does not take</td></tr>
+<tr><td><code>Sealed.EncapsulatedKey</code></td><td><code>mw</code></td><td>RFC 9180’s <code>enc</code>, the sender’s ephemeral public key, fresh for each answer, in base64url with no padding: under KEM <code>0x0010</code>, 65 bytes, 87 characters. A public key: the middleware’s log holds it as it is</td></tr>
+<tr><td><code>Sealed.Ciphertext</code></td><td><code>mw</code></td><td>RFC 9180’s single-shot seal of the group’s JSON, the AEAD’s 16-byte tag last, in base64url with no padding. The middleware’s log holds it as <code>&lt;withheld&gt;</code></td></tr>
+<tr><td><code>SignedValue</code></td><td><code>mw</code></td><td>Sealed: the group the plaintext is the JSON of. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
+<tr><td><code>SignedValue.Adapter</code></td><td><code>mw</code></td><td>Sealed: what made the group, <code>signed_value</code>, or <code>sandbox_signed_value</code> in the sandbox. A later kind seals a group of its own, told apart by its <code>Adapter</code></td></tr>
+<tr><td><code>SignedValue.KeyIdentification</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>KeyIdentification</code>, “Identification of the cryptographic key.”, here the id of the fleet’s key at its payment system, as the fleet set it</td></tr>
+<tr><td><code>SignedValue.Challenge</code></td><td><code>mw</code></td><td>Sealed: the random value signed, as text: lowercase hex, base64url with no padding, or a version 4 UUID’s 36 characters in lowercase, as the fleet’s credential says. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
+<tr><td><code>SignedValue.Signature</code></td><td><code>mw</code></td><td>Sealed: the MAC over <code>Challenge</code>’s ASCII bytes, written as the fleet’s credential says. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
+<tr><td><code>SignedValue.LoginReference</code></td><td><code>mw</code></td><td>Sealed: the middleware’s name for this one answer, <code>lgn_</code> then 32 lowercase hex characters, drawn for each answer, so every group holds one. Name it in the <code>LoginResponse</code> that reports the answer (The report, below). Not a secret. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
+<tr><td><code>SignedValue.AcceptorIdentification</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>AcceptorIdentification</code>, “Identification of the card acceptor performing the transaction.”, here the store’s own number at its fleet’s payment system: which of the fleet’s merchants the terminal signs in for. Absent where the store holds none</td></tr>
+<tr><td><code>SignedValue.UserName</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>UserName</code>, “User name identifying the client.”, here the merchant user the fleet named for the store at its payment system. It names an account, never a person or an e-mail address. Absent where the store holds none</td></tr>
+<tr><td><code>SignedValue.ApplicationIdentification</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>ApplicationIdentification</code>, “Identification of the payment application, user of the acquirer protocol.”, here the fleet’s payment application, as the credential the fleet set for the store names it. Absent where the store holds none</td></tr>
+</tbody>
+</table>
+</div>
+<p>Ignore any key not named here, at any depth: a later version may add some.</p>
+<h3 id="opening-the-answer"><a class="header" href="#opening-the-answer">Opening the answer</a></h3>
+<ol>
+<li>Check <code>Sealed.Suite</code>, and open only a suite the terminal takes: in this version, <code>Kem</code>
+<code>0x0010</code>, <code>Kdf</code> <code>0x0001</code> and <code>Aead</code> <code>0x0001</code>.</li>
+<li>Under KEM <code>0x0010</code>, check <code>Sealed.EncapsulatedKey</code> is a point on P-256 before the key
+agreement, as RFC 9180 § 7.1.4 asks of a recipient.</li>
+<li>Open <code>Sealed.Ciphertext</code> by RFC 9180’s base mode, <code>mode_base</code>, single-shot, with the fresh
+key’s private part, under the suite KEM <code>0x0010</code>, DHKEM(P-256, HKDF-SHA256), KDF <code>0x0001</code>,
+HKDF-SHA256, and AEAD <code>0x0001</code>, AES-128-GCM. <code>info</code> is 58 bytes: <code>mw-signin-v1</code>, a zero
+byte, <code>LoginRequest</code>, a zero byte, and the SHA-256 of the <code>POIIdentification</code>’s bytes, a zero
+byte and the 32 bytes of the connection’s credential id. The credential id is the SHA-256 of
+the DER of the certificate the connection presented, as the middleware’s log gives it in
+<code>credential_id</code>, or on a sandbox key’s connection the SHA-256 of the whole key’s text, <code>sbx_</code>
+included. <code>aad</code> is empty: zero bytes. An answer moved to another terminal or another
+connection does not open.</li>
+<li>Drop the private key once the answer is opened, or fails to open.</li>
+<li>Treat the opened group as input, not proof of its sender: base mode keeps the answer secret to
+the terminal, and does not prove who sealed it.</li>
+</ol>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Part of <code>info</code></th><th>Bytes</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mw-signin-v1</code>, in ASCII</td><td>12</td></tr>
+<tr><td>A zero byte</td><td>1</td></tr>
+<tr><td><code>LoginRequest</code>, in ASCII</td><td>12</td></tr>
+<tr><td>A zero byte</td><td>1</td></tr>
+<tr><td>The SHA-256 of the <code>POIIdentification</code>’s bytes, a zero byte and the 32 bytes of the credential id</td><td>32</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="what-to-do-with-it"><a class="header" href="#what-to-do-with-it">What to do with it</a></h3>
+<p>The terminal takes the opened <code>SignedValue</code> to its fleet’s payment system itself, in its own
+sign-in request, with whatever else that system needs that the terminal holds, such as its
+serial. With the signed value, it sends that system <code>AcceptorIdentification</code>, <code>UserName</code> and
+<code>ApplicationIdentification</code> as it needs them. A key absent is a value the store does not hold,
+so it sends that system’s own default for it, or none. It keeps the session while its process
+lives, and starts the sale on the path its application takes for a sale it starts itself. It
+does not sign out when its screen leaves the front. It asks again only when its fleet’s payment
+system refuses the session. Never log, store or send back <code>Challenge</code>, <code>Signature</code> or the fresh
+private key, and never log the session. Then report what that system answered (The report,
+below).</p>
+<h3 id="the-report-loginresponse"><a class="header" href="#the-report-loginresponse">The report: <code>LoginResponse</code></a></h3>
+<p>The terminal to the middleware, on the connection that asked, once it has tried its fleet’s
+payment system with an opened answer: one <code>LoginResponse</code> naming the group’s <code>LoginReference</code>,
+before its next frame of sign-in. Send <code>SUCC</code> if that system opened a session with what it was
+sent, or <code>FAIL</code> with the code that fits. Put nothing that system said in the report.</p>
+<pre><code class="language-json">{ "MessageType": "LoginResponse", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "Response": "SUCC" }
+{ "MessageType": "LoginResponse", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "Response": "FAIL", "ResponseReason": "not_covered" }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>terminal</code></td><td><code>LoginResponse</code></td></tr>
+<tr><td><code>LoginReference</code></td><td><code>terminal</code></td><td>The opened group’s <code>LoginReference</code>, as the group held it: <code>lgn_</code> then 32 lowercase hex characters. ISO 20022 has no element for it: the name is the middleware’s own. The middleware’s log holds it as <code>&lt;withheld&gt;</code> in the report’s <code>in</code> line, and names it in the line of a report taken</td></tr>
+<tr><td><code>Response</code></td><td><code>terminal</code></td><td><code>SUCC</code>, ISO’s “Processing OK. […]”: its fleet’s system opened a session with what it was sent. <code>FAIL</code>, ISO’s “Processing of the request fails for various reasons. […]”: it did not. ISO 20022’s <code>Response11Code</code>, of which the middleware takes these two: <code>WARN</code> is not taken</td></tr>
+<tr><td><code>ResponseReason</code></td><td><code>terminal</code></td><td>With <code>FAIL</code>, and required with it; never with <code>SUCC</code>. One of the three codes below, the middleware’s own: ISO 20022 has the name and not these codes</td></tr>
+</tbody>
+</table>
+</div>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>ResponseReason</code></th><th>What the fleet’s payment system did</th></tr>
+</thead>
+<tbody>
+<tr><td><code>not_covered</code></td><td>The fleet’s system answered that the key does not cover the merchant it was sent for</td></tr>
+<tr><td><code>not_accepted</code></td><td>It refused the sign-in for any other reason</td></tr>
+<tr><td><code>no_answer</code></td><td>It did not answer, or could not be reached</td></tr>
+</tbody>
+</table>
+</div>
+<p>Send no other key: any other key of a report is dropped by its path and named in the
+middleware’s log, its value unread.</p>
+<p><strong>What the middleware does with it.</strong> A report the middleware takes gets no frame back, and nor
+does one naming no answer the middleware holds as the terminal’s last one not yet reported: a
+second report of one answer, a report of an answer before the last, or a <code>LoginReference</code> no
+answer had. A report naming no such answer changes nothing: its <code>in</code> line, and a <code>fields_dropped</code>
+line for any key it may not hold, are the only lines it gets. A <code>Refusal</code> of a report is a bug in
+the terminal, apart from two: after <code>terminal_not_permitted</code>, close the connection and reconnect
+with the backoff Reconnect, above, gives; after <code>sign_in_unavailable</code>, go on as the report’s
+<code>Response</code> says, without sending the report again, and ask again no sooner than 60 seconds
+later. A report holding two faults is refused for the first of <code>missing_field</code>,
+<code>invalid_result</code> and <code>invalid_reference</code>, in that order. None of these refusals closes the
+connection (Refusal, below).</p>
+<p><strong>After the report.</strong> After a <code>FAIL</code> other than <code>not_covered</code> that follows a <code>SUCC</code>, or is the
+terminal’s first, ask again at once, once: the middleware answers that one ask inside its
+interval. If that ask is refused <code>sign_in_limited</code>, the middleware counted a failure the
+terminal did not see, so wait 60 seconds. After any other <code>FAIL</code>, <code>not_covered</code> among them, ask
+again no sooner than 60 seconds later. After <code>not_covered</code>, also tell someone: the store’s
+credential does not cover the merchant it was sent for, and asking again does not change that.</p>
+<h3 id="the-two-cases-and-the-other-refusals"><a class="header" href="#the-two-cases-and-the-other-refusals">The two cases, and the other refusals</a></h3>
+<p><strong>No credential at the store.</strong> The ask is refused <code>sign_in_not_available</code>, and a terminal signed
+out is normal: answer the sale <code>RJCT</code> with <code>AB11</code>, unless a person signs in at the terminal by its
+fleet’s own means, and ask no more on that connection.</p>
+<p><strong>A credential attached.</strong> The terminal is woken, signs in with what it is sent, reports what
+its fleet’s payment system answered, and takes the sale.</p>
+<p>Answer a sale the terminal cannot start for want of a session <code>RJCT</code> with <code>AB11</code> (Which
+<code>TransactionStatus</code> to send, below). After the other refusals of an ask, and after an answer
+that does not open:</p>
+<ul>
+<li><code>recipient_key_invalid</code>: a bug in the terminal, in its key or its signature, so alert someone.</li>
+<li>After <code>sign_in_limited</code> or <code>sign_in_unavailable</code>, or no answer in 20 seconds, answer the sale
+<code>RJCT</code> with <code>AB11</code>, and ask again no sooner than 60 seconds later.</li>
+<li>After <code>terminal_not_permitted</code> on an ask, close the connection, reconnect with the backoff
+Reconnect, above, gives, and ask again once a connection is accepted.</li>
+<li>A <code>LoginRequest</code> that does not open, or that names a suite the terminal does not take, is
+treated as <code>sign_in_unavailable</code>: answer the sale <code>RJCT</code> with <code>AB11</code>, and ask again no sooner
+than 60 seconds later. Nothing is reported for it: no group was opened, so there is no
+<code>LoginReference</code> to name.</li>
+</ul>
+<p>At the day’s cap of <code>sign_in_limited</code>, <code>MW_SIGNIN_PER_DAY</code> answers, the middleware writes an
+<code>ERROR</code> line.</p>
+<p>None of these refusals closes the connection (Refusal, below).</p>
+<h3 id="the-worked-vector"><a class="header" href="#the-worked-vector">The worked vector</a></h3>
+<p>Check an implementation against these numbers. Each is a published test value, no fleet’s: the
+sender’s seed and the recipient’s key pair are RFC 9180 § A.3.1’s, and the group is the sandbox’s
+stand-in, signed under the sandbox’s published secret. The middleware draws a fresh seed for each
+answer it seals.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Input</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>The sender’s seed, RFC 9180’s <code>ikmE</code>, 32 bytes in hex</td><td><code>4270e54ffd08d79d5928020af4686d8f6b7d35dbe470265f1f5aa22816ce860e</code></td></tr>
+<tr><td>The recipient’s public key, RFC 9180’s <code>pkRm</code>, 65 bytes in hex</td><td><code>04fe8c19ce0905191ebc298a9245792531f26f0cece2460639e8bc39cb7f706a826a779b4cf969b8a0e539c7f62fb3d30ad6aa8f80e30f1d128aafd68a2ce72ea0</code></td></tr>
+<tr><td>The same as <code>RecipientKey.PublicKey</code>, base64url, 87 characters</td><td><code>BP6MGc4JBRkevCmKkkV5JTHybwzs4kYGOei8Oct_cGqCanebTPlpuKDlOcf2L7PTCtaqj4DjDx0Siq_WiiznLqA</code></td></tr>
+<tr><td>The recipient’s private key, RFC 9180’s <code>skRm</code>, 32 bytes in hex</td><td><code>f3ce7fdae57e1a310d87f1ebbde6f328be0a99cdbcadf4d6589cf29de4b8ffd2</code></td></tr>
+<tr><td><code>POIIdentification</code></td><td><code>poi_00000000000000000000000000000001</code></td></tr>
+<tr><td>The connection’s credential id, 32 bytes in hex</td><td><code>1111111111111111111111111111111111111111111111111111111111111111</code></td></tr>
+<tr><td><code>aad</code></td><td>Empty</td></tr>
+</tbody>
+</table>
+</div>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Part of <code>info</code></th><th>Bytes</th><th>Hex</th></tr>
+</thead>
+<tbody>
+<tr><td><code>mw-signin-v1</code></td><td>12</td><td><code>6d772d7369676e696e2d7631</code></td></tr>
+<tr><td>A zero byte</td><td>1</td><td><code>00</code></td></tr>
+<tr><td><code>LoginRequest</code></td><td>12</td><td><code>4c6f67696e52657175657374</code></td></tr>
+<tr><td>A zero byte</td><td>1</td><td><code>00</code></td></tr>
+<tr><td>The SHA-256 of <code>poi_00000000000000000000000000000001</code>, a zero byte and the 32 bytes <code>0x11</code></td><td>32</td><td><code>8164e98764b8b73b59d9c5fccf93d51bc4e0c1de89f439782c900f2bff0122f9</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><code>info</code> whole, 58 bytes in hex: <code>6d772d7369676e696e2d7631004c6f67696e52657175657374008164e98764b8b73b59d9c5fccf93d51bc4e0c1de89f439782c900f2bff0122f9</code></p>
+<p>The group: <code>Challenge</code> is <code>000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f</code>, the bytes <code>0x00</code> to <code>0x1f</code> as lowercase hex, and
+<code>Signature</code> is <code>508243bbe4b0b05d1c6cb8d87375136553b5d64eef666c55fe7b66c370e97c4a</code>, the HMAC-SHA256 of that challenge’s 64 ASCII characters keyed with
+the bytes of the sandbox’s published secret, <code>mw-sandbox-signin-secret-published-not-secret</code>, as lowercase hex. The plaintext is
+the group’s JSON, 231 bytes of UTF-8 with no whitespace:</p>
+<pre><code class="language-json">{"Adapter":"sandbox_signed_value","KeyIdentification":"sandbox-signin-1","Challenge":"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","Signature":"508243bbe4b0b05d1c6cb8d87375136553b5d64eef666c55fe7b66c370e97c4a"}
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Output</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Sealed.EncapsulatedKey</code>, RFC 9180’s <code>enc</code>, 65 bytes in hex, RFC 9180 § A.3.1’s <code>pkEm</code></td><td><code>04a92719c6195d5085104f469a8b9814d5838ff72b60501e2c4466e5e67b325ac98536d7b61a1af4b78e5b7f951c0900be863c403ce65c9bfcb9382657222d18c4</code></td></tr>
+<tr><td>The same in base64url, 87 characters</td><td><code>BKknGcYZXVCFEE9GmouYFNWDj_crYFAeLERm5eZ7MlrJhTbXthoa9LeOW3-VHAkAvoY8QDzmXJv8uTgmVyItGMQ</code></td></tr>
+<tr><td><code>Sealed.Ciphertext</code>, 247 bytes in hex: the plaintext’s 231 and the tag’s 16</td><td><code>94109f919fc313fad462be13f18be73e4c162fe1c64f6a67c87fbd9bdf7aea7672cea1fd0c3709bf0f2de66d80c6aff48f2ed1a65d08929d5e4b0b6eca33229696d01c56de6e9bce93f58232d59956d8335f154a6d03ffe5a6700fe0a52c6fb771f9760a2526fd060958827ddcedda208eae40a6184ca6374856593dc71d8097620f47250cde044fc43c4ba4b951f0da60c2547a76de897c6c1539c3448b14ce97d13f282e1012e96fdbeb9cd91fd8d16f3304594dbeab7e707ce19d242131e28880e9480020483684e5fdd548f3da908211ffdf9bdbfaee249029ae3c2f2a104a8360927992a457fdcbd7a99b1691a7dc5f95c9a1dc05</code></td></tr>
+<tr><td>The same in base64url, 330 characters</td><td><code>lBCfkZ_DE_rUYr4T8YvnPkwWL-HGT2pnyH-9m9966nZyzqH9DDcJvw8t5m2Axq_0jy7Rpl0Ikp1eSwtuyjMilpbQHFbebpvOk_WCMtWZVtgzXxVKbQP_5aZwD-ClLG-3cfl2CiUm_QYJWIJ93O3aII6uQKYYTKY3SFZZPccdgJdiD0clDN4ET8Q8S6S5UfDaYMJUenbeiXxsFTnDRIsUzpfRPyguEBLpb9vrnNkf2NFvMwRZTb6rfnB84Z0kITHiiIDpSAAgSDaE5f3VSPPakIIR_9-b2_ruJJAprjwvKhBKg2CSeZKkV_3L16mbFpGn3F-VyaHcBQ</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Opened with the private key above, <code>enc</code>, this <code>info</code> and an empty <code>aad</code>, the ciphertext gives the
+plaintext above. The answer, above, shows the <code>LoginRequest</code> that carries it. This plaintext is a
+vector of the seal: an answer’s group also carries <code>LoginReference</code> after <code>Signature</code>, and then
+each of <code>AcceptorIdentification</code>, <code>UserName</code> and <code>ApplicationIdentification</code> the store holds, as
+the group the answer, above, shows does, and its ciphertext opens the same way.</p>
+<h2 id="which-transactionstatus-to-send"><a class="header" href="#which-transactionstatus-to-send">Which <code>TransactionStatus</code> to send</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What happened</th><th>Send</th></tr>
+</thead>
+<tbody>
+<tr><td>The host approved the whole <code>TotalAmount</code></td><td><code>ACSP</code></td></tr>
+<tr><td>The host or the card declined</td><td><code>RJCT</code>, <code>Reason</code> <code>AG07</code></td></tr>
+<tr><td>The customer cancelled at the terminal, or the terminal gave up, before anything reached the host</td><td><code>RJCT</code>, <code>Reason</code> <code>AB11</code></td></tr>
+<tr><td>An <code>Abort</code> for the payment came before the payment reached the host, and the terminal stopped it (Abort, above)</td><td><code>RJCT</code>, <code>Reason</code> <code>DS02</code></td></tr>
+<tr><td>An <code>Abort</code> for the payment came once the payment was with the host</td><td>What the host answers, by the other rows. Never <code>DS02</code></td></tr>
+<tr><td>The host did not answer, and a reversal confirmed no charge</td><td><code>RJCT</code>, <code>Reason</code> <code>AB11</code></td></tr>
+<tr><td>The host approved, then the terminal reversed it, or the host approved only part of the amount and the terminal reversed that</td><td><code>RJCT</code>, <code>Reason</code> <code>AB11</code>. <code>ACSP</code> always means the whole <code>TotalAmount</code></td></tr>
+<tr><td>The terminal does not know whether a payment was taken</td><td><strong>Nothing yet.</strong> Find out: ask the host for the payment by its stored reference, or reverse it and wait for the host to confirm the reversal. Then send the answer as soon as it comes (The paths, step by step, below). Until then it is still busy</td></tr>
+<tr><td>A refund: the host refunded the whole <code>TotalAmount</code></td><td><code>ACSP</code></td></tr>
+<tr><td>A refund: the host declined the refund, its own cap on the sale’s refunds among its reasons</td><td><code>RJCT</code>, <code>Reason</code> <code>AG07</code></td></tr>
+<tr><td>A refund: no refund was made any other way, such as a cancel at the terminal, a host that did not answer where a reversal confirmed none, or a kind of payment the terminal cannot refund</td><td><code>RJCT</code>, <code>Reason</code> <code>AB11</code></td></tr>
+<tr><td>A refund: an <code>Abort</code> for it came before it reached the host, and the terminal stopped it</td><td><code>RJCT</code>, <code>Reason</code> <code>DS02</code>: no refund was made</td></tr>
+</tbody>
+</table>
+</div>
+<p>A refund’s other ends are a sale’s: a terminal that does not know whether a refund was made
+sends nothing yet, and stays busy until it finds out, and <code>ACSP</code> always means the whole
+<code>TotalAmount</code> was refunded.</p>
+<p><code>ACSP</code> means the whole <code>TotalAmount</code> was approved, and nothing more. This contract has no
+partial approval, and a terminal adds no surcharge, tip or fee to <code>TotalAmount</code> (What to
+charge, in Instruction, above): a terminal that approves less, or charges more, is outside it,
+and the <code>TransactionDetails.AuthorisedAmount</code> its approval states shows the difference
+(Outcome, below).
+Send <code>RJCT</code> only when no payment was taken, and always with its <code>Reason</code> in
+<code>StatusReasonInformation</code>: <code>AG07</code> when the host or the card declined, <code>DS02</code> when the terminal
+stopped the payment in answer to an <code>Abort</code>, and <code>AB11</code> for every other way no payment was taken,
+a cancel at the terminal among them. Send <code>DS02</code> only in answer to an <code>Abort</code>. <code>PDNG</code> and <code>UNKN</code>
+are what a POS reads, and a terminal never sends either: <code>UNKN</code> is the middleware’s own code.</p>
+<p>A terminal that does not know whether a payment was taken must find out, and never ends with
+nothing: it asks its host, or reverses the payment, until it has an answer, and sends it as soon
+as it knows (The paths, step by step, below). <code>RJCT</code> tells the POS that no payment was taken and
+to take another tender, so send it after a reversal only once the host has confirmed the
+reversal. A reversal only queued is not a confirmed one: it may never land, and the customer
+would pay twice.</p>
+<h2 id="the-codes-as-iso-20022-defines-them"><a class="header" href="#the-codes-as-iso-20022-defines-them">The codes, as ISO 20022 defines them</a></h2>
+<p><code>TransactionStatus</code> is ISO 20022’s <code>TransactionStatus</code> (<code>TxSts</code>) of a payment’s status
+report, <code>pacs.002.001.16</code> and <code>pain.002.001.15</code> (M5), and its codes are ISO’s
+<code>ExternalPaymentTransactionStatus1Code</code>. <code>Reason</code> is ISO’s
+<code>StatusReasonInformation/Reason/Code</code> (<code>StsRsnInf/Rsn/Cd</code>) of the same messages, and its
+codes are ISO’s <code>ExternalStatusReason1Code</code>. These are the messages a bank and NPP report a
+payment’s status in: NPP’s answer to a payment, and its notice of a timeout, are each a
+<code>pacs.002</code> (N1), and a rejection’s reason is a code (N2). So a terminal on another rail
+reports in the same fields.
+Each definition below is ISO’s, ISO’s spelling kept, with <code>&lt;br&gt;</code> as ISO’s line break: the
+definitions from M1 and the names from M2 (Sources, below).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Code</th><th>ISO’s name</th><th>ISO’s definition</th><th>What it means here</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ACSP</code></td><td>AcceptedSettlementInProcess</td><td>“All preceding checks such as technical validation and customer profile were successful and therefore the payment instruction has been accepted for execution.”</td><td>The host approved the whole <code>TotalAmount</code></td></tr>
+<tr><td><code>RJCT</code></td><td>Rejected</td><td>“Payment instruction has been rejected.”</td><td>No payment was taken, and <code>Reason</code> says why</td></tr>
+<tr><td><code>AG07</code></td><td>UnsuccesfulDirectDebit</td><td>“Debtor account cannot be debited for a generic reason.<br>Code value may be used in general purposes and as a replacement for AM04 if debtor bank does not reveal its customer’s insufficient funds for privacy reasons”</td><td>The host or the card declined. The host’s own reason travels in <code>ResponseCode</code></td></tr>
+<tr><td><code>AB11</code></td><td>TimeoutDebtorAgent</td><td>“Transaction stopped due to timeout at the Debtor Agent.”</td><td>No payment was taken otherwise: a cancel at the terminal, a host that did not answer where a reversal confirmed no charge, an approval the terminal reversed, or an instruction the terminal never received or did not start</td></tr>
+<tr><td><code>DS02</code></td><td>OrderCancelled</td><td>“An authorized user has cancelled the order”</td><td>The terminal stopped the payment, before it reached its host, in answer to an <code>Abort</code> (Abort, above). Sent only in answer to an <code>Abort</code>. On a refund, no refund was made</td></tr>
+<tr><td><code>PDNG</code></td><td>Pending</td><td>“Payment instruction is pending. Further checks and status update will be performed.”</td><td>What a POS reads while the sale waits for the outcome. A terminal never sends it</td></tr>
+<tr><td><code>UNKN</code></td><td></td><td>ISO’s code set has no code for unknown or in doubt, so this one is the middleware’s own</td><td>What a POS reads when the middleware does not know. A terminal never sends it</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="resending-is-safe"><a class="header" href="#resending-is-safe">Resending is safe</a></h2>
+<p>Resending is safe, and the only safe change is none. The middleware does not acknowledge an
+outcome, so a terminal cannot be sure one arrived.</p>
+<ul>
+<li>Store the frame before sending it.</li>
+<li>Treat an outcome as taken once any later frame but a Close has come from the middleware on the
+same connection, such as a Ping or an <code>Instruction</code>, with no <code>Refusal</code> for it. On a library
+that never shows a Ping, it is the next text frame (Hold, above). That
+frame shows the connection was still alive after the outcome went. A <code>Refusal</code> that
+comes later is still about it while it is the last frame sent (Refusal, below). This
+decides when the terminal goes on to its next payment, and does not end the resend below.</li>
+<li>After any reconnect, send your most recent outcome again, unchanged, whether or not you
+think it arrived, and judge it there the same way. That covers a drop, a restart of the
+terminal, a close after 75 seconds of silence (Hold, above), a newer connection
+replacing this one, where the middleware sends what was queued for it and then a Close, and a
+<code>Refusal</code> on it can be lost (Reconnect, above), and the middleware closing the connection
+because its store could not take the outcome.</li>
+<li>Stop sending it again when a new <code>Instruction</code> arrives, when the middleware answers it with any
+<code>Refusal</code> but <code>terminal_not_permitted</code>, or 23 hours after you first sent it. After a
+<code>Refusal</code>, do not resend that frame (Refusal, below), with one exception: after
+<code>terminal_not_permitted</code>, keep the outcome, close the connection, reconnect, and send it
+again. 23 hours stays inside the middleware’s default retention of 24 hours (Deadline, above),
+so a terminal left idle does not end on a <code>not_held</code> an operator would have to read.</li>
+<li>This resend is the only recovery for an outcome the middleware closed the connection on and
+could not record, because the middleware sends no acknowledgement. It replaces any judgement of
+how soon a close must follow a send: the middleware may take several seconds to close when its
+store is slow.</li>
+<li>A repeat of what the middleware holds changes no sale and gets no reply, so sending again after a
+reconnect is always safe. On one connection, send a sale’s outcome at most once, and
+never again on a timer: each repeat is another line in the middleware’s log. The sandbox’s
+conformance run fails a terminal it sees repeating an outcome on one connection, and a
+green run does not prove a terminal never does.</li>
+<li>A different <code>TransactionStatus</code> or <code>Reason</code>, or a different value under one path of
+<code>PaymentReference</code>, its group and key, is a contradiction: the sale reads <code>UNKN</code> for
+good. An outcome that only adds a key is a repeat, and so is one whose <code>ResponseCode</code>,
+<code>AdditionalInformation</code> or <code>TransactionDetails.AuthorisedAmount</code> alone differs: the amount
+first applied stands. A key of the same name in two groups is two keys.</li>
+<li>The middleware queues a refused frame’s <code>Refusal</code> on the frame’s own connection as soon as it has
+read and judged the frame. On a connection that stays open, it is lost only where the middleware
+cannot queue it: on a connection a newer one has replaced, and on one where 8 frames
+already wait because the terminal is not reading them. A connection that ends, by a drop,
+a write that fails, the end of a takeover’s drain, the middleware closing it on a store failure,
+or the middleware stopping, can take a queued <code>Refusal</code> with it. The connection closing is the
+sign: send the outcome again after the reconnect, as above.</li>
+</ul>
+<h2 id="outcome"><a class="header" href="#outcome">Outcome</a></h2>
+<p>The terminal to the middleware. An approval, then a decline:</p>
+<pre><code class="language-json">{ "MessageType": "Outcome", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "TransactionDateTime": "2026-11-06T15:12:40+11:00", "TransactionStatus": "ACSP", "StatusReasonInformation": { "ResponseCode": "00", "AdditionalInformation": "APPROVED" }, "TransactionDetails": { "AuthorisedAmount": "12.50" }, "PaymentReference": { "Card": { "RetrievalReferenceNumber": "631012345678", "SystemTraceAuditNumber": "000123", "AuthorisationCode": "A1B2C3", "AcquirerPOIIdentification": "12345678", "AcquirerMerchantIdentification": "987654321", "RefundReference": "klujhadsc9ph87asd" } } }
+{ "MessageType": "Outcome", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "TransactionStatus": "RJCT", "StatusReasonInformation": { "Reason": "AG07", "ResponseCode": "05", "AdditionalInformation": "DECLINED" } }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Required</th><th>Rule</th><th>On a receipt?</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>terminal</code></td><td>Yes</td><td><code>Outcome</code></td><td></td></tr>
+<tr><td><code>TransactionReference</code></td><td><code>terminal</code></td><td>Yes</td><td>The instruction’s, returned as received. The matching key</td><td></td></tr>
+<tr><td><code>TransactionStatus</code></td><td><code>terminal</code></td><td>Yes</td><td><code>ACSP</code> or <code>RJCT</code>, in upper case, as Which <code>TransactionStatus</code> to send, above, says. Absent is <code>missing_field</code>, and anything else, a value that is not a string included, is <code>invalid_result</code></td><td>Yes, as the result</td></tr>
+<tr><td><code>StatusReasonInformation</code></td><td><code>terminal</code></td><td>With <code>RJCT</code></td><td>An object holding the three fields below. Anything else is dropped whole</td><td></td></tr>
+<tr><td><code>StatusReasonInformation.Reason</code></td><td><code>terminal</code></td><td>With <code>RJCT</code></td><td><code>AG07</code>, <code>AB11</code> or <code>DS02</code>, <code>DS02</code> only in answer to an <code>Abort</code>. With <code>RJCT</code>, absent is <code>missing_field</code> and anything else <code>invalid_result</code>. With <code>ACSP</code> it is dropped alone</td><td></td></tr>
+<tr><td><code>StatusReasonInformation.ResponseCode</code></td><td><code>terminal</code></td><td>No</td><td><code>^[A-Za-z0-9]{1,3}$</code>, the card host’s code, on a card payment only</td><td>Yes</td></tr>
+<tr><td><code>StatusReasonInformation.AdditionalInformation</code></td><td><code>terminal</code></td><td>No</td><td>The host’s text: <code>^[A-Za-z0-9.,'&amp;()/+%#-]([A-Za-z0-9 .,'&amp;()/+%#-]{0,33}[A-Za-z0-9.,'&amp;()/+%#-])?$</code>, with at most 8 digits in total</td><td>Yes</td></tr>
+<tr><td><code>TransactionDetails</code></td><td><code>terminal</code></td><td>No</td><td>An object holding <code>AuthorisedAmount</code> alone, with <code>ACSP</code>. ISO also has <code>TotalAmount</code> here: leave it out, since the total is the middleware’s to state. Anything else is dropped whole, and another key in it is dropped by its path</td><td></td></tr>
+<tr><td><code>TransactionDetails.AuthorisedAmount</code></td><td><code>terminal</code></td><td>No: send it with every <code>ACSP</code></td><td>The amount the host approved, an amount such as <code>12.50</code>: what the customer was charged, or on a refund what was refunded. Send it with <code>ACSP</code>, equal to the instruction’s <code>TotalAmount</code>. With <code>RJCT</code> it is dropped alone, since no payment was taken. Absent, the outcome still applies, and states no amount</td><td></td></tr>
+<tr><td><code>TransactionDateTime</code></td><td><code>terminal</code></td><td>No</td><td>The terminal clock, as it states it, at most 35 characters: <code>^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]{1,9})?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$</code></td><td>Yes</td></tr>
+<tr><td><code>PaymentReference</code></td><td><code>terminal</code></td><td>No</td><td>An object of up to four groups, <code>Card</code>, <code>Bank</code>, <code>Wallet</code> and <code>NPP</code>, each holding its own keys (References by kind, below)</td><td></td></tr>
+</tbody>
+</table>
+</div>
+<p><code>TransactionReference</code> is the matching key: the middleware finds the sale by it, among the sales it
+holds for this terminal. The middleware passes to the POS, unchanged, what passed of
+<code>StatusReasonInformation</code> and of <code>PaymentReference</code>, each reference under the same group and
+key, for its receipt, a refund and matching settlement, and the amount the host approved.
+<code>TransactionDateTime</code> is checked for shape and never for truth: the middleware logs it
+unchanged, uses it for no ordering, deadline or decision, and does not pass it to the POS, so
+a terminal clock set wrong changes nothing.</p>
+<p><strong>The amount the host approved.</strong> With every <code>ACSP</code>, send <code>TransactionDetails.AuthorisedAmount</code>,
+alone in that group: what the customer was charged, or on a refund what was refunded, equal to
+the instruction’s <code>TotalAmount</code>, since a terminal adds nothing to it (What to charge, in
+Instruction, above). <code>AuthorisedAmount</code> is ISO 20022’s <code>AuthorisedAmount</code> (<code>AuthrsdAmt</code>) of
+<code>CardPaymentTransactionDetails54</code>: “Amount authorised for the payment transaction.” (M3). ISO
+nests it in <code>TransactionDetails</code> beside a required <code>TotalAmount</code>: leave <code>TotalAmount</code> out of
+<code>TransactionDetails</code>, since the total is the middleware’s to state, and one sent is dropped by
+its path. With <code>RJCT</code> no payment was taken, so none was approved, and an <code>AuthorisedAmount</code> sent
+with it is dropped alone. An approval without it still applies, and states no amount, as a
+terminal built before it sends. The middleware passes it to the POS, and an approval that
+states an amount other than <code>TotalAmount</code> is logged as <code>amount_differs</code>: the POS records the
+amount charged, or on a refund refunded, and the terminal has broken this contract.</p>
+<p><strong>Send nothing else, and never a card number, an expiry, track data, a cardholder name or a
+bank account.</strong> A receipt printed from these fields has no masked card number and no card
+scheme: a printed card line stays on the terminal’s own receipt. As a safety net, the middleware
+drops any other field and logs its name, never its value. The schema in
+<a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a> is strict on this frame, because it states what a terminal
+must send.</p>
+<h2 id="references-by-kind"><a class="header" href="#references-by-kind">References by kind</a></h2>
+<p><code>PaymentReference</code> holds the payment’s references, grouped by the kind of payment that gave
+them: one group for each kind, below. Send the group of the kind the payment was, holding the
+keys its issuer gave and no others. Every key is optional. A group or a key not listed here
+is dropped by its path, its value unread, and a value that fails its pattern is dropped
+alone (A value that fails is dropped alone, below). The last column of each table says what
+a POS does with the key: prints it on a receipt, keeps it to refund against, or matches the
+payment on a statement or settlement report by it.</p>
+<p><strong>The reference text rule.</strong> Six keys hold free text whose issuer sets its format:
+<code>Card.RefundReference</code>, <code>Bank.AccountServicerReference</code>,
+<code>Wallet.RecipientTransactionIdentification</code>, and the three <code>NPP</code> keys. Each holds 1 to 35
+ASCII letters, digits and <code>. _ : / # -</code>, 64 on <code>Wallet.RecipientTransactionIdentification</code>,
+with at most 12 digits in total, and <code>Wallet.RecipientTransactionIdentification</code> also holds a
+UUID. So none holds <code>@</code>, <code>+</code> or a space, or a card number of 13 to 19 digits however it is
+written, with one exception: a card number padded into a UUID’s shape fits
+<code>Wallet.RecipientTransactionIdentification</code>, which holds a UUID. That takes intent. A numeric
+id of more than 12 digits is dropped alone until a provider that issues one is integrated.</p>
+<h3 id="card-a-card-payment"><a class="header" href="#card-a-card-payment"><code>Card</code>: a card payment</a></h3>
+<p>A card payment, through a card terminal and its card host. A card terminal sends it on an
+outcome its card host answered, holding the host’s references and never card data.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Pattern</th><th>What a POS does with it</th></tr>
+</thead>
+<tbody>
+<tr><td><code>RetrievalReferenceNumber</code></td><td><code>^[A-Za-z0-9]{1,12}$</code></td><td>Prints it on a receipt, and matches settlement by it</td></tr>
+<tr><td><code>SystemTraceAuditNumber</code></td><td><code>^[0-9]{6}$</code>, zero filled</td><td>Prints it on a receipt, and matches settlement by it</td></tr>
+<tr><td><code>AuthorisationCode</code></td><td><code>^[A-Za-z0-9]{1,6}$</code></td><td>Prints it on a receipt, and matches settlement by it</td></tr>
+<tr><td><code>AcquirerPOIIdentification</code></td><td><code>^[A-Za-z0-9]{1,8}$</code>, the acquirer’s terminal id</td><td>Prints it on a receipt, and matches settlement by it</td></tr>
+<tr><td><code>AcquirerMerchantIdentification</code></td><td><code>^[A-Za-z0-9]{1,15}$</code>, the acquirer’s merchant id. A card number of 13 to 15 digits fits this pattern: the middleware forbids it here and cannot detect it</td><td>Prints it on a receipt, and matches settlement by it</td></tr>
+<tr><td><code>RefundReference</code></td><td>The host’s reference for a later refund, by the reference text rule: <code>^[A-Za-z0-9._:/#-]{1,35}$</code>, with at most 12 digits in total</td><td>Keeps it to refund against. Not on a receipt</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="bank-a-payment-by-the-accounts-own-bank"><a class="header" href="#bank-a-payment-by-the-accounts-own-bank"><code>Bank</code>: a payment by the account’s own bank</a></h3>
+<p>A payment from a bank account by the account’s own bank, outside a card scheme and NPP. A
+terminal sends it when that bank gave a reference.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Pattern</th><th>What a POS does with it</th></tr>
+</thead>
+<tbody>
+<tr><td><code>AccountServicerReference</code></td><td>The reference the account’s own bank gave the payment, never the account, by the reference text rule: <code>^[A-Za-z0-9._:/#-]{1,35}$</code>, with at most 12 digits in total</td><td>Prints it on a receipt, and matches settlement by it</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="wallet-a-payment-through-a-wallet-or-payment-app"><a class="header" href="#wallet-a-payment-through-a-wallet-or-payment-app"><code>Wallet</code>: a payment through a wallet or payment app</a></h3>
+<p>A payment through a wallet or payment app. A terminal that took the payment that way sends
+it, naming the provider, and with the provider’s id for the payment when it gave one.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Pattern</th><th>What a POS does with it</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ProviderIdentification</code></td><td>The wallet’s or payment app’s provider, by name: <code>^[A-Za-z][A-Za-z0-9._-]{0,34}$</code>, with at most 4 digits in total</td><td>Prints it on a receipt</td></tr>
+<tr><td><code>RecipientTransactionIdentification</code></td><td>The provider’s id for the payment, by the reference text rule at 64 characters: <code>^[A-Za-z0-9._:/#-]{1,64}$</code>, with at most 12 digits in total, or a UUID such as <code>3fa85f64-5717-4562-b3fc-2c963f66afa6</code></td><td>Prints it on a receipt, keeps it to refund against, and matches settlement by it</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="npp-a-payment-over-the-new-payments-platform"><a class="header" href="#npp-a-payment-over-the-new-payments-platform"><code>NPP</code>: a payment over the New Payments Platform</a></h3>
+<p>A payment over Australia’s New Payments Platform, PayTo included: a PayTo payment is an NPP
+payment under a mandate, so its references are NPP’s and the mandate’s id. A terminal whose
+payment went over NPP sends it.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Pattern</th><th>What a POS does with it</th></tr>
+</thead>
+<tbody>
+<tr><td><code>EndToEndIdentification</code></td><td>The payer’s reference, passed on unchanged end to end, and <code>NOTPROVIDED</code> when the payer gave none (N2). By the reference text rule: <code>^[A-Za-z0-9._:/#-]{1,35}$</code>, with at most 12 digits in total</td><td>Prints it on a receipt, keeps it to refund against, and matches settlement by it</td></tr>
+<tr><td><code>TransactionIdentification</code></td><td>The payer’s bank’s id for the payment, which every later NPP message about it carries, its 35th character marking a retry (N1). By the reference text rule: <code>^[A-Za-z0-9._:/#-]{1,35}$</code>, with at most 12 digits in total until NPP’s layout for it is known</td><td>Keeps it to refund against, and matches settlement by it</td></tr>
+<tr><td><code>MandateIdentification</code></td><td>On a PayTo payment, the mandate’s id, which NPP’s Mandate Management Service generates, not the creditor (N1). By the reference text rule: <code>^[A-Za-z0-9._:/#-]{1,35}$</code>, with at most 12 digits in total until its format is known</td><td>Prints it on a receipt, and matches settlement by it</td></tr>
+</tbody>
+</table>
+</div>
+<p>NPP has not published the layout of its Transaction ID or the format of a Mandate ID, so
+both keys hold the reference text rule until it does. A value outside it is dropped alone,
+and the outcome stands.</p>
+<h3 id="what-these-values-can-still-carry"><a class="header" href="#what-these-values-can-still-carry">What these values can still carry</a></h3>
+<p>The middleware forbids card, bank and personal data in every field of the outcome, but its patterns
+cannot keep all of it out, and the middleware cannot detect a value like these where it fits. A key
+of the reference text rule is one of the six keys that rule names, above.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Value</th><th>Fits</th></tr>
+</thead>
+<tbody>
+<tr><td>A card number of 13 to 19 digits, plain, spaced, dashed, among letters or between marks, or joined to its expiry or to track data</td><td>No key of <code>Bank</code> or <code>NPP</code>, no <code>Wallet</code> key but <code>RecipientTransactionIdentification</code>, which a card number padded into a UUID’s shape fits (below), and no <code>Card</code> key but <code>AcquirerMerchantIdentification</code>, which a card number of 13 to 15 digits fits</td></tr>
+<tr><td>A card number of 13 to 15 digits</td><td><code>Card.AcquirerMerchantIdentification</code></td></tr>
+<tr><td>A 12 digit card number, or the first 12 digits of a longer one</td><td><code>Card.RetrievalReferenceNumber</code>, <code>Card.AcquirerMerchantIdentification</code>, and every key of the reference text rule</td></tr>
+<tr><td>An expiry as <code>12/29</code></td><td><code>StatusReasonInformation.AdditionalInformation</code>, and every key of the reference text rule</td></tr>
+<tr><td>An expiry as <code>1229</code>, a card verification value (CVV)</td><td>Every key of the reference text rule, <code>Card.RetrievalReferenceNumber</code>, <code>Card.AcquirerMerchantIdentification</code>, <code>StatusReasonInformation.AdditionalInformation</code>, and some of the others</td></tr>
+<tr><td>A phone number written without <code>+</code>, such as <code>0412345678</code>, an 11 digit ABN, a BSB, an account number, or a BSB and an account number together, up to 12 digits in all (<code>062000-123456</code> fits, <code>062-000-12345678</code> does not)</td><td>Every key of the reference text rule. Written as digits alone, each also fits <code>Card.RetrievalReferenceNumber</code>, <code>Card.AcquirerMerchantIdentification</code>, and some of the others</td></tr>
+<tr><td>A name with no space, such as <code>JSMITH</code>, or a URL such as <code>https://pay.example/u/jsmith</code></td><td>Every key of the reference text rule. The name also fits <code>Wallet.ProviderIdentification</code>, <code>Card.RetrievalReferenceNumber</code>, <code>Card.AcquirerMerchantIdentification</code>, <code>StatusReasonInformation.AdditionalInformation</code>, and some of the others</td></tr>
+<tr><td>An email address, a phone number written <code>+61…</code>, a name with a space</td><td>No reference key, since none holds <code>@</code>, <code>+</code> or a space. A name with a space, such as <code>J SMITH</code>, still fits <code>StatusReasonInformation.AdditionalInformation</code></td></tr>
+<tr><td>A card number padded into a UUID’s shape</td><td><code>Wallet.RecipientTransactionIdentification</code>, which holds a UUID. That takes intent</td></tr>
+<tr><td>Digits written in a date’s shape, such as <code>4111-11-11T11:11:11.11Z</code></td><td><code>TransactionDateTime</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>So a card number of 13 to 15 digits fits <code>AcquirerMerchantIdentification</code>, and a 12 digit
+one fits <code>RetrievalReferenceNumber</code>, <code>AcquirerMerchantIdentification</code> and every key of the
+reference text rule. The contract forbids each of these values in every field: a terminal
+that put one in a reference would have it logged, sent to the POS and stored with the sale
+until retention, undetected. A real retrieval reference is often 12 digits and a real
+merchant id up to 15, so the middleware cannot narrow those patterns without refusing real values.</p>
+<h2 id="a-value-that-fails-is-dropped-alone"><a class="header" href="#a-value-that-fails-is-dropped-alone">A value that fails is dropped alone</a></h2>
+<p>A value that fails its pattern is dropped alone, and the outcome still applies. The middleware’s
+log names it in a <code>fields_dropped</code> line by its full path, as <code>TransactionDateTime</code> or
+<code>PaymentReference.Card.RetrievalReferenceNumber</code>, and its value is written nowhere. The POS
+gets the rest, and does not get that value.</p>
+<ul>
+<li>A key sent as <code>null</code>, an empty object, and an object emptied by drops read as absent.</li>
+<li>A <code>StatusReasonInformation</code>, a <code>PaymentReference</code> or a group that is not an object is
+dropped whole. A <code>ResponseCode</code> or <code>AdditionalInformation</code> that is not a string is
+dropped alone.</li>
+<li>A <code>Reason</code> sent with <code>ACSP</code> is dropped alone and named in <code>fields_dropped</code>: it decides
+nothing there, so it never refuses the outcome.</li>
+<li><code>TransactionStatus</code> is different, because the outcome cannot stand without it: absent is
+<code>missing_field</code>, and anything else wrong is <code>invalid_result</code>. So is <code>Reason</code> with <code>RJCT</code>:
+absent, or in a <code>StatusReasonInformation</code> that is not an object, is <code>missing_field</code>, and
+anything but <code>AG07</code>, <code>AB11</code> or <code>DS02</code> is <code>invalid_result</code>.</li>
+<li>A key in another case, such as <code>RRN</code> or <code>responsecode</code>, is an unknown field, and dropped.
+So is a group or a key that References by kind does not list, such as a card key sent at
+<code>PaymentReference</code>’s top level, by its path, its value unread.</li>
+<li>The middleware does not trim, so a padded <code>AuthorisationCode</code> such as <code>"AB12  "</code> is dropped.
+Strip padding, and zero fill <code>SystemTraceAuditNumber</code>.</li>
+<li>If a key is repeated in a frame, the last value wins, and it is held to the same rules.</li>
+<li>Three things are never dropped alone, because the middleware cannot parse a frame that holds
+one, in any field: a <code>\u</code> escape of half a surrogate pair with no other half, such as
+<code>\ud83d</code> alone; a number beyond the range of an IEEE 754 double, such as <code>1e400</code>; and
+arrays and objects nested 128 deep, the frame’s own object counting as one. A frame
+holding one is refused whole as <code>unparseable_frame</code>, and its outcome does not apply.
+Never send them: cut a string between whole characters, never inside a surrogate pair.</li>
+</ul>
+<h2 id="refusal"><a class="header" href="#refusal">Refusal</a></h2>
+<p>The middleware to the terminal: the middleware could not take a frame. A dropped field is not refused, so
+it gets no frame: read the log, in Testing below.</p>
+<pre><code class="language-json">{ "MessageType": "Refusal", "ResponseReason": "invalid_result" }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>mw</code></td><td><code>Refusal</code></td></tr>
+<tr><td><code>ResponseReason</code></td><td><code>mw</code></td><td>One code from the table below. It never holds anything the frame held</td></tr>
+<tr><td><code>TransactionReference</code></td><td><code>mw</code></td><td>Never sent in this version. The schema allows it for a later one, so ignore it</td></tr>
+</tbody>
+</table>
+</div>
+<p>A <code>Refusal</code> names no frame, so it is about the last frame the terminal sent on that
+connection. The middleware reads a connection’s frames in the order they were sent, queues a
+refused frame’s <code>Refusal</code> as soon as it has read and judged the frame, and sends what it
+queued for a connection in that order. So send one frame at a time, and read any <code>Refusal</code>
+for it before sending the next.</p>
+<p>A <code>Refusal</code> the middleware cannot queue is lost, and the middleware’s log holds a <code>delivery_failed</code> line
+for it: on a connection a newer one has replaced (Reconnect, above), and on one where 8
+frames already wait because the terminal is not reading them. A frame the middleware reads but
+does not apply gets no <code>Refusal</code> and no <code>delivery_failed</code> line, though its <code>in</code> line is
+logged: one read while 8 frames before it still wait to be applied, which closes the
+connection, and one still waiting when the connection closes.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>ResponseReason</code></th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>unparseable_frame</code></td><td>Valid UTF-8 that is not JSON, or JSON that is not an object, or a frame the middleware cannot parse: one holding half a surrogate pair as an escape, a number beyond the range of an IEEE 754 double, or nesting 128 deep (A value that fails is dropped alone, above)</td><td>A bug: alert someone</td></tr>
+<tr><td><code>binary_frame</code></td><td>A binary frame</td><td>A bug: alert someone</td></tr>
+<tr><td><code>unknown_frame_type</code></td><td><code>MessageType</code> is absent or is not <code>Outcome</code>. A <code>LoginNeeded</code> is answered instead only on a connection that declared <code>SASQ</code> in <code>Mw-Message-Functions</code>, and on any other it gets this. A <code>LoginResponse</code> too is read instead only on a connection that declared <code>SASQ</code>, and on any other it gets this</td><td>A bug: alert someone</td></tr>
+<tr><td><code>missing_field</code></td><td><code>TransactionStatus</code> or <code>TransactionReference</code> is absent, or <code>StatusReasonInformation.Reason</code> is absent with <code>RJCT</code>. In a <code>LoginResponse</code>, <code>LoginReference</code> or <code>Response</code> is absent, or <code>ResponseReason</code> is absent with <code>FAIL</code></td><td>A bug: alert someone</td></tr>
+<tr><td><code>invalid_result</code></td><td><code>TransactionStatus</code> is not <code>ACSP</code> or <code>RJCT</code>, or is not a string, or with <code>RJCT</code> <code>StatusReasonInformation.Reason</code> is not <code>AG07</code>, <code>AB11</code> or <code>DS02</code>. In a <code>LoginResponse</code>, <code>Response</code> is not <code>SUCC</code> or <code>FAIL</code>, or is not a string, or with <code>FAIL</code> <code>ResponseReason</code> is not one of <code>not_covered</code>, <code>not_accepted</code> and <code>no_answer</code>, or with <code>SUCC</code> a <code>ResponseReason</code> is sent</td><td>A bug: alert someone</td></tr>
+<tr><td><code>invalid_reference</code></td><td><code>TransactionReference</code> is not a string. In a <code>LoginResponse</code>, <code>LoginReference</code> is not <code>lgn_</code> then 32 lowercase hex characters</td><td>A bug: alert someone</td></tr>
+<tr><td><code>not_held</code></td><td>A well-formed outcome naming no sale the middleware holds</td><td>Stop. Keep your own record. The sale passed retention, the log holds what you sent, and an operator reconciles it. An outcome already taken for a sale still held gets no <code>Refusal</code></td></tr>
+<tr><td><code>other_terminal</code></td><td>It names a sale held for another terminal</td><td>A bug: alert someone</td></tr>
+<tr><td><code>terminal_not_permitted</code></td><td>A well-formed outcome on a connection that may no longer hold its terminal: the terminal is not <code>paired</code>, or the credential it connected with is retired. The middleware did not take it, and its log keeps what the terminal said. A <code>LoginNeeded</code>, or a well-formed <code>LoginResponse</code>, on such a connection gets it too, and nothing is counted or written</td><td>Keep the outcome, close the connection, reconnect, and send it again. After a <code>LoginNeeded</code> or a <code>LoginResponse</code>, close the connection and reconnect with the backoff all the same (Reconnect, above), and after an ask, ask again once a connection is accepted</td></tr>
+<tr><td><code>recipient_key_invalid</code></td><td>A <code>LoginNeeded</code>’s <code>RecipientKey</code> cannot be used: it is absent or not an object, its <code>PublicKey</code> is not 65 bytes in base64url of a point on P-256, <code>0x04</code> first, or on a connection made with a certificate its <code>Signature</code> is absent, malformed or does not verify under the key of the certificate the connection presented. Nothing was counted (Signing in, above)</td><td>A bug: alert someone. Answer the sale <code>RJCT</code> with <code>AB11</code></td></tr>
+<tr><td><code>sign_in_not_available</code></td><td>The middleware holds no sign-in credential it can use for the terminal’s store: none is attached, the credential is removed, the store or its owner is not in a state to act, or sign-in is off on this middleware. A terminal signed out is normal. Nothing was counted</td><td>Answer the sale <code>RJCT</code> with <code>AB11</code>, unless a person signs in at the terminal by its fleet’s own means, and ask no more on this connection</td></tr>
+<tr><td><code>sign_in_limited</code></td><td>The terminal was answered a sign-in less than <code>MW_SIGNIN_INTERVAL_SECS</code> ago, 60 seconds at the middleware’s default settings, or has been answered <code>MW_SIGNIN_PER_DAY</code> times, 24 by default, in the day counted from that day’s first answer. Nothing was counted</td><td>Answer the sale <code>RJCT</code> with <code>AB11</code>, and ask again no sooner than 60 seconds later</td></tr>
+<tr><td><code>sign_in_unavailable</code></td><td>The middleware could not answer the ask: its store did not answer or did not read as it should, the key service did not open the credential’s secret, or the answer could not be signed or sealed. Nothing was sent in clear. An ask whose secret could not be opened still counts toward the terminal’s limit. On a well-formed <code>LoginResponse</code>, its store did not answer or did not read as it should, and nothing of the report was written</td><td>Answer the sale <code>RJCT</code> with <code>AB11</code>, and ask again no sooner than 60 seconds later. After a <code>LoginResponse</code>, go on as its <code>Response</code> says, without sending it again, and ask again no sooner than 60 seconds later</td></tr>
+</tbody>
+</table>
+</div>
+<p>A refused frame changes nothing, so the sale waits for a good one, and the terminal goes on
+to its next payment. Apart from <code>not_held</code>, <code>terminal_not_permitted</code>, <code>sign_in_not_available</code>,
+<code>sign_in_limited</code> and <code>sign_in_unavailable</code>, a <code>Refusal</code> means a bug in the terminal’s code,
+which a running app cannot fix, so do not resend that frame.
+Keep an outcome it refused, so the outcome can be sent once the code is fixed. A refused
+<code>LoginNeeded</code> is never kept or resent: its fresh key is dropped (Signing in). Nor is a refused
+<code>LoginResponse</code>: the terminal goes on as Signing in, above, says. <code>terminal_not_permitted</code> is the
+one exception to do not resend: it is no bug, so keep the outcome, close the connection,
+reconnect, and send it again. A suspension that lifts then loses nothing.</p>
+<p>An outcome that was taken gets no reply: there is no acknowledgement. Nor does a <code>LoginResponse</code>
+that was taken. A frame or message over 65,536 bytes closes the connection instead of getting a
+<code>Refusal</code>, and so does a frame that breaks the WebSocket protocol, such as invalid UTF-8 in a
+text frame. Either way the frame is lost, so resend its outcome after the reconnect.</p>
+<h2 id="the-paths-step-by-step"><a class="header" href="#the-paths-step-by-step">The paths, step by step</a></h2>
+<p><strong>The normal path.</strong></p>
+<ol>
+<li>Connect, and hold the connection.</li>
+<li>An <code>Instruction</code> arrives. Store its <code>TransactionReference</code>, then show <code>TotalAmount</code> as
+the total, and the items if the terminal can.</li>
+<li>Take the payment for <code>TotalAmount</code>, or with <code>TransactionType</code> <code>RFND</code> make the refund of it
+(A refund, above).</li>
+<li>Build the <code>Outcome</code> with the instruction’s <code>TransactionReference</code>, and the
+<code>TransactionStatus</code>, with its <code>Reason</code> on <code>RJCT</code>, that Which <code>TransactionStatus</code> to send,
+above, gives. Store it, then send it.</li>
+<li>No <code>Refusal</code> arrives, and a later frame from the middleware does, such as its next Ping, or
+on a library that never shows one its next text frame (Hold, above): the outcome was taken,
+and the terminal is free for its next payment. Taken or not, it is
+still the most recent outcome, so after any reconnect take the resend path below.</li>
+</ol>
+<p><strong>The resend path.</strong> The connection drops or the middleware closes it, or the terminal restarts,
+after the terminal sent an outcome, and before a new <code>Instruction</code>, a <code>Refusal</code> for it other
+than <code>terminal_not_permitted</code>, or 23 hours after it was first sent.</p>
+<ol>
+<li>Reconnect with the backoff.</li>
+<li>Send the stored frame again, unchanged.</li>
+<li>The middleware applies it if it had not arrived, and ignores it if it had. Either way no reply
+comes, and the sale reads the result that frame carries. The one exception is a sale
+the middleware no longer holds, past retention: that outcome gets <code>not_held</code>, below.</li>
+<li>Do the same after every later reconnect, until one of those three ends.</li>
+</ol>
+<p>If the same <code>TransactionReference</code> arrives again in an <code>Instruction</code>, do not charge again:
+send the stored outcome.</p>
+<p><strong>The unknown-result path.</strong> The terminal does not know whether a payment was taken, for
+example because the host did not answer.</p>
+<ol>
+<li>Send nothing for that sale yet. The terminal is still busy: start no other payment.</li>
+<li>Ask the host for the payment by the reference stored before the card, its
+<code>TransactionReference</code> (Instruction, above). An answer gives the outcome: approved is
+<code>ACSP</code>, and declined is <code>RJCT</code> with <code>AG07</code>. A host’s “never received” is <code>RJCT</code> with <code>AB11</code>
+only where the host documents that answer as final. Otherwise go to step 3.</li>
+<li>If the host cannot answer the enquiry, offers none, or gives a “not found” it does not
+document as final, reverse the payment. Send <code>RJCT</code> with <code>AB11</code> once the host has confirmed
+the reversal, and not before (Which <code>TransactionStatus</code> to send, above).</li>
+<li>Keep trying steps 2 and 3 until one gives an answer, and send it as soon as it comes,
+however late: a late outcome replaces the <code>UNKN</code> the POS reads after the deadline. With the
+default settings, a host that answers lets the terminal report before the hold ends, 300
+seconds from the instruction (Deadline, above). A host that does not answer leaves the POS
+reading <code>UNKN</code> until it does, and the outcome is then resent for 23 hours, as any outcome is
+(Resending is safe, above). A terminal that was off sends it on its first connection after.</li>
+<li>Never give up with nothing.</li>
+</ol>
+<p>A refund is the same: a terminal that does not know whether a refund was made finds out by
+these steps, and sends <code>RJCT</code> with <code>AB11</code> after a reversal only once the host has confirmed it.</p>
+<p><strong>A <code>not_held</code> outcome.</strong> The sale passed retention. Stop sending that outcome, keep it in
+the terminal’s own record, and leave reconciling it to an operator: the log holds what was
+sent.</p>
+<p><strong>A <code>terminal_not_permitted</code> outcome.</strong> The terminal is not <code>paired</code>, or its credential is
+retired, so the middleware kept what it said and did not take it. Keep the outcome, close the
+connection, and reconnect with the backoff: a connect refused <code>403 not_permitted</code> backs off
+to one hour, and any other refusal is read by the holder’s table (What a holder of a dead
+certificate does, above). Once a connection is accepted, send the outcome again, as the
+resend path says.</p>
+<p><strong>The sign-in path.</strong> A terminal that declared <code>SASQ</code> holds no session at its fleet’s payment
+system when an <code>Instruction</code> arrives.</p>
+<ol>
+<li>Wake: turn the screen on, and bring the payment screen to the front over the lock screen.</li>
+<li>Make a fresh P-256 key pair in memory, sign its public key on a certificate’s connection, and
+send one <code>LoginNeeded</code>. Read its answer before sending another frame.</li>
+<li>On the <code>LoginRequest</code>, check its suite, open it and drop the private key. The terminal signs
+in at its fleet’s payment system with the opened <code>SignedValue</code>, and keeps the session.</li>
+<li>Send one <code>LoginResponse</code> naming the group’s <code>LoginReference</code>: <code>SUCC</code>, or <code>FAIL</code> with the
+code that fits. On a <code>FAIL</code>, ask again as Signing in, above, says.</li>
+<li>Take the payment, as the normal path does.</li>
+<li>On a <code>Refusal</code> of the ask, a <code>LoginRequest</code> that does not open, or no answer in 20 seconds,
+answer the sale <code>RJCT</code> with <code>AB11</code>, and ask again as Signing in, above, says for each.</li>
+</ol>
+<h2 id="testing"><a class="header" href="#testing">Testing</a></h2>
+<p>In the middleware’s sandbox, whose start page is <code>mw://start</code>, also served as
+<a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, with the sandbox’s address in <code>$SANDBOX</code>:</p>
+<ol>
+<li>
+<p>Take a key with <code>POST /sandbox/v1/keys</code>, which needs no credential. Its <code>201</code> holds the
+key, shown once, your <code>TesterIdentification</code>, your world’s <code>MerchantIdentification</code>, and
+its nine terminals. Your terminal’s id is <code>&lt;tester&gt;-yours</code>, <code>paired</code> for your world’s
+vendor, and the key is a <code>pos</code> key of that vendor’s register, bound to the terminal.</p>
+</li>
+<li>
+<p>Connect your terminal under that id to <code>$SANDBOX</code> with its scheme made WebSocket’s, <code>ws://</code>
+for <code>http://</code> and <code>wss://</code> for <code>https://</code>, then <code>/v1/terminals/{POIIdentification}/connect</code>,
+presenting the key on the upgrade as <code>Authorization: Bearer sbx_...</code> (Connect, above).</p>
+</li>
+<li>
+<p>Send it a sale as a POS would, naming that id, under the same key, with a new
+<code>IdempotencyKey</code> each time:</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/v1/sales" \
+  -H 'Authorization: Bearer sbx_...' \
+  -H 'Content-Type: application/json' \
+  -d '{"MerchantIdentification":"sbx-3f9a1c2e7b10-M1","POIIdentification":"sbx-3f9a1c2e7b10-yours","SaleReferenceIdentification":"INV-1001","IdempotencyKey":"test-sale-0001","TransactionDetails":{"Currency":"AUD","TotalAmount":"12.50","SaleItem":[{"ProductDescription":"Flat white","ProductQuantity":2,"UnitPrice":"6.25","ProductAmount":"12.50"}]}}'
+</code></pre>
+<p>with your key in place of <code>sbx_...</code>, and your <code>TesterIdentification</code> in place of
+<code>sbx-3f9a1c2e7b10</code>. The answer is <code>202</code>, holding the sale’s <code>TransactionReference</code>. The
+terminal receives the instruction.</p>
+</li>
+<li>
+<p>Read the sale as the POS does, under the same key, until it settles:</p>
+<pre><code class="language-sh">curl -s -H 'Authorization: Bearer sbx_...' \
+  "$SANDBOX/v1/sales/sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a?wait_seconds=25"
+</code></pre>
+<p>with the <code>TransactionReference</code> from step 3. A read under another register’s key answers
+<code>404</code>, as if the middleware never held the sale.</p>
+</li>
+<li>
+<p>Read the sale’s log with the <code>read_log</code> tool of the sandbox’s MCP server, given the
+<code>TransactionReference</code>. It answers every message of the sale both ways, with a
+<code>fields_dropped</code> line naming anything the middleware dropped from an outcome, so a terminal vendor
+can check it sends nothing extra. A sale to <code>&lt;tester&gt;-approve</code>, a simulated terminal, is a
+whole sale to compare against.</p>
+</li>
+<li>
+<p>To test signing in, connect as in step 2 with <code>SASQ</code> in <code>Mw-Message-Functions</code>, then send a
+<code>LoginNeeded</code> with a fresh key and no <code>Signature</code>, since a sandbox key’s connection has
+none (Signing in, above). Your world’s store holds the sandbox’s stand-in credential,
+<code>sandbox_signed_value</code>, <code>KeyIdentification</code> <code>sandbox-signin-1</code>, so the answer is a
+<code>LoginRequest</code>. Open it, and check the group’s <code>Signature</code>: the HMAC-SHA256 of
+<code>Challenge</code>’s ASCII bytes, keyed with the bytes of the sandbox’s published secret, in
+lowercase hex. <code>mw://world</code> and the start page give the secret, and the worked vector, in
+Signing in, above, checks your opening. Your world’s store holds none of
+<code>AcceptorIdentification</code>, <code>UserName</code> and <code>ApplicationIdentification</code>, so the group holds its
+four keys and its <code>LoginReference</code> alone. Then report it in a <code>LoginResponse</code> naming that
+<code>LoginReference</code>, as Signing in, above, says: the sandbox takes it as any middleware does.</p>
+</li>
+</ol>
+<p>A conformance run tests sign-in only on a terminal that declared <code>SASQ</code> when the step opened, in
+two steps: <code>sign_in</code>, with a credential attached, which starts the terminal asleep, its screen
+off and its application not in front, holding no session; and <code>sign_in_none</code>, for which the run
+ends the world’s attachment and restores it after, so the ask is refused <code>sign_in_not_available</code>.
+A terminal that did not declare <code>SASQ</code> is not tested on sign-in: each of those steps is not
+applicable, and its report row says so. A terminal that needs the middleware to sign it in must
+declare <code>SASQ</code> and run again. A run judges frames alone and sees no screen, so a green run does
+not prove that a terminal wakes.</p>
+<h2 id="sources"><a class="header" href="#sources">Sources</a></h2>
+<p>The ISO 20022 texts quoted here and in <a href="fields.json"><code>docs/api/fields.json</code></a> for the outcome’s status, its
+reason and the references of <code>Bank</code>, <code>Wallet</code> and <code>NPP</code> were read on 09-Nov-2026 from
+mirrors of ISO’s published files, because iso20022.org answered every request with HTTP 403.
+What NPP does was read the same day from NPP Australia’s and Australian Payments Plus’s
+published documents. The texts of <code>TransactionType</code>, its codes <code>CRDP</code> and <code>RFND</code>, and
+<code>OriginalTransaction</code>, quoted in A refund, above, were read on 11-Nov-2026 from M3, and the text
+of <code>AuthorisedAmount</code>, quoted in Outcome, above, on 16-Nov-2026. The texts of <code>SaleToPOIAbort</code>
+and of <code>ExchangeIdentification</code>, quoted in Abort, above, were read on 16-Nov-2026 from M3, the
+definition of <code>DS02</code> the same day from M1, and its name, OrderCancelled, on 17-Nov-2026 from M2.
+The texts of <code>RetailerMessage1Code</code>’s <code>SASQ</code>, of <code>SessionManagementRequest9</code>’s <code>LoginRequest</code>
+and of <code>KEKIdentifier7</code>’s <code>KeyIdentification</code>, quoted in Connect and Signing in, above, were read
+on 16-Nov-2026 from M3. The texts of <code>LoginResponse</code>, of <code>Response11Code</code>’s <code>SUCC</code> and <code>FAIL</code>, and
+of <code>AcceptorIdentification</code>, <code>UserName</code> and <code>ApplicationIdentification</code>, quoted in Signing in,
+above, were read on 17-Nov-2026 from M3. RFC 9180, R1, gives the sealing of Signing in, above, and its worked vector’s inputs.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Id</th><th>Source</th><th>Version</th><th>What it gave</th></tr>
+</thead>
+<tbody>
+<tr><td>M1</td><td>Beneficial Strategies <code>iso-20022-external-codesets</code>, <code>source/ExternalCodeSets.json</code>, ISO’s file as downloaded</td><td>Commit <code>ffdad80</code>: External Code Sets release 2Q2026 v3, ISO Last-Modified 03-Sep-2026</td><td>Each code’s definition</td></tr>
+<tr><td>M2</td><td>The Internet Archive’s copy of ISO’s <code>ExternalCodeSets_XLSX.zip</code></td><td>Release 1Q2026 v1, captured 18-Jun-2026. Every definition quoted is the same in 1Q2026 v1 and 2Q2026 v3</td><td>Each code’s name, which ISO’s JSON lacks</td></tr>
+<tr><td>M3</td><td>Beneficial Strategies <code>Iso20022Library</code>, <code>snapshot-sync/2026-09-04/spec-snapshot.tsv</code></td><td>Commit <code>e754326</code>, ISO’s repository snapshot of 04-Sep-2026</td><td>Each element’s definition, the codes of <code>CardPaymentServiceType16Code</code>, and the definition of <code>SaleToPOIAbort</code></td></tr>
+<tr><td>M4</td><td>Beneficial Strategies <code>iso-20022-text</code></td><td>Commit <code>b91ac1a</code></td><td>The same element definitions as M3</td></tr>
+<tr><td>M5</td><td>ISO’s XSDs <code>pacs.002.001.16.xsd</code> and <code>pain.002.001.15.xsd</code></td><td>Generated 02-Mar-2026</td><td>Where <code>TransactionStatus</code> and <code>StatusReasonInformation</code> sit</td></tr>
+<tr><td>N1</td><td>Regulations for New Payments Platform, <code>auspayplus.com.au/wp-content/uploads/2024/11/NPP-Regulations-v22.0.pdf</code></td><td>Version 22.0, 20-Nov-2024</td><td>A payment’s answer and its timeout notice are each a <code>pacs.002</code>; the payer’s bank assigns the Transaction ID, every later message carries it, and its 35th character marks a retry; the Mandate Management Service generates a mandate’s id</td></tr>
+<tr><td>N2</td><td>NPP Payment Initiation Messages: Technical guidance for corporates, government and third parties, <code>auspayplus.com.au/wp-content/uploads/2026/03/NPP-payment-initiation-V4.0.pdf</code></td><td>Version 4.0, 20-Nov-2025</td><td><code>NOTPROVIDED</code> as the end-to-end id when the payer gave none; a PayTo payment carries its mandate’s id; a rejection’s reason is a code</td></tr>
+<tr><td>N3</td><td>New Payments Platform API Framework, <code>auspayplus.com.au/wp-content/uploads/2025/05/NPP-API-Framework-v5.0-1.pdf</code></td><td>Version 5.0, 07-May-2021</td><td>Read, and quoted nowhere here</td></tr>
+<tr><td>N4</td><td>PayTo Service Overview, <code>auspayplus.com.au/wp-content/uploads/2025/07/PayTo-Service-Overview-Nov-2021-2.0.pdf</code></td><td>Version 2.0</td><td>Read, and quoted nowhere here</td></tr>
+<tr><td>R1</td><td>RFC 9180, Hybrid Public Key Encryption, <code>rfc-editor.org/rfc/rfc9180</code></td><td>February 2022</td><td>Base mode, the suite’s ids, a P-256 key’s serialised form and the check of <code>enc</code>, and § A.3.1’s test vector</td></tr>
+</tbody>
+</table>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="linking.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="changelog.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="linking.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="changelog.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

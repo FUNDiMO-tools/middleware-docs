@@ -58,7 +58,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "../searchindex-122325d1.js";
+            window.path_to_searchindex_js = "../searchindex-4a3a5c77.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-3b0d6c91.js"></script>
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../../versions.html">all releases</a></p>
 
 <p>This guide is also a PDF, to print or keep: <a href="fundimo-middleware-integration-guide-pos.pdf">fundimo-middleware-integration-guide-pos.pdf</a>.</p>
 <div class="mw-guide">
@@ -774,7 +774,7 @@ status<span style="color: #d73948">=</span><span style="color: #198810">$</span>
 <tbody>
 <tr><td><code>400</code></td><td><code>invalid_field</code></td><td>Not two words. Ask for the two words, in the order shown. The request stays open.</td></tr>
 <tr><td><code>403</code></td><td><code>link_word_unknown</code></td><td>The words are not correct. Offer to ask again, for new words.</td></tr>
-<tr><td><code>409</code></td><td><code>link_in_progress</code></td><td>Another register at the store is linking. Try again in one minute.</td></tr>
+<tr><td><code>409</code></td><td><code>link_in_progress</code></td><td>A request to link is open at the store, or for your register. If your register opened it and keeps its <code>LinkIdentification</code>, continue with that request. If not, try again when its time ends: two minutes at the default settings.</td></tr>
 <tr><td><code>409</code></td><td><code>no_terminal_to_link</code></td><td>No terminal is waiting. Make sure that it is on, enrolled at this store, connected, and not linked.</td></tr>
 <tr><td><code>410</code></td><td><code>link_expired</code></td><td>The words expired. Ask again.</td></tr>
 <tr><td><code>429</code></td><td><code>link_rate</code></td><td>FUNDiMO stopped linking at this store for a time. Wait one hour. After three wrong pairs of words, wait until tomorrow.</td></tr>
@@ -828,6 +828,7 @@ status<span style="color: #d73948">=</span><span style="color: #198810">$</span>
 <tr><td><code>mw://refusals</code></td><td>No</td><td>Every code that FUNDiMO and the sandbox give, what it means, and what to do next</td></tr>
 <tr><td><code>mw://conformance</code></td><td>No</td><td>The conformance scenarios, and the assertions that judge each</td></tr>
 <tr><td><code>mw://docs/openapi-pos.yaml</code><br><code>mw://docs/terminal.md</code><br><code>mw://docs/llms.txt</code></td><td>No</td><td>The OpenAPI document for a POS, the terminal contract and the index</td></tr>
+<tr><td><code>mw://docs/pos.md</code></td><td>No</td><td>What your register shows at each status, cancel and refund, and every code by route</td></tr>
 <tr><td><code>mw://onboarding/server</code><br><code>mw://onboarding/device</code><br><code>mw://onboarding/linking</code></td><td>No</td><td>Enrolment of a server, enrolment of an app on a device, and linking at the counter</td></tr>
 <tr><td><code>mw://report-key</code></td><td>No</td><td>The public key that verifies a conformance report's signature</td></tr>
 </tbody>
@@ -876,10 +877,12 @@ status<span style="color: #d73948">=</span><span style="color: #198810">$</span>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/sandbox.md"><code>/docs/api/sandbox.md</code></a></td><td>Start here. Your sandbox key and test world, the POS journey, the MCP server, conformance, and every code that the sandbox adds</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/environments.md"><code>/docs/api/environments.md</code></a></td><td>The sandbox and staging: the address of each, the differences, and how to move from the sandbox to staging</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a></td><td>The calls, the sale and its statuses, and every refusal with what to do</td></tr>
+<tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/pos.md"><code>/docs/api/pos.md</code></a></td><td>What your register shows at each status, cancel and refund, and every code by route</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/onboarding-server.md"><code>/docs/api/onboarding-server.md</code></a></td><td>Your server's pairing code, private key and certificate, with code for curl, Rust and Java. Also <code>Mw-Register</code>, the listing of registers, and renewal</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/linking.md"><code>/docs/api/linking.md</code></a></td><td>Linking a register to a terminal at the counter. What your register shows for each response</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/onboarding-device.md"><code>/docs/api/onboarding-device.md</code></a></td><td>For a register that is an app on a device</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/fields.json"><code>/docs/api/fields.json</code></a></td><td>Every field: who sends it, its ISO 20022 element if ISO has one, its limits, and an example</td></tr>
+<tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/refusals.json"><code>/docs/api/refusals.json</code></a></td><td>Every code that FUNDiMO and the sandbox give, what it means, and what to do next</td></tr>
 <tr><td><a href="https://mw.sandbox.fundimo.com.au/docs/api/conformance.json"><code>/docs/api/conformance.json</code></a></td><td>The conformance scenarios, and how FUNDiMO judges each</td></tr>
 <tr><td><code>POST /mcp</code></td><td>The sandbox's MCP server, for your AI coding assistant</td></tr>
 </tbody>

@@ -1,0 +1,856 @@
+/* The site's look, the main site's (fundimo.com.au): its ground and ink, Oswald for display in
+   capitals and DM Sans for text, the six-colour stripe under the bar, teal links, black frames
+   and the small monospace label; hairline rules and square corners. Over mdBook's own styles,
+   which this file follows: it sets mdBook's theme variables, then restyles what they do not
+   reach. Two themes (book.toml): light, the main site's, and dark, the same parts on a dark
+   ground, which mdBook calls coal and the switcher calls Dark (head.hbs); mdBook's other themes,
+   which a reader may have saved from an earlier release, are drawn as the nearer of the two:
+   rust as light, navy and ayu as dark. mdBook's root font size
+   is 10px, so sizes here are in px or em, never rem. Text is 4.5:1 or more on its ground, in each
+   theme; each pair is listed beside its colour. */
+
+/* ---- The tokens ----------------------------------------------------------------------------
+   The brand's colours, the main site's own, the same in each theme: the stripe's six. Then each
+   part's colour, light here and dark below. */
+
+:root {
+    --mw-brand-teal: #0e7a72;
+    --mw-brand-green: #3dbb7d;
+    --mw-brand-mint: #d2f0dc;
+    --mw-brand-blue: #c8d8ea;
+    --mw-brand-blush: #e4c4b8;
+    --mw-brand-yellow: #f1bf27;
+
+    --mw-display: "Oswald", "Arial Narrow", sans-serif;
+    --mw-body: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    /* The stripe's height, the main site's: 10px, 7px on a narrow screen. */
+    --mw-strip-h: 10px;
+    /* What the fixed bar and its stripe cover at the top of the window. */
+    --mw-chrome-h: calc(var(--menu-bar-height) + 1px + var(--mw-strip-h));
+
+    --menu-bar-height: 64px;
+    --page-padding: 16px;
+    --content-max-width: 780px;
+    --code-font-size: 0.875em;
+}
+
+@media (max-width: 900px) {
+    :root {
+        --mw-strip-h: 7px;
+        --menu-bar-height: 56px;
+    }
+}
+
+/* Light: the main site's grey-50 ground and black ink. */
+html.light,
+html.rust,
+html:not(.js) {
+    --mw-ground: #f5f4f0;       /* grey-50, the page */
+    --mw-paper: #ffffff;        /* a code block, a table's head, a quote */
+    --mw-ink: #0a0a0a;          /* black: headings, rules, a card filled; 18.0:1 on the ground */
+    --mw-text: #1a1a1a;         /* grey-900: body text; 15.8:1 on the ground, 17.4:1 on paper */
+    --mw-text-2: #444444;       /* grey-700: quieter text; 8.9:1 on the ground */
+    --mw-text-3: #555555;       /* grey-600: labels; 6.8:1 on the ground, 7.5:1 on paper */
+    --mw-rule: #dddddd;         /* grey-200: a table's rows */
+    --mw-rule-2: #bbbbbb;       /* grey-300: the sidebar's edge, a block's frame */
+    --mw-link: #0e7a72;         /* teal; 4.7:1 on the ground, 5.2:1 on paper */
+    --mw-link-hover: #0a5f59;   /* 6.8:1 on the ground */
+    --mw-wash: rgba(10, 10, 10, 0.06);  /* behind inline code */
+    --mw-head-bg: #0a0a0a;      /* a table's head band: ink */
+    --mw-head-fg: #f5f4f0;      /* its labels; 18.0:1 on it */
+    --mw-row-alt: #f1f0eb;      /* every other row; text 15.3:1, a link 4.55:1 on it */
+    --mw-focus-bg: #e8f7ed;     /* mint-light: the search result in focus; a link 4.7:1 on it */
+    --mw-mark-bg: #f1e6c6;      /* butter: a word search found; text 14.0:1 on it */
+    --mw-overlay: rgba(10, 10, 10, 0.25);
+    --mw-note: #255c7c;         /* each callout's title, 5.7:1 or more on the ground */
+    --mw-tip: #1d6b44;
+    --mw-important: #5b3a8c;
+    --mw-warning: #7a5a0c;
+    --mw-caution: #a12f2f;
+    --mw-copy-filter: invert(27%);
+    --mw-copy-filter-hover: invert(0%);
+    --mw-scheme: light;
+}
+
+/* Dark: the same parts on a near-black ground, the ink and links lightened. */
+html.coal,
+html.navy,
+html.ayu {
+    --mw-ground: #121211;
+    --mw-paper: #1c1c1a;
+    --mw-ink: #f5f4f0;          /* 17.0:1 on the ground */
+    --mw-text: #e6e4df;         /* 14.8:1 on the ground, 13.4:1 on paper */
+    --mw-text-2: #c4c1ba;       /* 10.4:1 on the ground */
+    --mw-text-3: #a9a69f;       /* 7.7:1 on the ground, 7.0:1 on paper */
+    --mw-rule: #33322f;
+    --mw-rule-2: #57554f;
+    --mw-link: #2fb3a6;         /* teal, lightened; 7.3:1 on the ground, 6.6:1 on paper */
+    --mw-link-hover: #6fd6cb;   /* 10.9:1 on the ground */
+    --mw-wash: rgba(245, 244, 240, 0.09);
+    --mw-head-bg: #2e2e2b;      /* labels 10.7:1 on it */
+    --mw-head-fg: #e6e4df;
+    --mw-row-alt: #232321;      /* text 12.4:1, a link 6.1:1 on it */
+    --mw-focus-bg: #1d332e;     /* text 10.6:1 on it, a link 5.2:1 */
+    --mw-mark-bg: #5a4a12;      /* text 6.8:1 on it */
+    --mw-overlay: rgba(0, 0, 0, 0.5);
+    --mw-note: #7cb8e0;         /* 7.2:1 or more on the ground */
+    --mw-tip: #6fcf97;
+    --mw-important: #c3a6f0;
+    --mw-warning: #e8c35a;
+    --mw-caution: #f08080;
+    --mw-copy-filter: invert(80%);
+    --mw-copy-filter-hover: invert(100%);
+    --mw-scheme: dark;
+}
+
+/* mdBook's theme variables, set to the tokens, in each theme. */
+html.light,
+html.rust,
+html.coal,
+html.navy,
+html.ayu,
+html:not(.js) {
+    --bg: var(--mw-ground);
+    --fg: var(--mw-text);
+
+    --sidebar-bg: var(--mw-ground);
+    --sidebar-fg: var(--mw-text);
+    --sidebar-non-existant: var(--mw-text-3);
+    --sidebar-active: var(--mw-link);
+    --sidebar-spacer: var(--mw-rule);
+    --sidebar-header-border-color: var(--mw-link);
+
+    --scrollbar: var(--mw-rule-2);
+
+    --icons: var(--mw-text-2);
+    --icons-hover: var(--mw-ink);
+
+    --links: var(--mw-link);
+
+    --inline-code-color: var(--mw-ink);
+
+    --theme-popup-bg: var(--mw-paper);
+    --theme-popup-border: var(--mw-ink);
+    --theme-hover: var(--mw-focus-bg);
+
+    --quote-bg: var(--mw-paper);
+    --quote-border: var(--mw-rule-2);
+
+    --warning-border: var(--mw-brand-yellow);
+
+    --table-border-color: var(--mw-rule);
+    --table-header-bg: transparent;
+    --table-alternate-bg: transparent;
+
+    --searchbar-border-color: var(--mw-text-3);
+    --searchbar-bg: var(--mw-paper);
+    --searchbar-fg: var(--mw-ink);
+    --searchbar-shadow-color: transparent;
+    --searchresults-header-fg: var(--mw-text-3);
+    --searchresults-border-color: var(--mw-rule-2);
+    --searchresults-li-bg: var(--mw-focus-bg);
+    --search-mark-bg: var(--mw-mark-bg);
+
+    --color-scheme: var(--mw-scheme);
+
+    --copy-button-filter: var(--mw-copy-filter);
+    --copy-button-filter-hover: var(--mw-copy-filter-hover);
+
+    --footnote-highlight: var(--mw-link);
+
+    --overlay-bg: var(--mw-overlay);
+
+    --blockquote-note-color: var(--mw-note);
+    --blockquote-tip-color: var(--mw-tip);
+    --blockquote-important-color: var(--mw-important);
+    --blockquote-warning-color: var(--mw-warning);
+    --blockquote-caution-color: var(--mw-caution);
+}
+
+html {
+    font-family: var(--mw-body);
+    /* What the keyboard brings into view lands below the bar and its stripe. */
+    scroll-padding-top: calc(var(--mw-chrome-h) + 16px);
+}
+
+body {
+    color: var(--fg);
+    background: var(--bg);
+}
+
+/* A heading a link names lands below the bar and its stripe, never under them. */
+:target {
+    scroll-margin-top: calc(var(--mw-chrome-h) + 16px);
+}
+
+/* ---- The bar: the main site's navigation ----------------------------------------------------
+   mdBook's menu bar, fixed across the whole window, on the ground with a rule of ink under it
+   and the stripe under that, as the main site's. In it: the button that shows the sidebar, then
+   the wordmark and what this site is (header.hbs), then the theme and search at the far end.
+   mdBook hides the bar as the page scrolls down; this one stays. The book's title is not shown:
+   the wordmark says it. */
+
+#mdbook-menu-bar-hover-placeholder {
+    display: none;
+}
+
+#mdbook-menu-bar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0;
+    right: 0;
+    z-index: 101;
+    flex-wrap: nowrap;
+    align-items: center;
+    height: var(--menu-bar-height);
+    margin: 0;
+    padding: 0 8px;
+    background: var(--mw-ground);
+    border-block-end: 1px solid var(--mw-ink);
+}
+
+#mdbook-menu-bar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 1px);
+    height: var(--mw-strip-h);
+    pointer-events: none;
+    /* One painted rectangle with hard stops, as the main site draws it, so no hairline of the
+       page shows between two bands at any width. */
+    background: linear-gradient(
+        to right,
+        var(--mw-brand-teal) 0 calc(100% / 6),
+        var(--mw-brand-green) calc(100% / 6) calc(200% / 6),
+        var(--mw-brand-mint) calc(200% / 6) calc(300% / 6),
+        var(--mw-brand-blue) calc(300% / 6) calc(400% / 6),
+        var(--mw-brand-blush) calc(400% / 6) calc(500% / 6),
+        var(--mw-brand-yellow) calc(500% / 6) 100%
+    );
+}
+
+#mdbook-menu-bar .left-buttons {
+    flex: 1;
+    align-items: center;
+    margin: 0;
+}
+
+#mdbook-menu-bar .icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    line-height: 1;
+    color: var(--mw-ink);
+}
+
+#mdbook-menu-bar .icon-button:hover,
+#mdbook-menu-bar .icon-button:focus-visible {
+    color: var(--mw-link);
+}
+
+#mdbook-menu-bar .fa-svg {
+    padding: 0;
+    line-height: 1;
+}
+
+/* The theme's button and search, at the bar's far end. */
+#mdbook-theme-toggle {
+    order: 2;
+    margin-inline-start: auto;
+}
+
+#mdbook-search-toggle {
+    order: 3;
+}
+
+#mdbook-menu-bar .menu-title,
+#mdbook-menu-bar .right-buttons {
+    display: none !important;
+}
+
+/* The themes: Auto, Light and Dark. mdBook's Rust, Navy and Ayu are not offered, and head.hbs
+   reads a reader's saved one as Light or Dark. The list drops under the theme's button. */
+#mdbook-theme-rust,
+#mdbook-theme-navy,
+#mdbook-theme-ayu {
+    display: none;
+}
+
+#mdbook-theme-list {
+    left: auto;
+    right: 52px;
+    top: calc(var(--mw-chrome-h) + 4px);
+    border-radius: 0;
+    font-family: var(--mw-body);
+    font-size: 14px;
+}
+
+#mdbook-theme-list .theme {
+    color: var(--mw-text);
+}
+
+/* The wordmark, linking the main site, and what this site is: set in the bar, after the button
+   that shows the sidebar. Fixed like the bar, so it moves with it when a narrow screen's sidebar
+   pushes the page aside. Each theme shows the wordmark drawn for its ground. */
+.mw-brand {
+    position: fixed;
+    top: 0;
+    left: 60px;
+    z-index: 102;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: var(--menu-bar-height);
+}
+
+.mw-brand .mw-wordmark {
+    display: block;
+    line-height: 0;
+}
+
+.mw-brand img {
+    display: block;
+    width: auto;
+    height: 28px;
+}
+
+.mw-brand .mw-on-dark,
+html:is(.coal, .navy, .ayu) .mw-brand .mw-on-light {
+    display: none;
+}
+
+html:is(.coal, .navy, .ayu) .mw-brand .mw-on-dark {
+    display: block;
+}
+
+.mw-brand .mw-product {
+    padding-inline-start: 16px;
+    border-inline-start: 1px solid var(--mw-rule-2);
+    font-family: var(--mw-display);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 28px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--mw-text-2);
+}
+
+@media (max-width: 900px) {
+    .mw-brand {
+        left: 56px;
+        gap: 12px;
+    }
+    .mw-brand img {
+        height: 24px;
+    }
+    .mw-brand .mw-product {
+        padding-inline-start: 12px;
+        font-size: 12px;
+        line-height: 24px;
+    }
+}
+
+/* Under 370px the bar holds the wordmark and its buttons alone: at 360px the label would run
+   under the theme's button. */
+@media (max-width: 369px) {
+    .mw-brand .mw-product {
+        display: none;
+    }
+}
+
+/* The page starts below the bar and its stripe. mdBook pulls it up under its own bar, which
+   this one replaces. */
+.page {
+    margin-block-start: 0;
+    padding-block-start: calc(var(--mw-chrome-h) + 20px);
+}
+
+/* ---- The sidebar ---------------------------------------------------------------------------
+   Below the bar, beside the page where it fits. On a narrow screen it opens over the page, which
+   stays where it is: mdBook moves the page aside there by a transform, and a page so moved takes
+   the fixed bar with it, off the screen with the button that closes the sidebar. */
+
+.sidebar {
+    top: var(--mw-chrome-h);
+    z-index: 100;
+    border-inline-end: 1px solid var(--mw-rule-2);
+    font-size: 15px;
+}
+
+@media only screen and (max-width: 619px) {
+    #mdbook-sidebar-toggle-anchor:checked ~ .page-wrapper {
+        transform: none;
+    }
+}
+
+.sidebar .sidebar-scrollbox {
+    padding: 20px 16px;
+}
+
+.chapter li.chapter-item {
+    margin-block-start: 0.5em;
+}
+
+/* Each part, as the main site marks a block: a thick rule of ink down its left, its title in
+   display capitals with a short bar of ink under it, then its pages. mdBook writes an empty item
+   before each part's title, which is not shown. */
+.chapter li.chapter-item:empty {
+    display: none;
+}
+
+.chapter li.part-title {
+    margin: 1.6em 0 0;
+    padding: 4px 0 6px 14px;
+    border-inline-start: 4px solid var(--mw-ink);
+    font-family: var(--mw-display);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mw-ink);
+}
+
+.chapter li.part-title::after {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 3px;
+    margin-block-start: 8px;
+    background: var(--mw-ink);
+}
+
+.chapter li.part-title ~ li.chapter-item {
+    margin-block-start: 0;
+    padding: 0.3em 0 0.3em 14px;
+    border-inline-start: 4px solid var(--mw-ink);
+}
+
+.chapter li a:hover {
+    color: var(--mw-ink);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.chapter li a.active,
+.chapter a.current-header {
+    color: var(--mw-link);
+    font-weight: 600;
+}
+
+.on-this-page {
+    border-inline-start-width: 2px;
+}
+
+/* ---- The page ------------------------------------------------------------------------------ */
+
+.content {
+    padding-block-end: 64px;
+}
+
+.content main {
+    font-size: 16px;
+}
+
+.content p,
+.content ol,
+.content ul {
+    line-height: 1.65;
+}
+
+.content li + li {
+    margin-block-start: 0.25em;
+}
+
+/* Links: teal, underlined, as the main site's in its text. */
+.content a:link,
+.content a:visited,
+#mdbook-searchresults a {
+    color: var(--mw-link);
+}
+
+.content a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+}
+
+.content a:hover {
+    color: var(--mw-link-hover);
+    text-decoration-thickness: 2px;
+}
+
+/* Headings: the main site's display type, in capitals, in ink. A heading's own link to itself
+   keeps the heading's colour, and code in a heading keeps its case. */
+.content h1,
+.content h2,
+.content h3 {
+    font-family: var(--mw-display);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--mw-ink);
+}
+
+.content h1 {
+    margin: 0.2em 0 0.6em;
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+}
+
+.content h2 {
+    margin: 2.2em 0 0.7em;
+    padding-block-start: 0.8em;
+    border-block-start: 1px solid var(--mw-rule-2);
+    font-size: 26px;
+}
+
+.content h3 {
+    margin: 1.8em 0 0.6em;
+    font-size: 19px;
+}
+
+.content h4,
+.content h5,
+.content h6 {
+    margin: 1.6em 0 0.5em;
+    font-family: var(--mw-body);
+    font-weight: 700;
+    color: var(--mw-ink);
+}
+
+.content h4 {
+    font-size: 17px;
+}
+
+@media (max-width: 620px) {
+    .content h1 {
+        font-size: 32px;
+    }
+    .content h2 {
+        font-size: 23px;
+    }
+}
+
+.content :is(h1, h2, h3) code {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.8em;
+}
+
+.content :is(h1, h2, h3, h4, h5, h6) a.header:link,
+.content :is(h1, h2, h3, h4, h5, h6) a.header:visited {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* The wordmark's lowercase i, kept where capitals would flatten it: the start page's title, and
+   each guide's, which names FUNDiMO in a heading Typst writes. */
+.content .mw-wm,
+.content .mw-guide h1 {
+    text-transform: none;
+}
+
+/* Code: on paper in a hairline frame, square, in mdBook's monospace, Source Code Pro. mdBook's
+   highlighting keeps its colours, its light set in the light theme and its Tomorrow Night in the
+   dark, each 4.6:1 or more on paper. Inline code is ink on a faint wash of it. A block wider than
+   the page scrolls inside its frame. */
+.content pre {
+    position: relative;
+    border: 1px solid var(--mw-rule-2);
+    border-radius: 0;
+    background: var(--mw-paper);
+}
+
+.content pre > code,
+.content pre > .hljs,
+.hljs {
+    background: var(--mw-paper);
+    color: var(--mw-text);
+}
+
+.content pre > code {
+    padding: 14px 16px;
+    line-height: 1.55;
+}
+
+.content :not(pre) > code {
+    padding: 0.1em 0.3em;
+    border-radius: 0;
+    background: var(--mw-wash);
+    color: var(--mw-ink);
+    overflow-wrap: anywhere;
+}
+
+/* The copy button on a block: square, on paper. */
+pre > .buttons button {
+    border-radius: 0;
+    border-color: var(--mw-rule-2);
+    background-color: var(--mw-paper);
+}
+
+/* Tables: a head band of ink, each column's title the monospace label on it; then rows on
+   paper, every other one faintly shaded so the eye keeps its row, with room in each, and a rule
+   of ink under the last. A table wider than the page scrolls in its box, never the page. */
+.content .table-wrapper {
+    margin: 1.2em 0 1.6em;
+    overflow-x: auto;
+    border-block-end: 1px solid var(--mw-ink);
+}
+
+.content table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.content table thead {
+    background: transparent;
+}
+
+.content table th {
+    padding: 12px 14px;
+    border: 0;
+    background: var(--mw-head-bg);
+    font-family: var(--mono-font);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-align: start;
+    text-transform: uppercase;
+    vertical-align: bottom;
+    color: var(--mw-head-fg);
+}
+
+/* Each column at least wide enough for a short key, BENCH-1, so none breaks at its hyphen. */
+.content table td {
+    min-width: 4.5em;
+    padding: 12px 14px;
+    border: 0;
+    vertical-align: top;
+}
+
+.content table tbody tr,
+.content table tbody tr:nth-child(2n + 1) {
+    background: var(--mw-paper);
+}
+
+.content table tbody tr:nth-child(2n) {
+    background: var(--mw-row-alt);
+}
+
+/* On a phone each column keeps a width a line can be read at, and a table of more columns than
+   fit scrolls in its box. */
+@media (max-width: 620px) {
+    .content table {
+        width: auto;
+    }
+    .content table th,
+    .content table td {
+        min-width: 9em;
+    }
+}
+
+/* A quote, and mdBook's callouts: on paper, a rule of ink at the start, square. */
+.content blockquote {
+    margin: 1.4em 0;
+    padding: 4px 20px;
+    border: 0;
+    border-inline-start: 3px solid var(--mw-ink);
+    background: var(--mw-paper);
+}
+
+.content hr {
+    border: 0;
+    border-block-start: 1px solid var(--mw-rule-2);
+}
+
+/* mdBook's links to the chapter before and after: quiet, teal under the pointer. */
+.nav-chapters,
+.mobile-nav-chapters {
+    color: var(--mw-text-2);
+}
+
+.nav-chapters:hover,
+.mobile-nav-chapters:hover {
+    color: var(--mw-link);
+    text-decoration: none;
+}
+
+.mobile-nav-chapters {
+    border-radius: 0;
+    background: transparent;
+    border: 1px solid var(--mw-ink);
+}
+
+/* ---- Search --------------------------------------------------------------------------------
+   The field as the main site's: square, on paper, a teal ring when it has the focus. */
+
+#mdbook-searchbar {
+    border: 1px solid var(--mw-text-3);
+    border-radius: 0;
+    background: var(--mw-paper);
+    font-family: var(--mw-body);
+    font-size: 16px;
+    color: var(--mw-ink);
+}
+
+#mdbook-searchbar:focus,
+#mdbook-searchbar.active {
+    outline: 2px solid var(--mw-link);
+    outline-offset: 1px;
+    box-shadow: none;
+}
+
+ul#mdbook-searchresults li.focus {
+    background-color: var(--mw-focus-bg);
+}
+
+ul#mdbook-searchresults span.teaser em {
+    background: var(--mw-mark-bg);
+}
+
+/* ---- The site's own parts -------------------------------------------------------------------- */
+
+/* The banner at the top of each page: its release, and a link to every release, as the main
+   site's monospace label, over a hairline. */
+.mw-release {
+    display: block;
+    margin: 0 0 24px;
+    padding: 0 0 10px;
+    border-block-end: 1px solid var(--mw-rule-2);
+    font-family: var(--mono-font);
+    font-size: 12.5px;
+    letter-spacing: 0.06em;
+    color: var(--mw-text-3);
+}
+
+.content .mw-release a:link,
+.content .mw-release a:visited {
+    color: var(--mw-link);
+}
+
+/* The start page's two choices, side by side where they fit: each the main site's line button,
+   a frame of ink that fills with ink, its title in display capitals. */
+.mw-choose {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 28px 0;
+}
+
+.content a.mw-card,
+.content a.mw-card:link,
+.content a.mw-card:visited {
+    display: block;
+    flex: 1 1 16em;
+    padding: 20px 22px;
+    border: 1px solid var(--mw-ink);
+    border-radius: 0;
+    background: transparent;
+    color: var(--mw-text-2);
+    line-height: 1.5;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+/* The title is a block of its own, so the line break the page writes after it is not needed. */
+.mw-card strong + br {
+    display: none;
+}
+
+.mw-card strong {
+    display: block;
+    margin-block-end: 6px;
+    font-family: var(--mw-display);
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--mw-ink);
+}
+
+.content a.mw-card:hover,
+.content a.mw-card:focus-visible {
+    background: var(--mw-ink);
+    color: var(--mw-ground);
+    text-decoration: none;
+}
+
+.content a.mw-card:hover strong,
+.content a.mw-card:focus-visible strong {
+    color: var(--mw-ground);
+}
+
+/* A reader's API reference, framed in the book. */
+.mw-frame {
+    display: block;
+    width: 100%;
+    height: 85vh;
+    margin: 16px 0;
+    border: 1px solid var(--mw-ink);
+    border-radius: 0;
+    background: var(--mw-paper);
+}
+
+/* A guide's page: Typst's HTML export of the guide, inside the book. Each diagram on a line of
+   its own, on a white panel in each theme, since each is drawn on white; its caption, the block
+   Typst writes after it, small beneath it. */
+.mw-guide img {
+    display: block;
+    box-sizing: border-box;
+    max-width: 100%;
+    height: auto;
+    margin: 1.5em 0 0.4em;
+    padding: 8px;
+    border: 1px solid var(--mw-rule-2);
+    background: #ffffff;
+}
+
+.mw-guide img + div {
+    margin-bottom: 1.5em;
+    font-size: 0.875em;
+    color: var(--mw-text-2);
+}
+
+/* Typst writes no wrapper round a table, so each scrolls in its own box on a narrow screen. */
+.mw-guide table {
+    display: block;
+    max-width: 100%;
+    margin-bottom: 1em;
+    overflow-x: auto;
+    border-block-end: 1px solid var(--mw-ink);
+}
+
+.mw-guide table th,
+.mw-guide table td {
+    min-width: 8em;
+}
+
+/* Typst colours each kind of token in a guide's code in an inline style, for a light ground:
+   4.6:1 or more on paper. On the dark ground each is its own hue lightened, 6.6:1 or more. */
+html:is(.coal, .navy, .ayu) .mw-guide pre span[style="color: #198810"] {
+    color: #7fcf6f !important;
+}
+
+html:is(.coal, .navy, .ayu) .mw-guide pre span[style="color: #4b69c6"] {
+    color: #8fa8f0 !important;
+}
+
+html:is(.coal, .navy, .ayu) .mw-guide pre span[style="color: #d73948"] {
+    color: #f08a92 !important;
+}
+
+html:is(.coal, .navy, .ayu) .mw-guide pre span[style="color: #b60157"] {
+    color: #f07ab0 !important;
+}

@@ -1,0 +1,492 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Sales, refunds and codes - FUNDiMO middleware API</title>
+
+
+        <!-- Custom HTML head -->
+        <link rel="stylesheet" href="theme/fonts.css">
+        <script>
+            (function () {
+                var nearer = { rust: 'light', navy: 'coal', ayu: 'coal' };
+                function remap() {
+                    try {
+                        var saved = (localStorage.getItem('mdbook-theme') || '').replace(/"/g, '');
+                        if (nearer[saved]) { localStorage.setItem('mdbook-theme', nearer[saved]); }
+                    } catch (e) { }
+                }
+                remap();
+                window.addEventListener('storage', remap);
+                window.addEventListener('pageshow', remap);
+                document.addEventListener('DOMContentLoaded', function () {
+                    var dark = document.getElementById('mdbook-theme-coal');
+                    if (dark) { dark.textContent = 'Dark'; }
+                    Object.keys(nearer).forEach(function (name) {
+                        var button = document.getElementById('mdbook-theme-' + name);
+                        if (button) { button.parentNode.remove(); }
+                    });
+                });
+            })();
+        </script>
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/site-acfedb15.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "coal";
+            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-3b0d6c91.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div class="mw-brand">
+                    <a class="mw-wordmark" href="https://fundimo.com.au/"><img class="mw-on-light" src="theme/fundimo.png" alt="FUNDiMO" width="1142" height="277"><img class="mw-on-dark" src="theme/fundimo-on-dark.png" alt="FUNDiMO" width="1200" height="290"></a>
+                    <span class="mw-product">Middleware API</span>
+                </div>
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">FUNDiMO middleware API</h1>
+
+                    <div class="right-buttons">
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
+
+<h1 id="middleware-a-poss-sales-refunds-and-codes"><a class="header" href="#middleware-a-poss-sales-refunds-and-codes">Middleware: a POS’s sales, refunds and codes</a></h1>
+<p>21-Nov-2026.</p>
+<p>This page is for a POS vendor, and for whoever writes the screens a cashier sees: what the
+register shows and what the cashier does at each state of a sale or a refund, cancelling one,
+refunding, and every code a POS meets, by route. Each route’s fields and answers are in
+<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>. Each code’s meaning, and what your code does next, are its row of
+<a href="refusals.json"><code>/docs/api/refusals.json</code></a>. An agent reads the same bytes through the sandbox’s MCP server as
+<code>mw://docs/pos.md</code>.</p>
+<p>The register uses its own words. The words in these tables are an example.</p>
+<p>A POS on its own server names the register each call is for in <code>Mw-Register</code>, on every sale,
+read, cancel and link: <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, 6. Name the register. An app on a till
+holds its register’s own certificate, and sends none, or one naming itself: on a sale, read,
+cancel or link, naming another register, or sending it twice, is <code>403 not_permitted</code> (An app on a
+till, below).</p>
+<h2 id="a-sales-states"><a class="header" href="#a-sales-states">A sale’s states</a></h2>
+<p><code>POST /v1/sales</code> answers <code>202</code> with the sale, <code>PDNG</code>, and its <code>TransactionReference</code>. Read it
+with <code>GET /v1/sales/{TransactionReference}?wait_seconds=25</code>, which holds the read up to 25
+seconds for a change, until it settles. Read a refund the same way, by its own
+<code>TransactionReference</code>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>TransactionStatus</code></th><th>What it means</th><th>The register shows</th><th>The cashier</th></tr>
+</thead>
+<tbody>
+<tr><td><code>PDNG</code></td><td>The terminal was sent the sale, and has not answered</td><td>Waiting for the customer at the terminal</td><td>Waits, while the register reads again</td></tr>
+<tr><td><code>ACSP</code></td><td>The terminal approved the whole <code>TotalAmount</code></td><td>Approved</td><td>Completes the sale, and prints any references <code>PaymentReference</code> holds</td></tr>
+<tr><td><code>RJCT</code> with <code>AG07</code></td><td>The card or the host declined</td><td>Not paid</td><td>Asks for another tender</td></tr>
+<tr><td><code>RJCT</code> with <code>AB11</code></td><td>No payment was taken, for another cause, such as: the terminal gave up, the sale was cancelled at the terminal, the terminal could not sign in for the store, or a person is signed in at the terminal</td><td>Not paid</td><td>Asks for another tender. After two in a row on one terminal, the register says a person may be signed in at it, or it cannot sign in, and the cashier checks the terminal</td></tr>
+<tr><td><code>RJCT</code> with <code>DS02</code></td><td>Your register cancelled the sale, and the terminal stopped it before it reached the host</td><td>Cancelled: nothing was taken</td><td>Asks for another tender, or starts the sale again</td></tr>
+<tr><td><code>RJCT</code> with a <code>Reason</code> your register does not know</td><td>No payment was taken</td><td>Not paid</td><td>Asks for another tender</td></tr>
+<tr><td><code>UNKN</code></td><td>No outcome came by the deadline, or the terminal contradicted itself</td><td>Unknown: check the terminal</td><td>Checks the terminal before another tender, while the register keeps reading</td></tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li><code>RJCT</code> means no payment was taken, whatever its <code>Reason</code>.</li>
+<li>On <code>ACSP</code>, record <code>TransactionDetails.AuthorisedAmount</code> as the amount charged, or on a refund
+as the amount refunded. It should equal <code>TotalAmount</code>: a lower one leaves the rest of the bill,
+or of the refund, owed, and a higher one is more than was asked. Where it is absent, the outcome
+stated none, and <code>TotalAmount</code> is the amount.</li>
+<li>A late outcome replaces <code>UNKN</code>, however late, unless the terminal contradicted itself, when the
+sale stays <code>UNKN</code>. Until then, a payment may have been taken. The deadline is 120 seconds from
+the sale at the middleware’s default settings, and 30 in the sandbox, whose <code>mw://world</code> states
+its timers.</li>
+<li>The middleware keeps a sale 24 hours after it settles or goes <code>UNKN</code>, and 30 minutes in the
+sandbox. A read after that is <code>404 sale_not_found</code>: on an id the middleware gave you, the
+register shows Unknown, never that there was no sale.</li>
+<li>How long to read an <code>UNKN</code> sale: until a read settles it or answers <code>404 sale_not_found</code>, each
+held read followed by the next, as after any answer. The cashier does not wait for it: the
+register shows Unknown at once, the cashier checks the terminal, and the register keeps
+reading. A sale that went <code>UNKN</code> at its deadline holds its terminal until its outcome comes or
+the hold ends, 300 seconds from the sale at the default settings and 75 in the sandbox. A
+register that restarts meanwhile reads the sale again from its own records. A sale that never
+settles is FUNDiMO’s to reconcile against the acquirer’s record, from its own list of the sales
+that read <code>UNKN</code>: the middleware is not the record of a payment, and a register reads only its
+own sales, one at a time.</li>
+<li>Read a <code>TransactionStatus</code> your register does not know as <code>UNKN</code>, and ignore a field it does
+not know.</li>
+<li>While a person is signed in at the terminal by its fleet’s own means, the terminal takes no POS
+sale: each one is <code>RJCT</code> with <code>AB11</code>, and nothing is taken, until that person signs out. No POS
+sale runs on a person’s session, and nothing tells the POS when the person signs out.</li>
+</ul>
+<p><strong>A lost answer.</strong> If the answer to <code>POST /v1/sales</code> is lost, send the same sale again, with the
+same <code>IdempotencyKey</code>, from the same register. The answer is <code>200</code> with the sale as it stands if
+the first send made it, or <code>202</code> if it did not, and the middleware never makes a second sale. No
+answer at all, or one with no <code>Error</code> body, is a lost answer too. A key is the register’s own:
+from another register, the same key makes a new sale. <code>409 idempotency_conflict</code> means the key
+names a sale with a different body, so a sale may stand under it with no id to read: the register
+shows Unknown, and the cashier checks the terminal.</p>
+<h2 id="when-the-terminal-cannot-take-a-sale"><a class="header" href="#when-the-terminal-cannot-take-a-sale">When the terminal cannot take a sale</a></h2>
+<p><code>POST /v1/sales</code> refuses a sale the terminal cannot take now. Nothing is created, and the
+<code>IdempotencyKey</code> is unspent: send the same sale with it again once the cause has passed.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status and <code>Error.Code</code></th><th>Why</th><th>The register shows</th></tr>
+</thead>
+<tbody>
+<tr><td><code>409 terminal_busy</code></td><td>The terminal holds another sale: one that reads <code>PDNG</code>, or <code>UNKN</code> within the terminal’s hold. The hold starts at that sale’s deadline: 180 seconds after the 120-second deadline at the default settings, 300 from the sale, and in the sandbox 45 after 30, 75 from the sale, as <code>mw://world</code>’s <code>TerminalHoldSeconds</code> and <code>SaleDeadlineSeconds</code> give them</td><td>Terminal busy</td></tr>
+<tr><td><code>409 terminal_offline</code></td><td>The terminal is not connected, or its queue of frames is full. It was sent nothing</td><td>Terminal not connected</td></tr>
+<tr><td><code>403 not_permitted</code></td><td>The register is not linked to that terminal; <code>MerchantIdentification</code> is not that store’s; a POS on its own server sent no <code>Mw-Register</code>, or named another register; an app on a till, on its own certificate, named a register not its own; either sent <code>Mw-Register</code> twice, or one of no register’s shape; the register was re-paired with a new code and has not yet enrolled with it; or the terminal, the register, its store or your vendor is not in a state to take a sale</td><td>This register cannot use that terminal: check the store and the link (<a href="linking.html"><code>/docs/api/linking.md</code></a>). An app on a till whose other calls, a read among them, are refused the same, and that sends no <code>Mw-Register</code> or one naming itself, reads it as its holder’s table does, a removal or a re-pair, and says the device may need a new code (<a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, 11. Re-enrol with a new code)</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="cancelling-a-sale-or-a-refund"><a class="header" href="#cancelling-a-sale-or-a-refund">Cancelling a sale or a refund</a></h2>
+<p>A cancel button is optional. A register that has one may cancel a sale or a refund while it reads
+<code>PDNG</code>, or <code>UNKN</code> within its terminal’s hold. Send no body, with <code>Content-Length: 0</code>, from the
+register that made the sale:</p>
+<pre><code class="language-sh">curl -s -X POST -H 'Authorization: Bearer sbx_...' -H 'Content-Length: 0' \
+  "$SANDBOX/v1/sales/sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a/abort"
+</code></pre>
+<p>Over HTTP/1.1, the edge in front of a hosted middleware refuses a <code>POST</code> with no body and no
+<code>Content-Length</code> with <code>411</code>, whose body is the edge’s and not an <code>Error</code>, and the cancel never
+reaches the middleware.</p>
+<p>The answer, <code>202</code>, is not the cancel’s result. It holds the sale as it stands, <code>PDNG</code> or <code>UNKN</code>,
+and the middleware has asked the terminal to stop. Read the sale until it settles:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>It settles as</th><th>What it means</th><th>The register shows</th></tr>
+</thead>
+<tbody>
+<tr><td><code>RJCT</code> with <code>DS02</code></td><td>The terminal stopped the payment before it reached the host. Nothing was taken, and on a refund nothing was refunded</td><td>Cancelled: nothing was taken</td></tr>
+<tr><td><code>ACSP</code></td><td>The cancel came too late: the payment was with its host, and the host took it</td><td>Approved: complete the sale</td></tr>
+<tr><td><code>RJCT</code> with another <code>Reason</code></td><td>No payment was taken, as on any read</td><td>Not paid</td></tr>
+<tr><td><code>UNKN</code></td><td>As on any read</td><td>Unknown: check the terminal</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>DS02</code> answers your register’s cancel alone. A cancel at the terminal itself, by the customer or
+the staff, is <code>AB11</code>. A cancel moves no timer, and the terminal stays held until it answers or its
+hold ends, so a new sale to it meanwhile is <code>409 terminal_busy</code>.</p>
+<p>Three refusals of a cancel are the cashier’s to see. Each sends the terminal nothing, and the sale
+goes on as it was:</p>
+<ul>
+<li><code>409 terminal_cannot_abort</code>: this terminal cannot be stopped from the register. The cashier
+cancels at the terminal, and the register reads the sale.</li>
+<li><code>409 sale_not_abortable</code>: the sale has ended, or its terminal’s hold has, or the terminal
+contradicted itself. The register reads it: <code>ACSP</code> means the cancel came too late.</li>
+<li><code>409 terminal_offline</code>: the terminal is not connected, or its queue is full. Cancel again once
+it is, or the cashier cancels at the terminal.</li>
+</ul>
+<p>The sandbox walks a cancel from your own code: <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 4. The POS journey, Cancel
+a sale.</p>
+<h2 id="refunding"><a class="header" href="#refunding">Refunding</a></h2>
+<p>Refund from the POS. A refund is a <code>POST /v1/sales</code> of its own: <code>TransactionType</code> <code>RFND</code>, the
+sale’s <code>TransactionReference</code> in <code>OriginalTransaction</code>, the amount to refund in <code>TotalAmount</code>,
+your own reference for the refund, such as a credit note number, in
+<code>SaleReferenceIdentification</code>, and a new <code>IdempotencyKey</code>. <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 4. The POS
+journey, A refund, gives the command.</p>
+<p>A sale your vendor’s register made and the terminal approved can be refunded by any of your
+registers at the same store, within its refund window, 90 days at the default settings: the
+whole amount or a part, and more than once, on any terminal there that takes refunds. A refund is
+never refunded.</p>
+<p>At the terminal, the refund asks for a merchant user’s PIN before it is made: whoever holds that
+PIN at the store types it there. A refund the PIN does not pass refunds nothing: it reads <code>RJCT</code>,
+whatever its <code>Reason</code>. The time spent at the PIN counts toward the refund’s deadline, 120 seconds
+at the default settings and 30 in the sandbox, so a refund still waiting for its PIN then reads
+<code>UNKN</code>, until the terminal’s outcome replaces it.</p>
+<p>Read the refund as a sale. <code>ACSP</code>: refunded, and <code>AuthorisedAmount</code> is the amount refunded.
+<code>RJCT</code>: not refunded, whatever its <code>Reason</code>. <code>UNKN</code>: no one knows yet, so the cashier checks the
+terminal before refunding another way, and the register keeps reading and never sends the refund
+again under a new <code>IdempotencyKey</code>.</p>
+<p>The middleware keeps no total of a sale’s refunds, and does not compare a refund’s amount with
+the sale’s. The register shows the cashier what has been refunded already, from your POS’s own
+records.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status and <code>Error.Code</code></th><th>Why</th><th>The register shows</th></tr>
+</thead>
+<tbody>
+<tr><td><code>409 sale_not_refundable</code></td><td>The middleware cannot refund that sale here: it is not a sale your vendor’s register made and the terminal approved, it is of another store, or its refund window has closed</td><td>This sale cannot be refunded from the register</td></tr>
+<tr><td><code>409 terminal_cannot_refund</code></td><td>The terminal has not declared that it takes refunds</td><td>Choose a terminal that takes refunds</td></tr>
+</tbody>
+</table>
+</div>
+<p>Each creates nothing, and the <code>IdempotencyKey</code> is unspent.</p>
+<h2 id="a-payment-made-at-the-terminal"><a class="header" href="#a-payment-made-at-the-terminal">A payment made at the terminal</a></h2>
+<p>A sale or a refund made from the terminal’s own menu, and not sent by the POS, is reported to
+neither the POS nor the middleware, so it is in neither’s records. A refund made there leaves the
+sale refundable from the POS, which does not know of it. Where a refund is made at the
+terminal or another way, after <code>409 sale_not_refundable</code> among other times, record it in your POS
+by hand, so the sale is not refunded twice.</p>
+<h2 id="linking-and-moving-a-till"><a class="header" href="#linking-and-moving-a-till">Linking, and moving a till</a></h2>
+<p>A register takes sales on the terminals it is linked to. <a href="linking.html"><code>/docs/api/linking.md</code></a> walks linking at
+the counter, and what the register shows at each answer. Before a till moves to another store,
+unlink each of its terminals: a register still bound at one store cannot link at another, and is
+refused <code>409 register_in_other_store</code>.</p>
+<h2 id="an-app-on-a-till"><a class="header" href="#an-app-on-a-till">An app on a till</a></h2>
+<p>An app on a till that holds its register’s own certificate sells, reads, cancels, refunds and
+links on the same routes, with the same bodies and answers, as a POS on its own server, and sends
+no <code>Mw-Register</code>. One it sends names itself, once: naming another register, sending it twice, or
+one of no register’s shape is <code>403 not_permitted</code> on every one of those calls, a read among them,
+which no new code mends. It enrols as a device does, with a five-word code, a key in the device’s
+keystore and its attestation, and renews its own certificate: <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>.
+In the sandbox it is tried in a world of a register on a device: <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 1. A key
+and a world. A device may also run a payment terminal’s app: two apps, each on its own
+certificate, linked as any register and terminal are, the person reading the word in the
+terminal’s app and typing it into the POS app (<a href="linking.html"><code>/docs/api/linking.md</code></a>).</p>
+<h2 id="the-codes-a-pos-meets-by-route"><a class="header" href="#the-codes-a-pos-meets-by-route">The codes a POS meets, by route</a></h2>
+<p>A refusal’s body is <code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>; in the
+sandbox, its gate’s <code>404</code> and its <code>503 ca_unavailable</code> add <code>Next</code> beside <code>Error</code>. Ignore a key
+you do not know. Each code’s meaning, and what your code does next, are its row of
+<a href="refusals.json"><code>/docs/api/refusals.json</code></a>, also <code>mw://refusals</code>, by its <code>Code</code>, where its <code>Channel</code> is
+<code>Error.Code</code>. That file is the sandbox’s: a <code>Next</code> that names an address names the sandbox’s own;
+for <code>terminal_offline</code>, <code>code_not_valid</code> and <code>ca_unavailable</code> it adds the sandbox’s own steps;
+and <code>not_found</code>’s and <code>sandbox_key_invalid</code>’s are the sandbox’s own. On a route that names an id,
+<code>404 not_found</code> may also mean the id is not yours: on a link route, no link request or binding of
+the register that asked has it; on a route of your <code>admin</code> server, no register of your vendor has
+it. The five body codes are <code>400</code> <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code>,
+<code>invalid_field</code> and <code>body_unreadable</code>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Route</th><th>Its own codes</th></tr>
+</thead>
+<tbody>
+<tr><td><code>POST /v1/sales</code>, a sale or a refund</td><td>the five body codes; <code>409</code> <code>idempotency_conflict</code>, <code>terminal_offline</code>, <code>terminal_busy</code>, and on a refund <code>sale_not_refundable</code> and <code>terminal_cannot_refund</code>; <code>413</code> <code>body_too_large</code></td></tr>
+<tr><td><code>GET /v1/sales/{TransactionReference}</code></td><td><code>400</code> <code>invalid_wait</code>; <code>404</code> <code>sale_not_found</code></td></tr>
+<tr><td><code>POST /v1/sales/{TransactionReference}/abort</code></td><td><code>404</code> <code>sale_not_found</code>; <code>409</code> <code>sale_not_abortable</code>, <code>terminal_cannot_abort</code>, <code>terminal_offline</code>; <code>411</code>, the edge’s, with no <code>Error</code></td></tr>
+<tr><td><code>POST /v1/links</code></td><td>the five body codes; <code>409</code> <code>link_in_progress</code>, <code>no_terminal_to_link</code>, <code>too_many_terminals</code>, <code>register_in_other_store</code>; <code>413</code> <code>body_too_large</code>; <code>429</code> <code>link_rate</code></td></tr>
+<tr><td><code>GET /v1/links/{Identification}</code></td><td><code>404</code> <code>not_found</code></td></tr>
+<tr><td><code>POST /v1/links/{LinkIdentification}/word</code></td><td>the five body codes; <code>403</code> <code>link_word_unknown</code>; <code>404</code> <code>not_found</code>; <code>409</code> <code>register_in_other_store</code>; <code>410</code> <code>link_expired</code>; <code>413</code> <code>body_too_large</code></td></tr>
+<tr><td><code>DELETE /v1/links/{Identification}</code></td><td><code>404</code> <code>not_found</code></td></tr>
+<tr><td><code>GET /v1/register/terminals</code></td><td>none</td></tr>
+<tr><td><code>POST /v1/enrol</code></td><td>the five body codes; <code>403</code> <code>code_not_valid</code>, <code>attestation_failed</code>, <code>app_identity_unknown</code>, <code>model_not_allowed</code>; <code>413</code> <code>body_too_large</code>; <code>429</code>, the edge’s, with no <code>Error</code>; <code>503</code> <code>ca_unavailable</code>, <code>attestation_status_unavailable</code>, <code>store_unavailable</code></td></tr>
+<tr><td><code>GET /v1/certificates/self</code></td><td>none</td></tr>
+<tr><td><code>POST /v1/certificates/challenge</code></td><td><code>411</code>, the edge’s, with no <code>Error</code></td></tr>
+<tr><td><code>POST /v1/certificates/renew</code></td><td>the five body codes; <code>403</code> <code>challenge_not_valid</code>, <code>attestation_failed</code>, <code>app_identity_unknown</code>, <code>model_not_allowed</code>; <code>409</code> <code>renewal_not_due</code>; <code>413</code> <code>body_too_large</code>; <code>429</code> <code>renewal_rate</code>; <code>503</code> <code>ca_unavailable</code>, <code>attestation_status_unavailable</code></td></tr>
+<tr><td><code>GET /v1/health</code></td><td>none: it answers <code>200</code> alone</td></tr>
+<tr><td><code>POST /v1/registers</code>, from your <code>admin</code> server</td><td>the five body codes; <code>413</code> <code>body_too_large</code></td></tr>
+<tr><td><code>GET /v1/registers</code>, from your <code>admin</code> server</td><td>none</td></tr>
+<tr><td><code>DELETE /v1/registers/{RegisterIdentification}</code>, from your <code>admin</code> server</td><td><code>404</code> <code>not_found</code></td></tr>
+<tr><td><code>POST /v1/registers/{RegisterIdentification}/pairing-code</code>, from your <code>admin</code> server</td><td><code>404</code> <code>not_found</code>; <code>411</code>, the edge’s, with no <code>Error</code></td></tr>
+<tr><td><code>GET /v1/registers/{RegisterIdentification}/certificates</code>, from your <code>admin</code> server</td><td><code>404</code> <code>not_found</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Beside its own, every route but <code>GET /v1/health</code> and <code>POST /v1/enrol</code> answers <code>401</code>
+<code>certificate_required</code>, <code>certificate_invalid</code>, <code>certificate_expired</code>, <code>sandbox_key_invalid</code> and
+<code>sandbox_key_on_live</code>; <code>403</code> <code>not_permitted</code> and <code>certificate_retired</code>; and <code>503</code>
+<code>store_unavailable</code> and <code>edge_not_trusted</code>. A path the contract does not name is <code>404</code>
+<code>not_found</code>, and a method it does not name for a path is <code>405</code> <code>method_not_allowed</code>. A route that
+is not a POS’s, such as one of the Operator API’s, answers a POS’s credential <code>403</code>
+<code>not_permitted</code> on a live middleware, and <code>404</code> <code>not_found</code> in the sandbox. In the
+sandbox, a route may also answer <code>429</code> <code>sandbox_rate</code>, <code>503</code> <code>sandbox_busy</code> or <code>503</code>
+<code>sandbox_restarting</code>, as <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 7. Codes the sandbox adds, says; and the five
+routes your <code>admin</code> server calls are not served there, so each answers <code>404</code> <code>not_found</code>.</p>
+<p>A request too malformed to be read as HTTP at all is answered by the HTTP server itself, with
+<code>400</code>, <code>414</code> or <code>431</code> and no <code>Error</code> body. A later version may add codes to these lists.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="pos/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="pos/reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="pos/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="pos/reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

@@ -1,6 +1,6 @@
 openapi: '3.1.0'
 info:
-  title: 'Middleware v0.4.0: what a POS calls'
+  title: 'Middleware v0.5.0: what a POS calls'
   version: '1.0.0'
   summary: The relay between a point of sale, a payment terminal and FUNDiMO.
   description: |-
@@ -20,7 +20,8 @@ info:
     and an example. A field's name follows ISO 20022 where `fields.json` or `terminal.md` names its
     element; every other name is the middleware's own. A later version may add fields to anything
     the middleware sends, and codes to any open list. An optional field sent as `null` reads as
-    absent.
+    absent. The normal backoff: wait 1 second, double the wait after each failure up to 30 seconds,
+    and add a little randomness; a terminal resets it once a connection has stayed open 10 seconds.
 
     `info.version` counts this document's contract, not the middleware's release. Its major is the
     path family every path is under, `v1` in `/v1/`, and its minor and patch stay 0. It moves only
@@ -937,8 +938,8 @@ paths:
           description: |
             Nothing is written.
 
-            - `link_in_progress`: a request is already open at this store, or for this
-              register. Try again in a minute.
+            - `link_in_progress`: a request is open at this store, or for this register. Go back to
+              your own by its `LinkIdentification`, or try again once its `ExpiresInSeconds` pass.
             - `no_terminal_to_link`: no terminal of the store is `paired` with no binding.
               Check the terminal is paired and connected, and end a binding it holds first.
             - `too_many_terminals`: more terminals of the store are `paired` with no binding
@@ -1170,7 +1171,7 @@ components:
       required: false
       x-sent-by: pos
       description: >-
-        The register a vendor's `pos` server acts for, by its `RegisterIdentification`: a register of the server's own vendor, listed with no serial. Required of a `pos` server on this route, sent once, and a `pos` server that leaves it out, sends it twice or names any other register is `403 not_permitted`; a register's own certificate needs none and may name only itself, and a sandbox `pos` key names its register already.
+        The register a vendor's `pos` server acts for, by its `RegisterIdentification`: a register of the server's own vendor, listed with no serial. Required of a `pos` server on this route, sent once; a register's own certificate needs none and may name only itself, and a sandbox `pos` key names its register already; a certificate that leaves it out where it is required, sends it twice or one of no register's shape, or names a register it may not is `403 not_permitted`.
       schema:
         type: string
         pattern: '^reg_[0-9a-f]{32}$'

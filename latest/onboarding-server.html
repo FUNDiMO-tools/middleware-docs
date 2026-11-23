@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-122325d1.js";
+            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,7 +198,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.4.0, 22-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-onboarding-a-server"><a class="header" href="#middleware-onboarding-a-server">Middleware: onboarding a server</a></h1>
 <p>10-Nov-2026.</p>
@@ -236,7 +236,7 @@ inside the overlap (step 9).</li>
 <li>After a refusal it does what the holder’s table says, and never deletes its key (step 10).</li>
 </ol>
 <h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
-<p>The same file is served in the sandbox, where three things differ.</p>
+<p>The same file is served in the sandbox, where four things differ.</p>
 <ul>
 <li>The sandbox’s gate answers <code>404</code> to every route of the Operator API,
 <code>POST /v1/vendors/{VendorIdentification}/servers</code> and <code>POST /v1/registers</code> among them.
@@ -248,6 +248,10 @@ neither.</li>
 <li>Nothing a sandbox signs is a record, and a sandbox certificate is refused on <code>live</code>.</li>
 <li>Enrolment needs a sandbox with an issuing certificate. A sandbox run without one answers
 <code>POST /v1/enrol</code> with <code>503 ca_unavailable</code>.</li>
+<li>A code can make a certificate due at once: <code>POST /sandbox/v1/codes</code> with
+<code>{"Role":"server","Due":true}</code> gives a code whose certificate is issued 16 days back, so
+<code>RenewNow</code> is <code>true</code> from its first daily check, and renewal, the overlap and their refusals
+can be tried the same day (<a href="sandbox.html"><code>docs/api/sandbox.md</code></a>, 4. The POS journey).</li>
 </ul>
 <h2 id="what-you-need"><a class="header" href="#what-you-need">What you need</a></h2>
 <ul>
@@ -387,7 +391,8 @@ key alone. The server is now <code>enrolled</code>. <code>NotAfter</code> is whe
 and <code>RenewFrom</code> is day 15.</p>
 <p><code>SpiffeId</code> is the certificate’s URI. Its host is the trust domain of the deployment that issued
 it, which need not be the address you call, and its first segment is the environment, <code>live</code> or
-<code>sandbox</code>.</p>
+<code>sandbox</code>. In the hosted sandbox its host is staging’s trust domain, the host of staging’s base
+URL (<a href="environments.html"><code>/docs/api/environments.md</code></a>), and its first segment <code>sandbox</code>.</p>
 <p>If an answer is lost, send the same body again inside the code’s 15 minutes: the same code and
 the same key answer <code>200</code> with the certificate already issued. The same code with another key
 is <code>403 code_not_valid</code>, so never make a new key to repeat a call that got no answer.</p>
@@ -584,7 +589,8 @@ refusal of the check is read by the holder’s table (step 10).</p>
 <h2 id="9-renew-with-one-renewer-per-identity"><a class="header" href="#9-renew-with-one-renewer-per-identity">9. Renew, with one renewer per identity</a></h2>
 <p>A certificate renews from day 15, always with a new key, on the server’s own certificate. A
 server skips the challenge a device asks first: <code>POST /v1/certificates/challenge</code> is a device’s,
-and a server asking it is refused <code>403 not_permitted</code>.</p>
+and a server asking it is refused <code>403 not_permitted</code>. In the sandbox, a certificate enrolled on a
+code asked with <code>"Due": true</code> is due at once (In the sandbox, above).</p>
 <ol>
 <li>Make a new P-256 key (step 2) and a CSR for it (step 3).</li>
 <li>Send <code>POST /v1/certificates/renew</code> with <code>CertificateSigningRequest</code> alone, on the current
