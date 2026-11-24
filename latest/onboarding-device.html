@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-be827a9c.js";
+            window.path_to_searchindex_js = "searchindex-afda5709.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,10 +198,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.0, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-onboarding-a-device"><a class="header" href="#middleware-onboarding-a-device">Middleware: onboarding a device</a></h1>
-<p>Last changed in v0.5.0.</p>
+<p>Last changed in v0.6.1.</p>
 <p>This is the walk for a vendor writing an Android app for a SUNMI device: a payment terminal,
 or a register, which is a POS app on a device. It is written for that maker’s devices today;
 other makers’ devices are intended, each with a walk of its own.
@@ -278,7 +278,7 @@ menu or settings opens, with the device alone, and again after the first enrolme
 enrolment screen).</li>
 </ol>
 <h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
-<p>Changed in v0.5.0.</p>
+<p>Changed in v0.6.1.</p>
 <p>The same file is served in the sandbox, where five things differ.</p>
 <ul>
 <li>The sandbox’s gate answers <code>404</code> to the operator’s routes. In their place the sandbox has
@@ -293,7 +293,9 @@ listed with the serial <code>&lt;tester&gt;-register</code>, as every world’s 
 <li>No attestation is required, so an emulator or a debug build can enrol. A chain sent is
 checked all the same, for its key, its challenge and its app, against app identities where
 a debug build counts, so you can prove your package and signing digest before you have a
-device. The first live enrolment is where the rest is proven.</li>
+device. The first live enrolment is where the rest is proven. A renewal needs its challenge
+here whether or not it sends a chain (step 10): one sent with no challenge of the
+certificate’s live is <code>403 challenge_not_valid</code>.</li>
 <li>Enrolment needs a sandbox with an issuing certificate. A sandbox run without one answers
 <code>POST /v1/enrol</code> with <code>503 ca_unavailable</code>.</li>
 <li>A code can make a certificate due at once: <code>POST /sandbox/v1/codes</code> with <code>"Due": true</code> beside
@@ -771,6 +773,7 @@ it, “because TLS/SSL stacks typically generate the necessary digest(s) themsel
 no brand and no model, so only an allowed-list row naming the firmware’s <code>VerifiedBootKey</code>
 alone can admit the device: tell the operator which of your devices this is.</p>
 <h3 id="which-devices-the-middleware-admits"><a class="header" href="#which-devices-the-middleware-admits">Which devices the middleware admits</a></h3>
+<p>Changed in v0.6.1.</p>
 <p>On <code>live</code> every enrolment and renewal of a device is attested, and the middleware refuses a chain
 unless: it chains to one of Google’s two attestation roots, and no certificate in it is
 revoked or suspended; the key is the CSR’s, P-256, made in the keystore’s trusted environment
@@ -805,7 +808,8 @@ that are the device’s and its maker’s: a chain not ending at one of Google�
 the middleware can follow, a certificate in it out of its dates or on Google’s status list, a
 key not in the trusted environment or StrongBox, a bootloader not locked or a boot not verified,
 and a device the allowed list does not hold. It also admits one whose app is registered as a
-debug build alone, and one that sends no chain. It issues the certificate and records on it
+debug build alone, and one that sends no chain, whose renewal still needs the challenge it
+asked (step 10). It issues the certificate and records on it
 which checks failed, which the device’s listings show, and the device then works as any other.
 It refuses as written above everything else: a chain that does not parse, an attestation
 extension not on the key’s own certificate alone, a key not the CSR’s, a challenge not the
@@ -1413,7 +1417,7 @@ the sign of an identity copied.
 So renew only while no next certificate waits for its first use, and send a renewal that waits
 for a verdict again as it was, never a new one in its place.</p>
 <h3 id="when-renewal-is-refused"><a class="header" href="#when-renewal-is-refused">When renewal is refused</a></h3>
-<p>Changed in v0.5.0.</p>
+<p>Changed in v0.6.1.</p>
 <p>A refusal of a renewal leaves the current certificate as it was.</p>
 <p>Of <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> and <code>invalid_field</code>, the first class that
 fails answers alone, with <code>Fields</code> naming every field of it, sorted.</p>
@@ -1424,14 +1428,14 @@ fails answers alone, with <code>Fields</code> naming every field of it, sorted.<
 </thead>
 <tbody>
 <tr><td><code>409</code></td><td><code>renewal_not_due</code></td><td>Before <code>RenewFrom</code></td><td>Wait: renew when the daily check’s <code>RenewNow</code> is <code>true</code></td></tr>
-<tr><td><code>403</code></td><td><code>challenge_not_valid</code></td><td>The key was made with no live challenge of this certificate’s: none asked, one past its 10 minutes, or one spent</td><td>Ask a new challenge, and make a new key with it under another new alias</td></tr>
+<tr><td><code>403</code></td><td><code>challenge_not_valid</code></td><td>No challenge of this certificate’s was live when the renewal came: none asked, one past its 10 minutes, or one spent; or the chain was made with another</td><td>Ask a new challenge, and make a new key with it under another new alias</td></tr>
 <tr><td><code>400</code></td><td><code>invalid_field</code></td><td>The CSR’s signature does not verify, its key is not P-256, or its key was used before</td><td>Make a new P-256 key under a new alias, with a new challenge</td></tr>
 <tr><td><code>403</code></td><td><code>attestation_failed</code>, <code>app_identity_unknown</code>, <code>model_not_allowed</code></td><td>The new key’s attestation fails, as at enrolment (step 6)</td><td>The current certificate is good until its <code>NotAfter</code>, and the operator is warned. Fix the cause, and try again with a new challenge at the next daily check</td></tr>
 <tr><td><code>429</code></td><td><code>renewal_rate</code></td><td>5 certificates for this identity in 24 hours</td><td>Back off, and try again tomorrow</td></tr>
 <tr><td><code>403</code></td><td><code>not_permitted</code></td><td>The device or its vendor is not in good standing: removed, suspended or re-paired</td><td>Back off to one hour. The certificate was good and the row refused it</td></tr>
 <tr><td><code>403</code></td><td><code>certificate_retired</code></td><td>The certificate presented is retired</td><td>Move to the newer certificate if the device holds one, by its first use (step 10). On its newest, stop and tell a person: something else holds a newer certificate of this identity</td></tr>
 <tr><td><code>401</code></td><td><code>certificate_expired</code></td><td>The certificate is past its <code>NotAfter</code></td><td>Re-enrol with a new code (step 11)</td></tr>
-<tr><td><code>503</code></td><td><code>ca_unavailable</code>, <code>attestation_status_unavailable</code>, <code>store_unavailable</code></td><td>The middleware could not sign, holds no fresh status list, or its store did not answer</td><td>Back off and send the same body again, at the next daily check if not before, never a new challenge in its place: a <code>store_unavailable</code> may follow a certificate issued, which the same body is answered <code>200</code> with, and where none was, a body holding its <code>AttestationChain</code> is refused <code>403 challenge_not_valid</code> once the challenge’s 10 minutes have passed and the fault has cleared, unless a row above refuses it first</td></tr>
+<tr><td><code>503</code></td><td><code>ca_unavailable</code>, <code>attestation_status_unavailable</code>, <code>store_unavailable</code></td><td>The middleware could not sign, holds no fresh status list, or its store did not answer</td><td>Back off and send the same body again, at the next daily check if not before, never a new challenge in its place: a <code>store_unavailable</code> may follow a certificate issued, which the same body is answered <code>200</code> with, and where none was, the body is refused <code>403 challenge_not_valid</code> once the challenge’s 10 minutes have passed and the fault has cleared, unless a row above refuses it first</td></tr>
 </tbody>
 </table>
 </div>

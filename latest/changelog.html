@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-be827a9c.js";
+            window.path_to_searchindex_js = "searchindex-afda5709.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,9 +198,20 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.0, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="what-changed"><a class="header" href="#what-changed">What changed</a></h1>
+<h2 id="v061-24-nov-2026"><a class="header" href="#v061-24-nov-2026">v0.6.1 (24-Nov-2026)</a></h2>
+<p>A device’s renewal that sends no attestation chain now needs its challenge, in the sandbox and on
+a middleware set to mark, as the device walk has always said.</p>
+<h3 id="fixed"><a class="header" href="#fixed">Fixed</a></h3>
+<ul>
+<li><strong>POS, Terminal</strong>: A device’s renewal with no <code>AttestationChain</code> is <code>403 challenge_not_valid</code>
+unless its certificate’s challenge, <code>POST /v1/certificates/challenge</code>, was asked and is live,
+in the sandbox and on staging (24-Nov-2026). Before, both issued it, so an app that skipped the
+challenge passed there and failed on production. Ask the challenge before every renewal, with a
+chain or without one.</li>
+</ul>
 <h2 id="v060-24-nov-2026"><a class="header" href="#v060-24-nov-2026">v0.6.0 (24-Nov-2026)</a></h2>
 <p>The sandbox now serves what changed in each release, and each page it serves names the release of
 its last change. A conformance run goes on past a failed step, names the sale each step judged,
@@ -293,7 +304,7 @@ renewal is refused, and that a renewal with no verdict is sent again as it was, 
 new challenge (23-Nov-2026). A register’s <code>403 not_permitted</code> on the POS’s routes is said to
 have causes of its own, its <code>Mw-Register</code> among them.</li>
 </ul>
-<h3 id="fixed"><a class="header" href="#fixed">Fixed</a></h3>
+<h3 id="fixed-1"><a class="header" href="#fixed-1">Fixed</a></h3>
 <ul>
 <li><strong>POS</strong>: The POS’s <code>cancel</code> row of the conformance table names the sandbox’s walk of a cancel,
 and the POS guide lists the POS’s page and the refusals (22-Nov-2026). The row, in
@@ -397,7 +408,7 @@ which now holds the rules the OpenAPI document’s descriptions held (19-Nov-202
 POS’s sale reaches another instance of it (20-Nov-2026). The terminal reconnects as after any
 close, as <a href="terminal.html"><code>/docs/api/terminal.md</code></a> says under Reconnect.</li>
 </ul>
-<h3 id="fixed-1"><a class="header" href="#fixed-1">Fixed</a></h3>
+<h3 id="fixed-2"><a class="header" href="#fixed-2">Fixed</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: A <code>POST</code> with no body is sent with <code>Content-Length: 0</code> (19-Nov-2026). Over
 HTTP/1.1, the edge in front of a hosted middleware refuses one without it with <code>411</code>, a body of
@@ -694,7 +705,7 @@ certificate all the same, and marked (15-Nov-2026). It enrols and takes sales, s
 but the attestation can be tested. The checks that tie the chain to this request, this key and
 this app still refuse.</li>
 </ul>
-<h3 id="fixed-2"><a class="header" href="#fixed-2">Fixed</a></h3>
+<h3 id="fixed-3"><a class="header" href="#fixed-3">Fixed</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: Two dead ends in the sandbox are gone (11-Nov-2026). A sandbox with no CA
 answers <code>POST /v1/enrol</code> with <code>503 ca_unavailable</code>, and a <code>Next</code> saying no run can start

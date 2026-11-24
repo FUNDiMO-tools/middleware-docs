@@ -1,6 +1,6 @@
 openapi: '3.1.0'
 info:
-  title: 'Middleware v0.6.0: what a terminal calls'
+  title: 'Middleware v0.6.1: what a terminal calls'
   version: '1.0.0'
   summary: The relay between a point of sale, a payment terminal and FUNDiMO.
   description: |-
@@ -432,8 +432,10 @@ paths:
               end of an overlap, because a newer one of the identity is in use. Renew on the newer
               one, or on the holder's newest, stop and tell a person: something else holds a newer
               certificate of this identity.
-            - `challenge_not_valid`: a device's chain was made with no challenge of this
-              certificate's that is live: ask a new challenge, and make a new key with it.
+            - `challenge_not_valid`: a device's renewal came when no challenge of this
+              certificate's was live, with a chain or, in the sandbox and on a middleware set to
+              mark, without one; or its chain was made with another. Ask a new challenge, and
+              make a new key with it.
             - `attestation_failed`, `app_identity_unknown` and `model_not_allowed`: the device's
               chain is refused as at enrolment. The current certificate stays good until its
               `NotAfter`, and the middleware writes a `WARNING` naming the device.

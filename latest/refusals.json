@@ -230,7 +230,7 @@
   {
     "Channel": "Error.Code",
     "Code": "challenge_not_valid",
-    "Meaning": "A device's renewal chain was made with no challenge of this certificate's that is live: none was asked, it was spent, or its 10 minutes passed, or the chain holds another.",
+    "Meaning": "A device's renewal came when no challenge of this certificate's was live: none was asked, it was spent, or its 10 minutes passed; or its chain was made with another. A renewal with no chain, which the sandbox and a middleware set to mark take, needs the challenge all the same.",
     "Next": "Ask a new challenge with POST /v1/certificates/challenge, make a new key with it, and renew with that key. The current certificate stays good until its NotAfter."
   },
   {

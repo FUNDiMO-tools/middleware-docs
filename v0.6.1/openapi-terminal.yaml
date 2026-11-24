@@ -1,0 +1,1531 @@
+openapi: '3.1.0'
+info:
+  title: 'Middleware v0.6.1: what a terminal calls'
+  version: '1.0.0'
+  summary: The relay between a point of sale, a payment terminal and FUNDiMO.
+  description: |-
+    The routes a terminal calls: the WebSocket it holds, enrolling for a certificate, its daily
+    check, its challenge and its renewal, and the health check. The schemas of the frames that
+    travel over the WebSocket are under `components.schemas`, and the terminal contract,
+    `terminal.md`, walks each one. Each property's `x-sent-by` names who sends it.
+    `/docs/api/environments.md` names each environment's base URL. This release publishes this
+    document as `openapi-terminal.yaml`.
+
+    Every property carries `x-sent-by`: `pos` for what a POS sends to the middleware, a register's
+    request to link among it, `terminal` for what a terminal sends to the middleware, `vendor` for
+    what a back office sends to the Operator API and what a vendor's app or server sends to enrol or
+    renew a certificate, and `mw` for what the middleware sends to whoever is reading. A field that
+    travels on, such as `TotalAmount`, is `pos` where it enters and `mw` where it leaves.
+
+    `/docs/api/fields.json` holds a row for each field of a sale and of each frame, with its bound
+    and an example. A field's name follows ISO 20022 where `fields.json` or `terminal.md` names its
+    element; every other name is the middleware's own. A later version may add fields to anything
+    the middleware sends, and codes to any open list. An optional field sent as `null` reads as
+    absent. The normal backoff: wait 1 second, double the wait after each failure up to 30 seconds,
+    and add a little randomness; a terminal resets it once a connection has stayed open 10 seconds.
+
+    `info.version` counts this document's contract, not the middleware's release. Its major is the
+    path family every path is under, `v1` in `/v1/`, and its minor and patch stay 0. It moves only
+    when the middleware serves a new family of paths, so a field or a code a later release adds
+    leaves it as it is. The release of the middleware answering is read at `GET /v1/health`, in its
+    `Version`, and on the sandbox in its MCP server's `serverInfo.version`.
+
+    Every operation but `GET /v1/health` and `POST /v1/enrol` needs a credential, the terminal's
+    WebSocket upgrade among them, and no body or frame changes for it. A `live` middleware refuses
+    every sandbox key with `401 sandbox_key_on_live`, before any lookup.
+
+    The people who use a POS are the POS vendor's responsibility. The middleware takes it that a
+    user was authenticated to make each sale and refund, and judges nothing about that user.
+
+    A path not listed here answers `404` with `Error.Code` `not_found`. A listed path with another
+    method answers `405` with `Error.Code` `method_not_allowed` and an `Allow` header naming the
+    methods it takes. Both carry the `Error` body. A request too malformed to be read as HTTP at all
+    is answered by the HTTP server library itself, with `400`, `414` or `431` and no `Error` body.
+servers:
+  - url: https://mw.sandbox.fundimo.com.au
+    description: The sandbox
+  - url: https://mw.staging.fundimo.com.au
+    description: Staging
+security:
+  - mutualTLS: []
+  - sandboxKey: []
+tags:
+  - name: terminals
+    description: Where a terminal holds its connection.
+  - name: certificates
+    description: >-
+      A principal's client certificate: enrolment with a pairing code, the daily check, and renewal with a new key.
+  - name: health
+    description: Whether the middleware is serving.
+paths:
+  /v1/health:
+    get:
+      tags: [health]
+      operationId: health
+      summary: Whether the middleware is serving.
+      security: []
+      responses:
+        '200':
+          description: The middleware is serving.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              examples:
+                ok:
+                  value: {"Status": "ok", "Version": "0.0.0"}
+  /v1/terminals/{POIIdentification}/connect:
+    get:
+      tags: [terminals]
+      operationId: connectTerminal
+      summary: A terminal's WebSocket connection to the middleware.
+      description: >-
+        A terminal's WebSocket connection, which it holds while it is on: the middleware sends `TerminalInstruction`, `TerminalRefusal`, `TerminalLinkWord`, `TerminalLinkEnded`, `TerminalStatusRequest`, `TerminalAbort` and `TerminalLoginRequest` on it, and the terminal sends `TerminalOutcome`, `TerminalLoginNeeded` and `TerminalLoginResponse`. `/docs/api/terminal.md` § Connect states its credential, its headers and its answers, and the page how to hold, reconnect, take a payment and report it.
+      parameters:
+        - name: POIIdentification
+          in: path
+          required: true
+          x-sent-by: terminal
+          description: The terminal's id, which the POS names in its sale.
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9_-]{1,64}$'
+        - name: Mw-Transaction-Types
+          in: header
+          required: false
+          x-sent-by: terminal
+          description: >-
+            The transaction types the terminal takes, separated by commas with optional spaces: `CRDP` is a sale and `RFND` a refund, so `CRDP, RFND` is a terminal that takes both. Absent means `CRDP` alone, and so do an empty value, one over 256 bytes, and one naming no code the middleware knows.
+          schema:
+            type: string
+            maxLength: 256
+          example: 'CRDP, RFND'
+        - name: Mw-Message-Functions
+          in: header
+          required: false
+          x-sent-by: terminal
+          description: >-
+            The requests the terminal answers, and the one it asks by, as codes separated by commas with optional spaces: `SSMQ` lets the middleware send it a `TerminalStatusRequest`, `SSAB` a `TerminalAbort`, and `SASQ` answer its `TerminalLoginNeeded` with a `TerminalLoginRequest`. Absent means none, and so do an empty value, one over 256 bytes, and one naming no code the middleware knows, and without `SSAB` a POS's request to cancel a sale on the terminal is refused `409 terminal_cannot_abort`.
+          schema:
+            type: string
+            maxLength: 256
+          example: 'SASQ, SSAB, SSMQ'
+      responses:
+        '101':
+          description: Switching Protocols; the WebSocket is open.
+        '400':
+          description: |
+            - `invalid_field`: `POIIdentification` fails its pattern, and `Error.Fields` is
+              `["POIIdentification"]`. Fix the id: retrying will not help.
+            - `invalid_upgrade`: a bad WebSocket version or key. Fix the client.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_field:
+                  value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["POIIdentification"]}}
+                invalid_upgrade:
+                  value: {"Error": {"Code": "invalid_upgrade", "Message": "The WebSocket upgrade is not valid.", "Fields": []}}
+        '401':
+          description: |
+            The credential is missing or not acceptable, and nothing is upgraded.
+
+            - `certificate_required`: no credential came. A terminal with no certificate enrols
+              first, with `POST /v1/enrol`.
+            - `certificate_invalid`: an `Authorization` header of another scheme, a token of no form
+              the middleware issues, two `Authorization` headers, a certificate beside an
+              `Authorization` header, or a certificate no row holds. On a certificate, back off an
+              hour, and after three refusals an hour apart tell the installer the terminal needs a
+              new code, and keep trying hourly.
+            - `certificate_expired`: the certificate is past its `NotAfter`. The same as
+              `certificate_invalid`: back off an hour, and after three tell the installer the
+              terminal needs a new code.
+            - `sandbox_key_on_live`: a sandbox key sent to a `live` middleware, which refuses every
+              one before any lookup. Wait one hour before the next connect.
+            - `sandbox_key_invalid`: the sandbox key is malformed, unknown or retired. Wait one hour
+              before the next connect.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                certificate_required:
+                  value: {"Error": {"Code": "certificate_required", "Message": "This route needs a credential, and none came.", "Fields": []}}
+                certificate_invalid:
+                  value: {"Error": {"Code": "certificate_invalid", "Message": "The credential presented is not acceptable.", "Fields": []}}
+                certificate_expired:
+                  value: {"Error": {"Code": "certificate_expired", "Message": "The certificate presented has expired.", "Fields": []}}
+                sandbox_key_on_live:
+                  value: {"Error": {"Code": "sandbox_key_on_live", "Message": "A sandbox key is accepted in the sandbox alone.", "Fields": []}}
+                sandbox_key_invalid:
+                  value: {"Error": {"Code": "sandbox_key_invalid", "Message": "The sandbox key is malformed, unknown or retired.", "Fields": []}}
+        '403':
+          description: |
+            The credential is good, and may not hold this terminal's connection.
+
+            - `not_permitted`: it is not this terminal's certificate, nor in the sandbox a `pos` key
+              of the terminal's vendor, or the terminal is not `paired`, which is what a removal or
+              a re-pair reads as. Back off to one hour before the next connect.
+            - `certificate_retired`: the certificate presented is retired. Holding a newer one,
+              connect on it, and on the terminal's newest, stop and tell a person.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_permitted:
+                  value: {"Error": {"Code": "not_permitted", "Message": "The caller is not permitted to do this.", "Fields": []}}
+                certificate_retired:
+                  value: {"Error": {"Code": "certificate_retired", "Message": "The certificate presented is retired: a newer one of this identity is in use.", "Fields": []}}
+        '426':
+          description: >-
+            `upgrade_required`: a `GET` with no WebSocket upgrade. Fix the client.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                upgrade_required:
+                  value: {"Error": {"Code": "upgrade_required", "Message": "This path takes a WebSocket upgrade.", "Fields": []}}
+        '503':
+          description: |
+            No verdict on the credential or the terminal: reconnect on the normal backoff.
+
+            - `store_unavailable`: the middleware's store did not answer while it checked the
+              credential or the terminal.
+            - `edge_not_trusted`: behind the load balancer, the upgrade did not come through a
+              trusted edge. It is an edge fault, and the terminal's certificate is not in question.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                store_unavailable:
+                  value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+                edge_not_trusted:
+                  value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+  /v1/enrol:
+    post:
+      tags: [certificates]
+      operationId: enrol
+      summary: Spend a pairing code for a first certificate.
+      security: []
+      description: >-
+        No credential: the code is the credential, spent here by a terminal, a register's device or a vendor's server listed with a `PairingCode` for its first client certificate. `/docs/api/onboarding-device.md` § 6 walks a device's enrolment, and § The challenge, worked says how to compute the challenge its key is made with.
+      requestBody:
+        required: true
+        description: The enrolment. At most 65,536 bytes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Enrolment'
+      responses:
+        '200':
+          description: The same certificate, to a repeat of an enrolment with the same code and key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '201':
+          description: >-
+            The certificate, the principal's id, and when to renew it. The code is spent, and the principal is now `paired`, `active` or `enrolled`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '400':
+          description: |
+            The body is refused, and each code means what it means on `POST /v1/sales`.
+
+            - `invalid_json`: the body is not a JSON object.
+            - `unknown_field`: the body holds a field this operation does not name, or a server's
+              enrolment sends `AttestationChain`.
+            - `missing_field`: a required field is absent. A device's five words sent with no
+              `SerialNumber`, or with it `null`, are this, naming `SerialNumber`.
+            - `invalid_field`: a field breaks its rule, or, behind a good code, the CSR's signature
+              does not verify or its key is not P-256, which counts an attempt. A `SerialNumber`
+              sent reads the code as a device's five words, so a server's code sent with a
+              `SerialNumber` is this, naming `PairingCode`, before any row is read and with no
+              attempt counted.
+            - `body_unreadable`: the body could not be read to its end.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_json:
+                  value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+                unknown_field:
+                  value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["AttestationChain"]}}
+                missing_field:
+                  value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["CertificateSigningRequest"]}}
+                invalid_field:
+                  value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["CertificateSigningRequest"]}}
+                body_unreadable:
+                  value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+        '403':
+          description: |
+            Refused, and nothing is issued.
+
+            - `code_not_valid`: the code is wrong, unknown, expired or spent, the serial is not the
+              listing's, the principal is not `listed`, or its vendor is suspended, one code for
+              every reason. A code no row holds counts nothing: a device's wrong serial or first
+              word, or a server's wrong first 6 characters, finds no row.
+            - `attestation_failed`: the device's chain fails a check of the chain, its root, its
+              dates, revocation, the extension, the key, the hardware, the challenge or the boot
+              state, or does not parse, or a device on a `live` middleware sent none. A middleware
+              set to mark admits a device whose chain fails only checks it records, and one that
+              sent none, and marks its certificate with those checks, or `chain_missing`
+              (`DeviceAttestation`).
+            - `app_identity_unknown`: the app the chain names is not registered for the vendor and
+              the principal's role, or more than one app shares the key.
+            - `model_not_allowed`: no row of the allowed list admits what the device attests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                code_not_valid:
+                  value: {"Error": {"Code": "code_not_valid", "Message": "The pairing code is not valid.", "Fields": []}}
+                attestation_failed:
+                  value: {"Error": {"Code": "attestation_failed", "Message": "The device's key attestation does not pass.", "Fields": []}}
+                app_identity_unknown:
+                  value: {"Error": {"Code": "app_identity_unknown", "Message": "The app holding the key is not one registered for this device.", "Fields": []}}
+                model_not_allowed:
+                  value: {"Error": {"Code": "model_not_allowed", "Message": "The device is not of a model the allowed list admits.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429':
+          description: >-
+            Sent by the edge in front of a hosted middleware, never by the middleware itself: more enrolments came from your address in a minute than the edge allows, and its body is the edge's, not an `Error`. The code was not read and no attempt is counted, so wait a minute, then send the same request again.
+        '503':
+          description: |
+            No verdict on the code: nothing is written, no attempt is counted, and the code stays
+            live, so retry on the normal backoff with the same code and the same key.
+
+            - `store_unavailable`: the middleware's store did not answer.
+            - `ca_unavailable`: the middleware could not sign the certificate.
+            - `attestation_status_unavailable`: a device's enrolment on a `live` middleware, which
+              holds no attestation status list fresh enough to check the chain for revocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                store_unavailable:
+                  value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+                ca_unavailable:
+                  value: {"Error": {"Code": "ca_unavailable", "Message": "The certificate authority could not sign. Retry.", "Fields": []}}
+                attestation_status_unavailable:
+                  value: {"Error": {"Code": "attestation_status_unavailable", "Message": "The attestation status list is not current. Retry.", "Fields": []}}
+  /v1/certificates/self:
+    get:
+      tags: [certificates]
+      operationId: readOwnCertificate
+      summary: The daily check of the certificate presented.
+      security:
+        - mutualTLS: []
+      description: >-
+        Any certificate, on itself, once a day: the middleware answers the certificate's `NotAfter`, its `RenewFrom`, day 15 of its life, and `RenewNow`, so a holder's own clock decides nothing. `/docs/api/onboarding-device.md` § 9 says when to renew, and how a refusal of the check is read.
+      responses:
+        '200':
+          description: The certificate's dates, and whether to renew it now.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/certificates/challenge:
+    post:
+      tags: [certificates]
+      operationId: issueRenewalChallenge
+      summary: A challenge for a device's next key.
+      security:
+        - mutualTLS: []
+      description: >-
+        A challenge for a device's next key, a terminal's or a register's, valid 10 minutes and for one renewal: a server renews without one, and asking is `403 not_permitted`. `/docs/api/onboarding-device.md` § 10 says how to make the key with it and renew.
+      responses:
+        '201':
+          description: The challenge, and how long it is valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeIssued'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '411': {$ref: '#/components/responses/EdgeLengthRequired'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/certificates/renew:
+    post:
+      tags: [certificates]
+      operationId: renewCertificate
+      summary: Renew the certificate presented, with a new key.
+      security:
+        - mutualTLS: []
+      description: >-
+        Any certificate, from its `RenewFrom`, with a new key: the middleware runs enrolment's checks with the caller's certificate where the code was, and answers as enrolment does. `/docs/api/onboarding-device.md` § 10 says when to use the new certificate and delete the old key, and how long the old one stays good.
+      requestBody:
+        required: true
+        description: The renewal. At most 65,536 bytes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Renewal'
+      responses:
+        '200':
+          description: The same certificate, to a repeat of a renewal with the same key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '201':
+          description: The new certificate, the principal's id, and when to renew it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '400':
+          description: |
+            The body is refused, nothing is issued, and each code means what it means on
+            `POST /v1/sales`.
+
+            - `invalid_json`: the body is not a JSON object.
+            - `unknown_field`: the body holds a field this operation does not name, or a server's
+              renewal sends `AttestationChain`.
+            - `missing_field`: a required field is absent.
+            - `invalid_field`: a field breaks its rule, the CSR's signature does not verify or its
+              key is not P-256, or its key is one the principal has used before.
+            - `body_unreadable`: the body could not be read to its end.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_json:
+                  value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+                unknown_field:
+                  value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["AttestationChain"]}}
+                missing_field:
+                  value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["CertificateSigningRequest"]}}
+                invalid_field:
+                  value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["CertificateSigningRequest"]}}
+                body_unreadable:
+                  value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          description: |
+            Refused, and nothing is issued: the current certificate stays as it was.
+
+            - `not_permitted`: the principal is not `paired`, `active` or `enrolled`, or its vendor
+              is not `active`, so a suspended vendor's certificate cannot renew.
+            - `certificate_retired`: the certificate presented is retired, or set to retire at the
+              end of an overlap, because a newer one of the identity is in use. Renew on the newer
+              one, or on the holder's newest, stop and tell a person: something else holds a newer
+              certificate of this identity.
+            - `challenge_not_valid`: a device's renewal came when no challenge of this
+              certificate's was live, with a chain or, in the sandbox and on a middleware set to
+              mark, without one; or its chain was made with another. Ask a new challenge, and
+              make a new key with it.
+            - `attestation_failed`, `app_identity_unknown` and `model_not_allowed`: the device's
+              chain is refused as at enrolment. The current certificate stays good until its
+              `NotAfter`, and the middleware writes a `WARNING` naming the device.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_permitted:
+                  value: {"Error": {"Code": "not_permitted", "Message": "The caller is not permitted to do this.", "Fields": []}}
+                certificate_retired:
+                  value: {"Error": {"Code": "certificate_retired", "Message": "The certificate presented is retired: a newer one of this identity is in use.", "Fields": []}}
+                challenge_not_valid:
+                  value: {"Error": {"Code": "challenge_not_valid", "Message": "The key was not made with a live challenge of this certificate's. Ask a new one.", "Fields": []}}
+                attestation_failed:
+                  value: {"Error": {"Code": "attestation_failed", "Message": "The device's key attestation does not pass.", "Fields": []}}
+                app_identity_unknown:
+                  value: {"Error": {"Code": "app_identity_unknown", "Message": "The app holding the key is not one registered for this device.", "Fields": []}}
+                model_not_allowed:
+                  value: {"Error": {"Code": "model_not_allowed", "Message": "The device is not of a model the allowed list admits.", "Fields": []}}
+        '409':
+          description: >-
+            `renewal_not_due`: the certificate is before its `RenewFrom`, and nothing is issued. Keep using it, and renew once the daily check answers `RenewNow` `true`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                renewal_not_due:
+                  value: {"Error": {"Code": "renewal_not_due", "Message": "The certificate is not due for renewal yet: its daily check says from when.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429':
+          description: >-
+            `renewal_rate`: this identity was issued 5 certificates in the last 24 hours, so the middleware writes a `WARNING`: a second renewer is the best sign of a fork. Keep the current certificate and renew later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                renewal_rate:
+                  value: {"Error": {"Code": "renewal_rate", "Message": "This identity was issued 5 certificates in the last 24 hours. Retry later.", "Fields": []}}
+        '503':
+          description: |
+            No verdict on the certificate: nothing is issued and a challenge is not spent, so retry
+            on the normal backoff with the same key.
+
+            - `store_unavailable`: the middleware's store did not answer.
+            - `ca_unavailable`: the middleware could not sign the certificate.
+            - `attestation_status_unavailable`: a device's renewal on a `live` middleware, which
+              holds no attestation status list fresh enough to check the chain for revocation.
+            - `edge_not_trusted`: behind the load balancer, the request did not come through a
+              trusted edge. It is an edge fault, and the certificate is not in question.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                store_unavailable:
+                  value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+                ca_unavailable:
+                  value: {"Error": {"Code": "ca_unavailable", "Message": "The certificate authority could not sign. Retry.", "Fields": []}}
+                attestation_status_unavailable:
+                  value: {"Error": {"Code": "attestation_status_unavailable", "Message": "The attestation status list is not current. Retry.", "Fields": []}}
+                edge_not_trusted:
+                  value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+components:
+  securitySchemes:
+    sandboxKey:
+      type: http
+      scheme: bearer
+      description: >-
+        A sandbox key, `sbx_` then 43 base64url characters, sent as `Authorization: Bearer`. It works in the sandbox alone, and its scope decides what it reaches: `pos` a register's sales and reads and its vendor's terminal connections, `admin` the Operator API inside its own vendor, `operator` FUNDiMO's routes, and `onboarding` the onboarding routes for every vendor, FUNDiMO's onboarding team's.
+    mutualTLS:
+      type: mutualTLS
+      description: >-
+        A client certificate from the middleware's own CA, presented at the TLS handshake with the issuing certificate beside it, as `CertificateChain` gave them, and never with an `Authorization` header. Its one SAN, a SPIFFE URI, names the environment, the role, `terminal`, `register`, `server` or `operator`, and the id, and a `server` certificate's scope decides what it reaches as a sandbox key's does.
+  responses:
+    Unauthorised:
+      description: |
+        The credential is missing or not acceptable, refused before the body is read or a key
+        looked up, so this request did nothing and its refusal says nothing of a sale an earlier
+        send made: if the request retried a sale whose answer was lost, fix the credential and send
+        the sale again with the same `IdempotencyKey` from the same register, never a new one.
+
+        - `certificate_required`: no credential came. A holder with no certificate for the
+          route enrols first, with `POST /v1/enrol`.
+        - `certificate_invalid`: an `Authorization` header of another scheme, a token of no
+          form the middleware issues, two `Authorization` headers, a client certificate beside an
+          `Authorization` header, or a client certificate no row holds.
+        - `certificate_expired`: the client certificate is past its `NotAfter`. A holder that
+          meets it re-enrols with a new code.
+        - `sandbox_key_on_live`: a sandbox key sent to a `live` middleware, which refuses every
+          one before any lookup.
+        - `sandbox_key_invalid`: the sandbox key is malformed, unknown or retired.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            certificate_required:
+              value: {"Error": {"Code": "certificate_required", "Message": "This route needs a credential, and none came.", "Fields": []}}
+            certificate_invalid:
+              value: {"Error": {"Code": "certificate_invalid", "Message": "The credential presented is not acceptable.", "Fields": []}}
+            sandbox_key_on_live:
+              value: {"Error": {"Code": "sandbox_key_on_live", "Message": "A sandbox key is accepted in the sandbox alone.", "Fields": []}}
+            sandbox_key_invalid:
+              value: {"Error": {"Code": "sandbox_key_invalid", "Message": "The sandbox key is malformed, unknown or retired.", "Fields": []}}
+            certificate_expired:
+              value: {"Error": {"Code": "certificate_expired", "Message": "The certificate presented has expired.", "Fields": []}}
+    NotPermitted:
+      description: |
+        Nothing was done.
+
+        - `not_permitted`: the credential is good, and this route refuses it: a credential of a
+          scope or a role the route does not take, `operator` asked for by anyone but the operator,
+          a write by a suspended vendor, a role the vendor does not hold, a move the object's state
+          does not allow, or an act held back from `onboarding`: a terminal's removal, or a code for
+          a device that is not `listed`, has held a certificate or holds a binding. One code answers
+          every reason.
+        - `certificate_retired`: the client certificate presented is retired, because a newer one of
+          the identity is in use. Retry on the newer one, and on the holder's newest, stop and tell
+          a person: something else holds a newer certificate of this identity.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            not_permitted:
+              value: {"Error": {"Code": "not_permitted", "Message": "The caller is not permitted to do this.", "Fields": []}}
+            certificate_retired:
+              value: {"Error": {"Code": "certificate_retired", "Message": "The certificate presented is retired: a newer one of this identity is in use.", "Fields": []}}
+    OperatorBodyTooLarge:
+      description: >-
+        `body_too_large`: the body is over 65,536 bytes. Nothing was done, and no part of the body is logged.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    EdgeLengthRequired:
+      description: 'Sent by the edge in front of a hosted middleware, never by the middleware itself, to a `POST` with no body and no `Content-Length` over HTTP/1.1: its body is the edge''s, not an `Error`, and nothing was read. Send the same request again with `Content-Length: 0`.'
+    OperatorStoreUnavailable:
+      description: |
+        No verdict on the caller.
+
+        - `store_unavailable`: the middleware's store did not answer, while it looked up the
+          credential or did the work. A write's commit may have landed with its answer lost,
+          so read the object back before doing it again.
+        - `edge_not_trusted`: behind the load balancer, the request did not come through a
+          trusted edge. It is an edge fault, and the caller's certificate is not in
+          question: retry on the normal backoff.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            store_unavailable:
+              value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+            edge_not_trusted:
+              value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+  schemas:
+    Amount:
+      type: string
+      pattern: '^(([0-9]|[1-9][0-9]{1,6})\.[0-9]{2}|10000000\.00)$'
+      description: >-
+        An amount: a JSON string in decimal major units, with a dot and exactly two fraction digits, from `0.00` to `10000000.00`, such as `"12.50"`, never a JSON number and never negative, a sign being a separate field where one exists. The middleware reads it as integer cents, never as a float, and writes it back as it arrived.
+      examples: ['12.50']
+    Error:
+      type: object
+      required: [Error]
+      description: The body of every non-2xx answer the middleware gives. Every field is present.
+      properties:
+        Error:
+          type: object
+          required: [Code, Message, Fields]
+          x-sent-by: mw
+          description: What was refused, and why.
+          properties:
+            Code:
+              type: string
+              x-sent-by: mw
+              description: The reason's code, one per case, named under its answer. Branch on this.
+            Message:
+              type: string
+              x-sent-by: mw
+              description: A fixed sentence per code for a person, holding nothing the request sent.
+            Fields:
+              type: array
+              maxItems: 32
+              items:
+                type: string
+              x-sent-by: mw
+              description: >-
+                The fields the refusal is about, sorted, at most 32, as paths such as `TransactionDetails.SaleItem[0].ProductDescription`, and empty when the refusal is about no field. A name the sender chose is shown as sent only when it has at most 64 characters, only ASCII letters, digits, `_`, `.` and `-`, and at most 2 digits, and as `<unprintable>` otherwise.
+      examples:
+        - {"Error": {"Code": "terminal_offline", "Message": "The terminal is not connected.", "Fields": []}}
+    Health:
+      type: object
+      required: [Status, Version]
+      description: Whether the middleware is serving.
+      properties:
+        Status:
+          type: string
+          x-sent-by: mw
+          description: '`ok`.'
+        Version:
+          type: string
+          x-sent-by: mw
+          description: The release of the middleware answering, not this document's `info.version`.
+      examples:
+        - {"Status": "ok", "Version": "0.0.0"}
+    TerminalInstruction:
+      type: object
+      required: [MessageType, TransactionReference, SaleReferenceIdentification, TransactionDetails]
+      description: >-
+        The middleware to the terminal, over the WebSocket: one frame starts one payment, a sale, or with `TransactionType` `RFND` a refund. `/docs/api/terminal.md` § Instruction says what to charge, what to show and what to ignore, and § A refund how to refund.
+      properties:
+        MessageType:
+          type: string
+          const: Instruction
+          x-sent-by: mw
+          description: The frame's name, `Instruction`.
+        TransactionType:
+          type: [string, 'null']
+          enum: [RFND, null]
+          x-sent-by: mw
+          description: Absent on a sale, which reads as `CRDP`, and `RFND` on a refund.
+        TransactionReference:
+          type: string
+          pattern: '^sal_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The sale's or refund's id, the matching key its outcome returns as received.
+        SaleReferenceIdentification:
+          type: string
+          x-sent-by: mw
+          description: The POS's reference, to show or print if the terminal wishes.
+        CashierIdentification:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: >-
+            The POS's identifier for the user of the POS who made the sale or the refund, present only when the POS sent one, to show, print or pass on if the terminal wishes.
+        TransactionDetails:
+          type: object
+          required: [Currency, TotalAmount]
+          x-sent-by: mw
+          description: What to charge, or with `RFND` to refund, and the items when there are any.
+          properties:
+            Currency:
+              type: string
+              x-sent-by: mw
+              description: The currency, `AUD`.
+            TotalAmount:
+              $ref: '#/components/schemas/Amount'
+              x-sent-by: mw
+              description: >-
+                The amount to charge and show as the total, or with `RFND` to refund, with no surcharge, tip or fee added.
+            SaleItem:
+              type: [array, 'null']
+              x-sent-by: mw
+              description: The items, present only when the sale has items, in the POS's order.
+              items:
+                type: object
+                required: [ProductDescription, ProductQuantity, UnitPrice, ProductAmount]
+                properties:
+                  ProductDescription:
+                    type: string
+                    x-sent-by: mw
+                    description: The name to show.
+                  ProductQuantity:
+                    type: integer
+                    x-sent-by: mw
+                    description: A JSON integer, for display.
+                  UnitPrice:
+                    $ref: '#/components/schemas/Amount'
+                    x-sent-by: mw
+                    description: The price of one unit.
+                  UnitPriceSign:
+                    type: [boolean, 'null']
+                    x-sent-by: mw
+                    description: >-
+                      Present only when the POS sent it: `false` means show the price as negative, and absent means plus.
+                  ProductAmount:
+                    $ref: '#/components/schemas/Amount'
+                    x-sent-by: mw
+                    description: The line's total.
+                  ProductAmountSign:
+                    type: [boolean, 'null']
+                    x-sent-by: mw
+                    description: Read as `UnitPriceSign` is.
+        OriginalTransaction:
+          type: [object, 'null']
+          required: [TransactionReference, POIIdentification, SaleReferenceIdentification]
+          x-sent-by: mw
+          description: With `RFND` alone, the sale refunded, as the middleware holds it.
+          properties:
+            TransactionReference:
+              type: string
+              pattern: '^sal_[0-9a-f]{32}$'
+              x-sent-by: mw
+              description: The refunded sale's id, as its own instruction carried it.
+            POIIdentification:
+              type: string
+              x-sent-by: mw
+              description: The terminal that took the sale, which may be another than this one.
+            SaleReferenceIdentification:
+              type: string
+              x-sent-by: mw
+              description: The POS's reference for the sale refunded.
+            TransactionDateTime:
+              type: [string, 'null']
+              x-sent-by: mw
+              description: >-
+                The sale's approving outcome's `TransactionDateTime`, as that terminal stated it, for a host whose original data needs it. Absent when it sent none.
+            PaymentReference:
+              type: [object, 'null']
+              x-sent-by: mw
+              description: >-
+                What the sale's approving outcome carried that passed, each key under the same group as the terminal sent it, less `Card.AcquirerMerchantIdentification`. Absent when nothing is left, as is each group of which no key passed.
+              properties:
+                Card:
+                  type: [object, 'null']
+                  x-sent-by: mw
+                  description: A card payment, through a card terminal and its card host.
+                  properties:
+                    RetrievalReferenceNumber:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The card host's retrieval reference.
+                    SystemTraceAuditNumber:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The card host's trace number.
+                    AuthorisationCode:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The authorising party's code.
+                    AcquirerPOIIdentification:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The acquirer's id for the terminal.
+                    RefundReference:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The host's reference to refund against.
+                Bank:
+                  type: [object, 'null']
+                  x-sent-by: mw
+                  description: An account's payment by its own bank, outside a card scheme and NPP.
+                  properties:
+                    AccountServicerReference:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The reference the account's own bank gave the payment.
+                Wallet:
+                  type: [object, 'null']
+                  x-sent-by: mw
+                  description: A payment through a wallet or payment app.
+                  properties:
+                    ProviderIdentification:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The wallet's or payment app's provider, by name.
+                    RecipientTransactionIdentification:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The provider's id for the payment.
+                NPP:
+                  type: [object, 'null']
+                  x-sent-by: mw
+                  description: A payment over Australia's New Payments Platform, PayTo included.
+                  properties:
+                    EndToEndIdentification:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The payer's reference, passed on unchanged end to end.
+                    TransactionIdentification:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The payer's bank's id for the payment.
+                    MandateIdentification:
+                      type: [string, 'null']
+                      x-sent-by: mw
+                      description: The PayTo mandate's id.
+      examples:
+        - {"MessageType": "Instruction", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "SaleReferenceIdentification": "INV-1001", "CashierIdentification": "STAFF-0042", "TransactionDetails": {"Currency": "AUD", "TotalAmount": "12.50", "SaleItem": [{"ProductDescription": "Flat white", "ProductQuantity": 2, "UnitPrice": "6.25", "ProductAmount": "12.50"}]}}
+        - {"MessageType": "Instruction", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2b", "SaleReferenceIdentification": "INV-1002", "TransactionDetails": {"Currency": "AUD", "TotalAmount": "12.50"}}
+        - {"MessageType": "Instruction", "TransactionType": "RFND", "TransactionReference": "sal_02a8f3c4d5e6f708192a3b4c5d6e7f80", "SaleReferenceIdentification": "CN-1001", "TransactionDetails": {"Currency": "AUD", "TotalAmount": "6.25", "SaleItem": [{"ProductDescription": "Flat white", "ProductQuantity": 1, "UnitPrice": "6.25", "ProductAmount": "6.25"}]}, "OriginalTransaction": {"TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "POIIdentification": "T-APPROVE", "SaleReferenceIdentification": "INV-1001", "TransactionDateTime": "2026-11-06T15:12:40+11:00", "PaymentReference": {"Card": {"RetrievalReferenceNumber": "631012345678", "SystemTraceAuditNumber": "000123", "AuthorisationCode": "A1B2C3", "AcquirerPOIIdentification": "12345678", "RefundReference": "klujhadsc9ph87asd"}}}}
+    TerminalOutcome:
+      type: object
+      additionalProperties: false
+      required: [MessageType, TransactionReference, TransactionStatus]
+      if:
+        properties:
+          TransactionStatus:
+            const: RJCT
+        required: [TransactionStatus]
+      then:
+        required: [StatusReasonInformation]
+        properties:
+          StatusReasonInformation:
+            type: object
+            required: [Reason]
+            properties:
+              Reason:
+                type: string
+      else:
+        properties:
+          StatusReasonInformation:
+            properties:
+              Reason:
+                type: 'null'
+      allOf:
+        - if:
+            properties:
+              TransactionStatus:
+                const: ACSP
+            required: [TransactionStatus]
+          else:
+            properties:
+              TransactionDetails:
+                properties:
+                  AuthorisedAmount:
+                    type: 'null'
+      description: >-
+        The terminal to the middleware, over the WebSocket: how the payment ended. `/docs/api/terminal.md` § Outcome says what to send and what is dropped, and § Resending is safe when to send it again.
+      properties:
+        MessageType:
+          type: string
+          const: Outcome
+          x-sent-by: terminal
+          description: The frame's name, `Outcome`.
+        TransactionReference:
+          type: string
+          x-sent-by: terminal
+          description: The instruction's reference, returned as received, the matching key.
+        TransactionDateTime:
+          type: [string, 'null']
+          maxLength: 35
+          pattern: '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]{1,9})?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$'
+          x-sent-by: terminal
+          description: The terminal clock, as it states it, in RFC 3339, at most 35 characters.
+        TransactionStatus:
+          type: string
+          enum: [ACSP, RJCT]
+          x-sent-by: terminal
+          description: |
+            How the payment ended, one of two codes in upper case, on a receipt as the result.
+
+            - `ACSP`: the host approved the whole `TotalAmount`, which
+              `TransactionDetails.AuthorisedAmount` states.
+            - `RJCT`: no payment was taken, and `StatusReasonInformation.Reason` says why.
+        StatusReasonInformation:
+          type: [object, 'null']
+          additionalProperties: false
+          x-sent-by: terminal
+          description: >-
+            Required with `RJCT`, which its `Reason` must explain, and optional with `ACSP`. The host's code and text go here with either status.
+          properties:
+            Reason:
+              type: [string, 'null']
+              enum: [AG07, AB11, DS02, null]
+              x-sent-by: terminal
+              description: |
+                Why no payment was taken: required with `RJCT`, and with any other status dropped
+                alone.
+
+                - `AG07`: the host or the card declined.
+                - `AB11`: no payment was taken otherwise: a cancel at the terminal before anything
+                  reached the host, a host that did not answer where a reversal confirmed no charge,
+                  or an approval, of the whole amount or a part, that the terminal reversed.
+                - `DS02`: the terminal stopped the payment, before it reached its host, because the
+                  middleware sent a `TerminalAbort` for it. A terminal sends `DS02` only in answer
+                  to a `TerminalAbort`, and a cancel at the terminal stays `AB11`.
+            ResponseCode:
+              type: [string, 'null']
+              pattern: '^[A-Za-z0-9]{1,3}$'
+              x-sent-by: terminal
+              description: The card host's code, on a card payment only, such as `00`. On a receipt.
+            AdditionalInformation:
+              type: [string, 'null']
+              allOf:
+                - pattern: '^[A-Za-z0-9.,''&()/+%#-]([A-Za-z0-9 .,''&()/+%#-]{0,33}[A-Za-z0-9.,''&()/+%#-])?$'
+                - pattern: '^[^0-9]*([0-9][^0-9]*){0,8}$'
+              x-sent-by: terminal
+              description: >-
+                The host's text, such as `APPROVED`: 1 to 35 characters, ASCII letters, digits, space and `. , ' & ( ) / + % # -`, no leading or trailing space, and at most 8 digits in total. On a receipt.
+        TransactionDetails:
+          type: [object, 'null']
+          additionalProperties: false
+          x-sent-by: terminal
+          description: Holds `AuthorisedAmount` alone, with `ACSP`.
+          properties:
+            AuthorisedAmount:
+              anyOf:
+                - $ref: '#/components/schemas/Amount'
+                - type: 'null'
+              x-sent-by: terminal
+              description: >-
+                The amount the host approved: what the customer was charged, or on a refund what was refunded. Send it with every `ACSP`, equal to the instruction's `TotalAmount`.
+        PaymentReference:
+          type: [object, 'null']
+          additionalProperties: false
+          x-sent-by: terminal
+          description: >-
+            Optional: the payment's references, which the middleware passes to the POS unchanged, under the same group and key, for its receipt, a refund and matching settlement. Up to four groups, `Card`, `Bank`, `Wallet` and `NPP`, each holding its own keys: send the group of the kind the payment was.
+          properties:
+            Card:
+              type: [object, 'null']
+              additionalProperties: false
+              x-sent-by: terminal
+              description: A card payment, through a card terminal and its card host.
+              properties:
+                RetrievalReferenceNumber:
+                  type: [string, 'null']
+                  pattern: '^[A-Za-z0-9]{1,12}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The card host's retrieval reference, 1 to 12 ASCII letters or digits, on a receipt and to match settlement by.
+                SystemTraceAuditNumber:
+                  type: [string, 'null']
+                  pattern: '^[0-9]{6}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The card host's trace number, exactly 6 digits, zero filled, on a receipt and to match settlement by.
+                AuthorisationCode:
+                  type: [string, 'null']
+                  pattern: '^[A-Za-z0-9]{1,6}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The authorising party's code, 1 to 6 ASCII letters or digits with no padding, on a receipt and to match settlement by.
+                AcquirerPOIIdentification:
+                  type: [string, 'null']
+                  pattern: '^[A-Za-z0-9]{1,8}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The acquirer's id for the terminal, 1 to 8 ASCII letters or digits, on a receipt and to match settlement by.
+                AcquirerMerchantIdentification:
+                  type: [string, 'null']
+                  pattern: '^[A-Za-z0-9]{1,15}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The acquirer's id for the merchant, 1 to 15 ASCII letters or digits, on a receipt and to match settlement by.
+                RefundReference:
+                  type: [string, 'null']
+                  allOf:
+                    - pattern: '^[A-Za-z0-9._:/#-]{1,35}$'
+                    - pattern: '^[^0-9]*([0-9][^0-9]*){0,12}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The host's reference for a later refund, by the reference text rule: 1 to 35 ASCII letters, digits and `. _ : / # -`, with at most 12 digits in total. Not on a receipt: a POS keeps it to refund against.
+            Bank:
+              type: [object, 'null']
+              additionalProperties: false
+              x-sent-by: terminal
+              description: An account's payment by its own bank, outside a card scheme and NPP.
+              properties:
+                AccountServicerReference:
+                  type: [string, 'null']
+                  allOf:
+                    - pattern: '^[A-Za-z0-9._:/#-]{1,35}$'
+                    - pattern: '^[^0-9]*([0-9][^0-9]*){0,12}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The reference the account's own bank gave the payment, by the reference text rule: 1 to 35 ASCII letters, digits and `. _ : / # -`, with at most 12 digits in total, on a receipt and to match settlement by.
+            Wallet:
+              type: [object, 'null']
+              additionalProperties: false
+              x-sent-by: terminal
+              description: A payment through a wallet or payment app.
+              properties:
+                ProviderIdentification:
+                  type: [string, 'null']
+                  allOf:
+                    - pattern: '^[A-Za-z][A-Za-z0-9._-]{0,34}$'
+                    - pattern: '^[^0-9]*([0-9][^0-9]*){0,4}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The wallet's or app's provider, by name: a letter, then up to 34 letters, digits, dots, underscores or dashes, at most 4 digits in total. On a receipt.
+                RecipientTransactionIdentification:
+                  type: [string, 'null']
+                  allOf:
+                    - pattern: '^[A-Za-z0-9._:/#-]{1,64}$'
+                    - pattern: '^([^0-9]*([0-9][^0-9]*){0,12}|[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})$'
+                  x-sent-by: terminal
+                  description: >-
+                    The provider's id for the payment, by the reference text rule at 64 characters: 1 to 64 ASCII letters, digits and `. _ : / # -`, with at most 12 digits in total, or a UUID, on a receipt, to refund against, and to match settlement by.
+            NPP:
+              type: [object, 'null']
+              additionalProperties: false
+              x-sent-by: terminal
+              description: >-
+                A payment over Australia's New Payments Platform, PayTo included: a PayTo payment is an NPP payment under a mandate, so its references are NPP's and the mandate's id.
+              properties:
+                EndToEndIdentification:
+                  type: [string, 'null']
+                  allOf:
+                    - pattern: '^[A-Za-z0-9._:/#-]{1,35}$'
+                    - pattern: '^[^0-9]*([0-9][^0-9]*){0,12}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The payer's reference, passed on unchanged end to end, by the reference text rule: 1 to 35 ASCII letters, digits and `. _ : / # -`, with at most 12 digits in total, on a receipt, to refund against, and to match settlement by.
+                TransactionIdentification:
+                  type: [string, 'null']
+                  allOf:
+                    - pattern: '^[A-Za-z0-9._:/#-]{1,35}$'
+                    - pattern: '^[^0-9]*([0-9][^0-9]*){0,12}$'
+                  x-sent-by: terminal
+                  description: >-
+                    The payer's bank's id for the payment, which every later NPP message about it carries, its 35th character marking a retry. By the reference text rule: 1 to 35 ASCII letters, digits and `. _ : / # -`, with at most 12 digits in total until NPP's layout for it is known.
+                MandateIdentification:
+                  type: [string, 'null']
+                  allOf:
+                    - pattern: '^[A-Za-z0-9._:/#-]{1,35}$'
+                    - pattern: '^[^0-9]*([0-9][^0-9]*){0,12}$'
+                  x-sent-by: terminal
+                  description: >-
+                    On a PayTo payment, the mandate's id, which on NPP the Mandate Management Service generates, not the creditor. By the reference text rule: 1 to 35 ASCII letters, digits and `. _ : / # -`, with at most 12 digits in total until its format is known.
+      examples:
+        - {"MessageType": "Outcome", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "TransactionDateTime": "2026-11-06T15:12:40+11:00", "TransactionStatus": "ACSP", "StatusReasonInformation": {"ResponseCode": "00", "AdditionalInformation": "APPROVED"}, "TransactionDetails": {"AuthorisedAmount": "12.50"}, "PaymentReference": {"Card": {"RetrievalReferenceNumber": "631012345678", "SystemTraceAuditNumber": "000123", "AuthorisationCode": "A1B2C3", "AcquirerPOIIdentification": "12345678", "AcquirerMerchantIdentification": "987654321", "RefundReference": "klujhadsc9ph87asd"}}}
+        - {"MessageType": "Outcome", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "TransactionStatus": "RJCT", "StatusReasonInformation": {"Reason": "AG07", "ResponseCode": "05", "AdditionalInformation": "DECLINED"}}
+        - {"MessageType": "Outcome", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "TransactionStatus": "RJCT", "StatusReasonInformation": {"Reason": "AB11"}}
+        - {"MessageType": "Outcome", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "TransactionStatus": "RJCT", "StatusReasonInformation": {"Reason": "DS02"}}
+        - {"MessageType": "Outcome", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "TransactionDateTime": "2026-11-06T15:12:40+11:00", "TransactionStatus": "ACSP", "TransactionDetails": {"AuthorisedAmount": "12.50"}, "PaymentReference": {"NPP": {"EndToEndIdentification": "INV-1001", "TransactionIdentification": "NPPTX0001", "MandateIdentification": "MNDT-0001"}}}
+    TerminalRefusal:
+      type: object
+      required: [MessageType, ResponseReason]
+      description: >-
+        The middleware to the terminal, over the WebSocket: the middleware could not take the frame the terminal sent. `/docs/api/terminal.md` § Refusal says what each code means, what to do next, and which frame a refusal is about.
+      properties:
+        MessageType:
+          type: string
+          const: Refusal
+          x-sent-by: mw
+          description: The frame's name, `Refusal`.
+        ResponseReason:
+          type: string
+          enum: [unparseable_frame, binary_frame, unknown_frame_type, missing_field, invalid_result, invalid_reference, not_held, other_terminal, terminal_not_permitted, recipient_key_invalid, sign_in_not_available, sign_in_limited, sign_in_unavailable]
+          x-sent-by: mw
+          description: |
+            The middleware's code for the refusal, not the host's text.
+
+            - `unparseable_frame`: valid UTF-8 that is not JSON, or JSON that is not an object, or a
+              frame the middleware cannot parse: one holding half a surrogate pair as an escape, a
+              number beyond the range of an IEEE 754 double, or nesting 128 deep. A bug: alert
+              someone.
+            - `binary_frame`: a binary frame. A bug: alert someone.
+            - `unknown_frame_type`, which a `LoginResponse` gets where a `LoginNeeded` does:
+              `MessageType` is absent or is not `Outcome`. A `LoginNeeded` is answered instead only
+              on a connection that declared `SASQ` in `Mw-Message-Functions`, and on any other it
+              gets this.
+            - `missing_field`: `TransactionStatus` or `TransactionReference` is absent, or
+              `StatusReasonInformation.Reason` is absent with `RJCT`. In a `LoginResponse`,
+              `LoginReference` or `Response` is absent, or `ResponseReason` is absent with `FAIL`.
+            - `invalid_result`: `TransactionStatus` is not `ACSP` or `RJCT`, or is not a string, or
+              with `RJCT` `StatusReasonInformation.Reason` is not `AG07`, `AB11` or `DS02`. In a
+              `LoginResponse`, `Response` is not `SUCC` or `FAIL`, or is not a string, or with
+              `FAIL` `ResponseReason` is not one of `not_covered`, `not_accepted` and `no_answer`,
+              or with `SUCC` a `ResponseReason` is sent.
+            - `invalid_reference`: `TransactionReference` is not a string. In a `LoginResponse`,
+              `LoginReference` is not `lgn_` then 32 lowercase hex characters.
+            - `not_held`: a well-formed outcome naming no sale the middleware holds, because the
+              sale passed retention. Stop, and keep your own record: the log holds what you sent,
+              and an operator reconciles it.
+            - `other_terminal`: the outcome names a sale held for another terminal. A bug: alert
+              someone.
+            - `terminal_not_permitted`: a well-formed outcome, an ask, or a well-formed
+              `LoginResponse`, on a connection that may no longer hold its terminal: the terminal is
+              not `paired`, or the credential it connected with is retired. Keep the outcome, close
+              the connection, reconnect with the backoff, and send it again, and after an ask, ask
+              again once a connection is accepted.
+            - `recipient_key_invalid`: a `LoginNeeded`'s `RecipientKey` cannot be used: it is absent
+              or not an object, its `PublicKey` is not 65 bytes in base64url of a point on P-256,
+              `0x04` first, or on a connection made with a certificate, its `Signature` is absent,
+              malformed, or does not verify under the key of the certificate the connection
+              presented. A bug: alert someone, and answer the sale `RJCT` with `AB11`.
+            - `sign_in_not_available`: the middleware holds no sign-in credential it can use for the
+              terminal's store: none is attached, the credential is removed, the store or its owner
+              is not in a state to act, or sign-in is off on this middleware. Answer the sale `RJCT`
+              with `AB11`, unless a person signs in at the terminal by its fleet's own means, and
+              ask no more on this connection.
+            - `sign_in_limited`: the terminal was answered a sign-in less than
+              `MW_SIGNIN_INTERVAL_SECS` ago, 60 seconds at the middleware's default settings, or has
+              been answered `MW_SIGNIN_PER_DAY` times, 24 by default, in the day counted from that
+              day's first answer. Answer the sale `RJCT` with `AB11`, and ask again no sooner than
+              60 seconds later.
+            - `sign_in_unavailable`: the middleware could not answer the ask, as its store did not
+              answer or did not read as it should, the key service did not open the credential's
+              secret, or the answer could not be signed or sealed, or its store could not take a
+              well-formed `LoginResponse`. Answer the sale `RJCT` with `AB11`, or after a
+              `LoginResponse` go on as its `Response` says, without sending it again, and ask again
+              no sooner than 60 seconds later.
+        TransactionReference:
+          type: [string, 'null']
+          pattern: '^sal_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: Never set in this version, and allowed for a later one, so ignore it.
+      examples:
+        - {"MessageType": "Refusal", "ResponseReason": "invalid_result"}
+        - {"MessageType": "Refusal", "ResponseReason": "not_held"}
+    TerminalLinkWord:
+      type: object
+      required: [MessageType, Word, ExpiresInSeconds]
+      description: >-
+        The middleware to the terminal, over the WebSocket, while a register links: show this word on the screen, large enough to read across a counter, so the staff member holding the terminal can type it into the register. `/docs/api/terminal.md` § Linking to a register says how long to show it, and never to log it.
+      properties:
+        MessageType:
+          type: string
+          const: LinkWord
+          x-sent-by: mw
+          description: The frame's name, `LinkWord`.
+        Word:
+          type: string
+          pattern: '^[a-z]{3,6}\.[a-z]{3,6}$'
+          x-sent-by: mw
+          description: >-
+            The word to show: two different words of the middleware's list, each 3 to 6 lowercase letters, in order, joined by a dot, such as `rabbit.lamp`. The staff member types the two into the register, with the dot or a space between them.
+        ExpiresInSeconds:
+          type: integer
+          minimum: 1
+          maximum: 300
+          x-sent-by: mw
+          description: How long to show the word, in seconds from when the terminal read the frame.
+      examples:
+        - {"MessageType": "LinkWord", "Word": "rabbit.lamp", "ExpiresInSeconds": 120}
+    TerminalLinkEnded:
+      type: object
+      required: [MessageType, Linked]
+      description: >-
+        The middleware to the terminal, over the WebSocket: the request to link has ended, so clear the word. `/docs/api/terminal.md` § Linking to a register says what a terminal shows on it.
+      properties:
+        MessageType:
+          type: string
+          const: LinkEnded
+          x-sent-by: mw
+          description: The frame's name, `LinkEnded`.
+        Linked:
+          type: boolean
+          x-sent-by: mw
+          description: Whether the register linked this terminal, which may show that it linked.
+      examples:
+        - {"MessageType": "LinkEnded", "Linked": true}
+    TerminalStatusRequest:
+      type: object
+      required: [MessageType, TransactionReference, SecondsSinceInstruction]
+      description: >-
+        The middleware to the terminal, over the WebSocket: a question about a sale or a refund the middleware still holds open for the terminal, `PDNG` or `UNKN`, made in the last 23 hours, made while an earlier connection held the terminal, whose `TerminalInstruction` may have been lost. `/docs/api/terminal.md` § StatusRequest says when it comes and how a terminal answers it, by what it holds for the reference.
+      properties:
+        MessageType:
+          type: string
+          const: StatusRequest
+          x-sent-by: mw
+          description: The frame's name, `StatusRequest`.
+        TransactionReference:
+          type: string
+          pattern: '^sal_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: >-
+            The sale or the refund asked about, as its `TerminalInstruction` carried it: the matching key, which the terminal's `TerminalOutcome` returns.
+        SecondsSinceInstruction:
+          type: integer
+          minimum: 0
+          x-sent-by: mw
+          description: Seconds since the sale's creation, by the middleware's clock, rounded up.
+      examples:
+        - {"MessageType": "StatusRequest", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "SecondsSinceInstruction": 34}
+    TerminalAbort:
+      type: object
+      required: [MessageType, TransactionReference]
+      description: >-
+        The middleware to the terminal, over the WebSocket: stop the payment of a sale or a refund, because its POS asked to cancel it with `POST /v1/sales/{TransactionReference}/abort` while the sale still held the terminal. `/docs/api/terminal.md` § Abort says when it comes and how a terminal answers it, by what it holds for the reference.
+      properties:
+        MessageType:
+          type: string
+          const: Abort
+          x-sent-by: mw
+          description: The frame's name, `Abort`.
+        TransactionReference:
+          type: string
+          pattern: '^sal_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The id of the `TerminalInstruction` to stop, as that instruction carried it.
+      examples:
+        - {"MessageType": "Abort", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a"}
+    TerminalLoginNeeded:
+      type: object
+      additionalProperties: false
+      required: [MessageType, RecipientKey]
+      description: >-
+        The terminal to the middleware, over the WebSocket: ask to be signed in to the terminal's fleet's payment system, with what the middleware holds for it. `/docs/api/terminal.md` § Signing in says when to ask, how to make and sign the key, and what to do after each answer.
+      properties:
+        MessageType:
+          type: string
+          const: LoginNeeded
+          x-sent-by: terminal
+          description: The frame's name, `LoginNeeded`.
+        RecipientKey:
+          type: object
+          additionalProperties: false
+          required: [PublicKey]
+          x-sent-by: terminal
+          description: >-
+            The key the answer is sealed to: a fresh P-256 key pair the terminal makes for this ask, in memory, not in its keystore, whose private key it drops after opening the answer.
+          properties:
+            PublicKey:
+              type: string
+              pattern: '^[A-Za-z0-9_-]{87}$'
+              x-sent-by: terminal
+              description: >-
+                The fresh key's public part as RFC 9180 § 7.1.1 serialises a P-256 key: 65 bytes, `0x04` then X and Y, which are the last 65 bytes of the key's SubjectPublicKeyInfo, in base64url with no padding, so 87 characters.
+            Signature:
+              type: [string, 'null']
+              pattern: '^[A-Za-z0-9_-]{1,96}$'
+              x-sent-by: terminal
+              description: >-
+                A DER ECDSA P-256 SHA-256 signature, at most 72 bytes, in base64url with no padding, so at most 96 characters, by the key of the certificate this connection presented, during a renewal's overlap that one and not the newer, over `mw-signin-recipient-v1`, a zero byte, the `POIIdentification`'s bytes, a zero byte and `PublicKey`'s 65 bytes. Required on a connection made with a certificate, and absent on a sandbox key's connection.
+      examples:
+        - {"MessageType": "LoginNeeded", "RecipientKey": {"PublicKey": "BP6MGc4JBRkevCmKkkV5JTHybwzs4kYGOei8Oct_cGqCanebTPlpuKDlOcf2L7PTCtaqj4DjDx0Siq_WiiznLqA", "Signature": "MEQCIBERERERERERERERERERERERERERERERERERERERERERAiAiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg"}}
+        - {"MessageType": "LoginNeeded", "RecipientKey": {"PublicKey": "BP6MGc4JBRkevCmKkkV5JTHybwzs4kYGOei8Oct_cGqCanebTPlpuKDlOcf2L7PTCtaqj4DjDx0Siq_WiiznLqA"}}
+    TerminalLoginRequest:
+      type: object
+      required: [MessageType, Sealed]
+      description: >-
+        The middleware to the terminal, over the WebSocket: the answer to the terminal's `TerminalLoginNeeded`, on the connection that asked, once for each ask the middleware answers. `/docs/api/terminal.md` § Signing in says how to open it, what to do with what it holds, and how to report that.
+      properties:
+        MessageType:
+          type: string
+          const: LoginRequest
+          x-sent-by: mw
+          description: The frame's name, `LoginRequest`.
+        Sealed:
+          type: object
+          required: [Suite, EncapsulatedKey, Ciphertext]
+          x-sent-by: mw
+          description: >-
+            The answer, sealed by HPKE, RFC 9180, in base mode, `mode_base`, to the `RecipientKey` the ask sent, so it opens only with that key's private part.
+          properties:
+            Suite:
+              type: object
+              required: [Kem, Kdf, Aead]
+              x-sent-by: mw
+              description: RFC 9180's suite, by its three ids, each written as the RFC writes it.
+              properties:
+                Kem:
+                  type: string
+                  pattern: '^0x[0-9A-F]{4}$'
+                  x-sent-by: mw
+                  description: The KEM id, `0x0010`, DHKEM(P-256, HKDF-SHA256), in this version.
+                Kdf:
+                  type: string
+                  pattern: '^0x[0-9A-F]{4}$'
+                  x-sent-by: mw
+                  description: The KDF id, `0x0001`, HKDF-SHA256, in this version.
+                Aead:
+                  type: string
+                  pattern: '^0x[0-9A-F]{4}$'
+                  x-sent-by: mw
+                  description: The AEAD id, `0x0001`, AES-128-GCM, in this version.
+            EncapsulatedKey:
+              type: string
+              pattern: '^[A-Za-z0-9_-]+$'
+              x-sent-by: mw
+              description: >-
+                RFC 9180's `enc`, the sender's ephemeral public key, fresh for each answer, in base64url with no padding. Under KEM `0x0010` it is 65 bytes, a P-256 point serialised as `RecipientKey.PublicKey` is, so 87 characters.
+            Ciphertext:
+              type: string
+              pattern: '^[A-Za-z0-9_-]+$'
+              x-sent-by: mw
+              description: >-
+                RFC 9180's ciphertext of a single-shot seal, the AEAD's 16-byte tag last, in base64url with no padding. Opened, it gives the JSON of the sign-in adapter's group, `TerminalLoginSignedValue`.
+      examples:
+        - {"MessageType": "LoginRequest", "Sealed": {"Suite": {"Kem": "0x0010", "Kdf": "0x0001", "Aead": "0x0001"}, "EncapsulatedKey": "BKknGcYZXVCFEE9GmouYFNWDj_crYFAeLERm5eZ7MlrJhTbXthoa9LeOW3-VHAkAvoY8QDzmXJv8uTgmVyItGMQ", "Ciphertext": "lBCfkZ_DE_rUYr4T8YvnPkwWL-HGT2pnyH-9m9966nZyzqH9DDcJvw8t5m2Axq_0jy7Rpl0Ikp1eSwtuyjMilpbQHFbebpvOk_WCMtWZVtgzXxVKbQP_5aZwD-ClLG-3cfl2CiUm_QYJWIJ93O3aII6uQKYYTKY3SFZZPccdgJdiD0clDN4ET8Q8S6S5UfDaYMJUenbeiXxsFTnDRIsUzpfRPyguEBLpb9vrnNkf2NFvMwRZTb6rfnB84Z0kITHiiIDpSAAgSDaE5f3VSPPakIIR_9-b2_ruJJAprjwvKhBKg2CSeZKkV_3L16mbFpGn3F-VyaHcBQ"}}
+    TerminalLoginResponse:
+      type: object
+      additionalProperties: false
+      required: [MessageType, LoginReference, Response]
+      if:
+        properties:
+          Response:
+            const: FAIL
+        required: [Response]
+      then:
+        required: [ResponseReason]
+        properties:
+          ResponseReason:
+            type: string
+      else:
+        properties:
+          ResponseReason:
+            type: 'null'
+      description: >-
+        The terminal to the middleware, over the WebSocket: what its fleet's payment system answered the group a `TerminalLoginRequest` sealed, `TerminalLoginSignedValue`. `/docs/api/terminal.md` § Signing in says when to send it, what the middleware does with it, and when to ask again.
+      properties:
+        MessageType:
+          type: string
+          const: LoginResponse
+          x-sent-by: terminal
+          description: The frame's name, `LoginResponse`.
+        LoginReference:
+          type: string
+          pattern: '^lgn_[0-9a-f]{32}$'
+          x-sent-by: terminal
+          description: The reported answer's `LoginReference`, as its group held it.
+        Response:
+          type: string
+          enum: [SUCC, FAIL]
+          x-sent-by: terminal
+          description: >-
+            `SUCC` when its fleet's system opened a session with what it was sent, and `FAIL` when it did not, with `ResponseReason` saying why.
+        ResponseReason:
+          type: [string, 'null']
+          enum: [not_covered, not_accepted, no_answer, null]
+          x-sent-by: terminal
+          description: >-
+            Required with `FAIL`, and `missing_field` when absent then; with `SUCC` it is `invalid_result`, and a `null` reads as absent. `not_covered`: the fleet's system answered that the key does not cover the merchant it was sent for; `not_accepted`: it refused the sign-in for any other reason; `no_answer`: it did not answer, or could not be reached.
+      examples:
+        - {"MessageType": "LoginResponse", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "Response": "SUCC"}
+        - {"MessageType": "LoginResponse", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "Response": "FAIL", "ResponseReason": "not_covered"}
+    TerminalLoginSignedValue:
+      type: object
+      required: [Adapter, KeyIdentification, Challenge, Signature, LoginReference]
+      description: >-
+        The group a terminal opens from a `TerminalLoginRequest`'s `Sealed.Ciphertext`: the JSON of the sign-in adapter's `SignedValue` group, what the terminal's fleet's payment system takes for a sign-in, made from the credential the fleet set for the terminal's store. It is no frame, holds no `MessageType` and travels inside the seal alone: `/docs/api/terminal.md` § Signing in says what a terminal does with it.
+      properties:
+        Adapter:
+          type: string
+          enum: [signed_value, sandbox_signed_value]
+          x-sent-by: mw
+          description: >-
+            The adapter that made the group: `signed_value`, with the fleet's secret, or `sandbox_signed_value`, a sandbox's stand-in, in the sandbox alone.
+        KeyIdentification:
+          type: string
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: The fleet's key id at its payment system, as the fleet set it. Not a secret.
+        Challenge:
+          type: string
+          pattern: '^[0-9A-Za-z_-]+$'
+          x-sent-by: mw
+          description: >-
+            The random value signed, fresh for each answer, as text, written as the credential's `Profile.ChallengeEncoding` says: lowercase hex, base64url with no padding, or a version 4 UUID's lowercase text.
+        Signature:
+          type: string
+          pattern: '^[0-9A-Za-z+/=_-]+$'
+          x-sent-by: mw
+          description: >-
+            The MAC over `Challenge`'s ASCII bytes, by the credential's `Profile.Algorithm`, written as its `Profile.SignatureEncoding` says: lowercase hex, base64 standard and padded, or base64url with no padding.
+        LoginReference:
+          type: string
+          pattern: '^lgn_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: >-
+            The middleware's name for this one answer, `lgn_` then 32 lowercase hex characters, drawn for each answer, so every answer's group holds one. The terminal names it in the `TerminalLoginResponse` that reports what its fleet's payment system answered.
+        AcceptorIdentification:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: >-
+            The store's own number at its fleet's payment system: which of its fleet's merchants the terminal signs in for. Absent where the store holds none.
+        UserName:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: >-
+            The merchant user the store's attachment names at its fleet's payment system, an account, never a person or an e-mail address. Absent where the attachment holds none.
+        ApplicationIdentification:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: The fleet's payment application in the store's credential, absent if none.
+      examples:
+        - {"Adapter": "signed_value", "KeyIdentification": "key-example-1", "Challenge": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "Signature": "WlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlo=", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "AcceptorIdentification": "merchant-example-1", "UserName": "user-example-1", "ApplicationIdentification": "app-example-1"}
+        - {"Adapter": "sandbox_signed_value", "KeyIdentification": "sandbox-signin-1", "Challenge": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "Signature": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a", "LoginReference": "lgn_0123456789abcdef0123456789abcdf0"}
+    Enrolment:
+      type: object
+      additionalProperties: false
+      required: [PairingCode, CertificateSigningRequest]
+      description: >-
+        What `POST /v1/enrol` takes. A device sends its `SerialNumber` and, on `live`, its `AttestationChain`, and a server sends neither.
+      properties:
+        PairingCode:
+          type: string
+          maxLength: 64
+          pattern: '^[0-9A-Za-z .-]{1,64}$'
+          x-sent-by: vendor
+          description: >-
+            The code as its listing showed it, at most 64 characters, read by the `SerialNumber` beside it. With a `SerialNumber` that is not `null`, a device's five different words of `docs/api/words.txt`, in any case, with one or more dots, spaces or hyphens between two words; with none, absent or `null`, a server's 16 characters in Crockford base32, spaces and hyphens dropped, either case read, and `I` and `L` read as `1` and `O` as `0`.
+        CertificateSigningRequest:
+          type: string
+          maxLength: 4096
+          x-sent-by: vendor
+          description: >-
+            A PKCS 10 request in PEM, one `CERTIFICATE REQUEST` block, for a P-256 key the principal never used. The middleware reads its public key and nothing else, and never logs it.
+        SerialNumber:
+          type: [string, 'null']
+          pattern: '^[A-Za-z0-9._-]{1,64}$'
+          x-sent-by: vendor
+          description: Optional. A device's serial, as its listing names it.
+        AttestationChain:
+          type: [string, 'null']
+          maxLength: 49152
+          x-sent-by: vendor
+          description: >-
+            A device's Android Key Attestation chain for the key of the CSR, as `KeyStore` gives it, in PEM, leaf first. Required of a device on a `live` middleware, and checked when a sandbox is offered one.
+    Renewal:
+      type: object
+      additionalProperties: false
+      required: [CertificateSigningRequest]
+      description: What renewal takes. A device on `live` sends `AttestationChain`; a server none.
+      properties:
+        CertificateSigningRequest:
+          type: string
+          maxLength: 4096
+          x-sent-by: vendor
+          description: >-
+            A PKCS 10 request in PEM, one `CERTIFICATE REQUEST` block, for a new P-256 key the principal has never used. The middleware reads its public key and nothing else.
+        AttestationChain:
+          type: [string, 'null']
+          maxLength: 49152
+          x-sent-by: vendor
+          description: >-
+            A device's Android Key Attestation chain for the new key, made with the challenge of `POST /v1/certificates/challenge`, in PEM, leaf first.
+    EnrolmentIssued:
+      type: object
+      required: [CertificateChain, SpiffeId, NotAfter, RenewFrom]
+      oneOf:
+        - required: [POIIdentification]
+        - required: [RegisterIdentification]
+        - required: [ServerIdentification]
+      description: >-
+        A certificate just issued, by enrolment or renewal, and the principal it names, by exactly one of its ids. A certificate is public.
+      properties:
+        CertificateChain:
+          type: string
+          x-sent-by: mw
+          description: The certificate then its issuer's, PEM. Present both at the TLS handshake.
+        POIIdentification:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: A terminal's id, when the certificate is a terminal's.
+        RegisterIdentification:
+          type: [string, 'null']
+          pattern: '^reg_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: A register's id, when the certificate is a register's.
+        ServerIdentification:
+          type: [string, 'null']
+          pattern: '^srv_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: A vendor's server's id, when the certificate is a server's.
+        SpiffeId:
+          type: string
+          x-sent-by: mw
+          description: >-
+            The certificate's one SAN, `spiffe://`, the middleware's trust domain, then the environment, the role and the id, each after a `/`.
+        NotAfter:
+          type: string
+          x-sent-by: mw
+          description: When the certificate expires, in RFC 3339.
+        RenewFrom:
+          type: string
+          x-sent-by: mw
+          description: When it may renew, day 15 of its life, in RFC 3339.
+    CertificateStatus:
+      type: object
+      required: [NotAfter, RenewFrom, RenewNow]
+      description: The certificate presented, as its daily check reads it.
+      properties:
+        NotAfter:
+          type: string
+          x-sent-by: mw
+          description: When it expires, in RFC 3339.
+        RenewFrom:
+          type: string
+          x-sent-by: mw
+          description: When it may renew, day 15 of its life, in RFC 3339.
+        RenewNow:
+          type: boolean
+          x-sent-by: mw
+          description: Whether to renew it now, by the middleware's clock.
+    ChallengeIssued:
+      type: object
+      required: [Challenge, ExpiresInSeconds]
+      description: A challenge for a device's next key.
+      properties:
+        Challenge:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          x-sent-by: mw
+          description: 32 random bytes, for the new key's attestation. Keep it out of every log.
+        ExpiresInSeconds:
+          type: integer
+          x-sent-by: mw
+          description: How long it is valid, in whole seconds.
