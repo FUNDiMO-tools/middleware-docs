@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
+            window.path_to_searchindex_js = "searchindex-be827a9c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,14 +198,15 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.6.0, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-the-terminal-contract"><a class="header" href="#middleware-the-terminal-contract">Middleware: the terminal contract</a></h1>
-<p>Version 5, 13-Nov-2026. This count numbers the frames of this page alone. It ends at 5. From
-now on, the frames change with a release of the middleware, and that release is not this count.
-Read the release in <code>serverInfo.version</code> from the sandbox’s MCP server, or in <code>SandboxVersion</code>
-in a conformance report. The release of the middleware a terminal connects to is in that host’s
-own <code>GET /v1/health</code>, in <code>Version</code>.</p>
+<p>Last changed in v0.4.0. Its frames are at version 5, the last of this page’s own count, which
+numbers the frames of this page alone and ends at 5. From now on, the frames change with a
+release of the middleware, and that release is not this count. Read the release in
+<code>serverInfo.version</code> from the sandbox’s MCP server, or in <code>SandboxVersion</code> in a conformance
+report. The release of the middleware a terminal connects to is in that host’s own
+<code>GET /v1/health</code>, in <code>Version</code>.</p>
 <p>Version 5 adds the refund. An <code>Instruction</code> may now carry <code>TransactionType</code> <code>RFND</code> and an
 <code>OriginalTransaction</code>, the sale to refund: refund <code>TotalAmount</code> against that sale, and report
 it in an <code>Outcome</code> as a sale’s (A refund, below). The middleware sends a refund only to a
@@ -295,6 +296,7 @@ boot, may choose one instead. A listed terminal may connect once it is <code>pai
 sandbox, a seed pairs it. It must not be a card or account number: the middleware cannot detect one
 in it, and the id is logged.</p>
 <h2 id="connect"><a class="header" href="#connect">Connect</a></h2>
+<p>Changed in v0.4.0.</p>
 <p><code>GET /v1/terminals/{POIIdentification}/connect</code> with a WebSocket upgrade (RFC 6455):
 <code>Connection: Upgrade</code>, <code>Upgrade: websocket</code>, <code>Sec-WebSocket-Version: 13</code> and a
 <code>Sec-WebSocket-Key</code>. Every message either way is a text frame holding one JSON object in
@@ -430,6 +432,7 @@ middleware’s Pings, the later frame of Resending is safe, below, is the next t
 middleware: an <code>Instruction</code>, a <code>StatusRequest</code>, an <code>Abort</code>, a <code>LinkWord</code>, a <code>LinkEnded</code> or a
 <code>LoginRequest</code>. An <code>Instruction</code> that comes is the next payment as well.</p>
 <h2 id="reconnect"><a class="header" href="#reconnect">Reconnect</a></h2>
+<p>Changed in v0.3.0.</p>
 <p>After any close, and after a failed connect the table above does not say to fix, reconnect
 with a backoff: wait 1 second, double the wait after each failure up to 30 seconds, and add
 a little randomness. A connection that closes within 10 seconds of opening counts as a
@@ -508,6 +511,7 @@ itself, so a terminal has no menu to open and nothing to choose. The middleware 
 terminal in a sale until the sale ends, and to a bound terminal none at all. Never log the
 word, and never send it back: the middleware’s own log holds it as <code>&lt;withheld&gt;</code>.</p>
 <h2 id="instruction"><a class="header" href="#instruction">Instruction</a></h2>
+<p>Changed in v0.3.0.</p>
 <p>The middleware to the terminal. One frame starts one payment: a sale, or with
 <code>TransactionType</code> <code>RFND</code> a refund (A refund, below).</p>
 <pre><code class="language-json">{ "MessageType": "Instruction", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "SaleReferenceIdentification": "INV-1001", "TransactionDetails": { "Currency": "AUD", "TotalAmount": "12.50", "SaleItem": [ { "ProductDescription": "Flat white", "ProductQuantity": 2, "UnitPrice": "6.25", "ProductAmount": "12.50" } ] } }
@@ -945,6 +949,7 @@ system refuses the session. Never log, store or send back <code>Challenge</code>
 private key, and never log the session. Then report what that system answered (The report,
 below).</p>
 <h3 id="the-report-loginresponse"><a class="header" href="#the-report-loginresponse">The report: <code>LoginResponse</code></a></h3>
+<p>Changed in v0.3.0.</p>
 <p>The terminal to the middleware, on the connection that asked, once it has tried its fleet’s
 payment system with an opened answer: one <code>LoginResponse</code> naming the group’s <code>LoginReference</code>,
 before its next frame of sign-in. Send <code>SUCC</code> if that system opened a session with what it was
@@ -997,6 +1002,7 @@ terminal did not see, so wait 60 seconds. After any other <code>FAIL</code>, <co
 again no sooner than 60 seconds later. After <code>not_covered</code>, also tell someone: the store’s
 credential does not cover the merchant it was sent for, and asking again does not change that.</p>
 <h3 id="the-two-cases-and-the-other-refusals"><a class="header" href="#the-two-cases-and-the-other-refusals">The two cases, and the other refusals</a></h3>
+<p>Changed in v0.3.0.</p>
 <p><strong>No credential at the store.</strong> The ask is refused <code>sign_in_not_available</code>, and a terminal signed
 out is normal: answer the sale <code>RJCT</code> with <code>AB11</code>, unless a person signs in at the terminal by its
 fleet’s own means, and ask no more on that connection.</p>
@@ -1193,6 +1199,7 @@ or the middleware stopping, can take a queued <code>Refusal</code> with it. The 
 sign: send the outcome again after the reconnect, as above.</li>
 </ul>
 <h2 id="outcome"><a class="header" href="#outcome">Outcome</a></h2>
+<p>Changed in v0.4.0.</p>
 <p>The terminal to the middleware. An approval, then a decline:</p>
 <pre><code class="language-json">{ "MessageType": "Outcome", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "TransactionDateTime": "2026-11-06T15:12:40+11:00", "TransactionStatus": "ACSP", "StatusReasonInformation": { "ResponseCode": "00", "AdditionalInformation": "APPROVED" }, "TransactionDetails": { "AuthorisedAmount": "12.50" }, "PaymentReference": { "Card": { "RetrievalReferenceNumber": "631012345678", "SystemTraceAuditNumber": "000123", "AuthorisationCode": "A1B2C3", "AcquirerPOIIdentification": "12345678", "AcquirerMerchantIdentification": "987654321", "RefundReference": "klujhadsc9ph87asd" } } }
 { "MessageType": "Outcome", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "TransactionStatus": "RJCT", "StatusReasonInformation": { "Reason": "AG07", "ResponseCode": "05", "AdditionalInformation": "DECLINED" } }
@@ -1582,6 +1589,7 @@ applicable, and its report row says so. A terminal that needs the middleware to 
 declare <code>SASQ</code> and run again. A run judges frames alone and sees no screen, so a green run does
 not prove that a terminal wakes.</p>
 <h2 id="sources"><a class="header" href="#sources">Sources</a></h2>
+<p>Changed in v0.3.0.</p>
 <p>The ISO 20022 texts quoted here and in <a href="fields.json"><code>docs/api/fields.json</code></a> for the outcome’s status, its
 reason and the references of <code>Bank</code>, <code>Wallet</code> and <code>NPP</code> were read on 09-Nov-2026 from
 mirrors of ISO’s published files, because iso20022.org answered every request with HTTP 403.

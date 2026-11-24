@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
+            window.path_to_searchindex_js = "searchindex-be827a9c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,10 +198,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.6.0, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-onboarding-a-device"><a class="header" href="#middleware-onboarding-a-device">Middleware: onboarding a device</a></h1>
-<p>10-Nov-2026.</p>
+<p>Last changed in v0.5.0.</p>
 <p>This is the walk for a vendor writing an Android app for a SUNMI device: a payment terminal,
 or a register, which is a POS app on a device. It is written for that maker’s devices today;
 other makers’ devices are intended, each with a walk of its own.
@@ -254,6 +254,7 @@ BENCH-2 is.</p>
 </table>
 </div>
 <h2 id="in-short"><a class="header" href="#in-short">In short</a></h2>
+<p>Changed in v0.5.0.</p>
 <ol>
 <li>The vendor registers the app’s package and signing digest for its role (step 1).</li>
 <li>The terminal’s fleet owner, or the POS vendor for a register, lists the device by its
@@ -277,6 +278,7 @@ menu or settings opens, with the device alone, and again after the first enrolme
 enrolment screen).</li>
 </ol>
 <h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>The same file is served in the sandbox, where five things differ.</p>
 <ul>
 <li>The sandbox’s gate answers <code>404</code> to the operator’s routes. In their place the sandbox has
@@ -407,6 +409,7 @@ fun bytesOfHex(text: String): ByteArray? {
 }
 </code></pre>
 <h2 id="1-register-the-app-identity"><a class="header" href="#1-register-the-app-identity">1. Register the app identity</a></h2>
+<p>Changed in v0.4.0.</p>
 <p>A device enrols only if the app holding its key is one its vendor registered. The middleware learns
 which app holds the key from the attestation, which states the app’s Android package and the
 SHA-256 of each certificate the app is signed with, so nothing secret is put in the app.
@@ -476,6 +479,7 @@ every digest the attestation states must be registered, so an app signed with tw
 certificates registers each. A device whose app is not registered is refused
 <code>403 app_identity_unknown</code> at enrolment and at renewal.</p>
 <h2 id="2-the-listing-and-the-code"><a class="header" href="#2-the-listing-and-the-code">2. The listing and the code</a></h2>
+<p>Changed in v0.4.0.</p>
 <p>Every device starts with one human act. On <code>live</code>, the terminal’s fleet owner lists it at a
 store by its serial, <code>POST /v1/merchant-stores/{StoreIdentification}/terminals</code> (in the Operator
 API, which FUNDiMO gives a vendor with an <code>admin</code> server directly), and the POS vendor’s <code>admin</code>
@@ -813,6 +817,7 @@ marked as failing the root, the hardware, the boot and the model. Production ref
 written, and the sandbox requires no attestation, so it marks nothing. Build the app for the
 rules above: a device staging marks, a middleware that does not mark refuses.</p>
 <h3 id="the-challenge-worked"><a class="header" href="#the-challenge-worked">The challenge, worked</a></h3>
+<p>Changed in v0.3.0.</p>
 <p>With the code the installer typed as <code>Bronze Farm-loop PRISM tempo</code>, and the serial <code>S-1</code>:</p>
 <div class="table-wrapper">
 <table>
@@ -932,6 +937,7 @@ it exactly as the listing holds it. One that differs is refused with the same
 <code>POST /sandbox/v1/codes</code> answered. The enrolment screen says how the serial is shown, and when
 it is typed (SCREEN-10 and SCREEN-11).</p>
 <h2 id="6-enrol-post-v1enrol"><a class="header" href="#6-enrol-post-v1enrol">6. Enrol: <code>POST /v1/enrol</code></a></h2>
+<p>Changed in v0.5.0.</p>
 <p>With the code, the serial, the key and its CSR, the app enrols. The call carries no
 credential, because the code is the credential, so the client presents no certificate.</p>
 <div class="table-wrapper">
@@ -1011,6 +1017,7 @@ sees the call, as it would for any HTTPS client: set the device’s date and tim
 again. Nothing the middleware decides rests on the device’s clock.</li>
 </ul>
 <h3 id="when-enrolment-is-refused"><a class="header" href="#when-enrolment-is-refused">When enrolment is refused</a></h3>
+<p>Changed in v0.3.0.</p>
 <p>Each refusal from the middleware has the body
 <code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>. The edge’s <code>429</code> is the one
 that differs: the edge in front of a hosted middleware sends it, and its body is the edge’s own.
@@ -1039,6 +1046,7 @@ fails answers alone, with <code>Fields</code> naming every field of it, sorted.<
 </table>
 </div>
 <h2 id="7-store-the-chain-against-the-alias"><a class="header" href="#7-store-the-chain-against-the-alias">7. Store the chain against the alias</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>The <code>201</code>’s <code>CertificateChain</code> is two certificates, PEM: the device’s own, then the issuing
 certificate. The device presents both at the handshake of every call from now on (step 8). A
 certificate is public, so the chain needs no protecting, but it belongs to the key under one
@@ -1232,6 +1240,7 @@ software keystore. A keystore key drove client TLS through OkHttp and an
 on 13-Nov-2026. A key in secure hardware is not yet tried.</li>
 </ul>
 <h2 id="9-the-daily-check-get-v1certificatesself"><a class="header" href="#9-the-daily-check-get-v1certificatesself">9. The daily check: <code>GET /v1/certificates/self</code></a></h2>
+<p>Changed in v0.5.0.</p>
 <p>Once a day the device sends <code>GET /v1/certificates/self</code>, on its own certificate. The middleware
 answers when the certificate ends, and whether to renew:</p>
 <pre><code class="language-json">{ "NotAfter": "...", "RenewFrom": "...", "RenewNow": true }
@@ -1285,6 +1294,7 @@ fun scheduleDailyCheck(context: Context) {
 <p>A refusal of the daily check is read by the holder’s table (What a holder of a dead
 certificate does, below). A call that gets no answer is tried again later.</p>
 <h2 id="10-renew-a-new-key-under-a-new-alias"><a class="header" href="#10-renew-a-new-key-under-a-new-alias">10. Renew: a new key under a new alias</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>A certificate renews from day 15, always with a new key. So a device proves its state again
 every 15 days, and a device rooted after it enrolled loses its identity within one lifetime of
 a certificate, but on a middleware set to mark (step 3), which marks it instead. In the sandbox, a
@@ -1403,6 +1413,7 @@ the sign of an identity copied.
 So renew only while no next certificate waits for its first use, and send a renewal that waits
 for a verdict again as it was, never a new one in its place.</p>
 <h3 id="when-renewal-is-refused"><a class="header" href="#when-renewal-is-refused">When renewal is refused</a></h3>
+<p>Changed in v0.5.0.</p>
 <p>A refusal of a renewal leaves the current certificate as it was.</p>
 <p>Of <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> and <code>invalid_field</code>, the first class that
 fails answers alone, with <code>Fields</code> naming every field of it, sorted.</p>
@@ -1425,6 +1436,7 @@ fails answers alone, with <code>Fields</code> naming every field of it, sorted.<
 </table>
 </div>
 <h2 id="what-a-holder-of-a-dead-certificate-does"><a class="header" href="#what-a-holder-of-a-dead-certificate-does">What a holder of a dead certificate does</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>A device holding a certificate is its holder. A refusal at the TLS handshake, or of a call, is
 read by this table, which is <a href="terminal.html"><code>docs/api/terminal.md</code></a>’s.</p>
 <div class="table-wrapper">
@@ -1516,6 +1528,7 @@ fun reEnrol(identities: Identities, enrolment: Enrolment): Answer {
 <p>The device keeps its id, <code>POIIdentification</code> or <code>RegisterIdentification</code>, and a register’s
 links to terminals stand: a re-pair ends none.</p>
 <h2 id="the-enrolment-screen"><a class="header" href="#the-enrolment-screen">The enrolment screen</a></h2>
+<p>Changed in v0.4.0.</p>
 <p>The enrolment screen is the screen of your app on which a person enrols the device: it takes the
 code (step 2), shows the serial (step 5), sends the enrolment (step 6) and says what came of it.
 An installer or a store’s staff uses it at the first enrolment and at each re-enrolment
@@ -1548,6 +1561,7 @@ take, would enrol a device in service as something else. So the screen of a devi
 certificate takes a code only behind what the store’s staff hold (SCREEN-6), and never moves the
 device to another environment (SCREEN-13).</p>
 <h3 id="what-it-shows-and-takes"><a class="header" href="#what-it-shows-and-takes">What it shows and takes</a></h3>
+<p>Changed in v0.4.0.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -1570,6 +1584,7 @@ device to another environment (SCREEN-13).</p>
 </table>
 </div>
 <h3 id="what-it-says-to-each-refusal"><a class="header" href="#what-it-says-to-each-refusal">What it says to each refusal</a></h3>
+<p>Changed in v0.4.0.</p>
 <p>Each refusal of step 6, in words a person at the device can act on. Put them in your own words,
 saying the same. As step 6 says, a refusal of a code the middleware found uses one of its five
 tries, unless the code was already spent or burned. The edge’s <code>429</code>, <code>503 ca_unavailable</code> and

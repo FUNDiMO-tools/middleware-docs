@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
+            window.path_to_searchindex_js = "searchindex-be827a9c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,10 +198,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.6.0, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-onboarding-a-server"><a class="header" href="#middleware-onboarding-a-server">Middleware: onboarding a server</a></h1>
-<p>10-Nov-2026.</p>
+<p>Last changed in v0.5.0.</p>
 <p>This is the walk for a vendor whose POS, or whose back office, runs on its own server and calls
 the middleware host to host. It goes from the listing that gives the server its code to a certificate
 the server renews by itself, with code to paste at each step. You can build the server’s side
@@ -236,6 +236,7 @@ inside the overlap (step 9).</li>
 <li>After a refusal it does what the holder’s table says, and never deletes its key (step 10).</li>
 </ol>
 <h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>The same file is served in the sandbox, where four things differ.</p>
 <ul>
 <li>The sandbox’s gate answers <code>404</code> to every route of the Operator API,
@@ -273,6 +274,7 @@ an <code>Error</code> (step 4, When enrolment is refused). Where a table here sa
 normal backoff, wait 1 second, double the wait after each failure up to 30 seconds, and add a
 little randomness.</p>
 <h2 id="1-the-listing-and-the-code"><a class="header" href="#1-the-listing-and-the-code">1. The listing and the code</a></h2>
+<p>Changed in v0.4.0.</p>
 <p>Every server starts with one human act. On <code>live</code>, the operator lists a vendor’s first server,
 and the vendor’s own <code>admin</code> server may list more, with
 <code>POST /v1/vendors/{VendorIdentification}/servers</code> and the <code>Scope</code> its certificate will reach
@@ -352,6 +354,7 @@ and holds no one’s name. The CSR is never logged: the middleware’s log holds
 <p>A CSR whose signature does not verify, or whose key is not P-256, is refused
 <code>400 invalid_field</code>, with <code>Fields</code> naming <code>CertificateSigningRequest</code>.</p>
 <h2 id="4-enrol-post-v1enrol"><a class="header" href="#4-enrol-post-v1enrol">4. Enrol: <code>POST /v1/enrol</code></a></h2>
+<p>Changed in v0.5.0.</p>
 <p>With the code and the CSR, the server enrols. The call carries no credential, because the code
 is the credential, so it presents no certificate and sends no <code>Authorization</code> header.</p>
 <div class="table-wrapper">
@@ -408,6 +411,7 @@ it with <code>DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentific
 retires its certificate at once, list a new server, and find how the code left your hands before
 you hand over the next. A vendor with no <code>admin</code> server asks the operator to read the row.</p>
 <h3 id="when-enrolment-is-refused"><a class="header" href="#when-enrolment-is-refused">When enrolment is refused</a></h3>
+<p>Changed in v0.3.0.</p>
 <p>A refusal once the code is found counts an attempt against it, unless the code is already spent
 or burned, and five attempts burn it, so fix what a refusal names before you try again. A <code>503</code>
 counts nothing and leaves the code unspent, and the edge’s <code>429</code> never reaches the middleware, so
@@ -587,6 +591,7 @@ matter. <code>RenewNow</code> reads <code>true</code> only on the newest certifi
 <p>Any instance may run the check, and only the one that renews acts on <code>RenewNow</code> (step 9). A
 refusal of the check is read by the holder’s table (step 10).</p>
 <h2 id="9-renew-with-one-renewer-per-identity"><a class="header" href="#9-renew-with-one-renewer-per-identity">9. Renew, with one renewer per identity</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>A certificate renews from day 15, always with a new key, on the server’s own certificate. A
 server skips the challenge a device asks first: <code>POST /v1/certificates/challenge</code> is a device’s,
 and a server asking it is refused <code>403 not_permitted</code>. In the sandbox, a certificate enrolled on a
@@ -657,6 +662,7 @@ fi
 <p>If the first call on the new certificate gets no answer, go on with the old one, which is good
 until then, and try the new one again later.</p>
 <h3 id="when-renewal-is-refused"><a class="header" href="#when-renewal-is-refused">When renewal is refused</a></h3>
+<p>Changed in v0.3.0.</p>
 <p>A refusal of a renewal leaves the current certificate as it was.</p>
 <p>Of <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> and <code>invalid_field</code>, the first class that
 fails answers alone, with <code>Fields</code> naming every field of it, sorted.</p>

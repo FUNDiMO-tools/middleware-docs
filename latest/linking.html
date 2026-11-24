@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
+            window.path_to_searchindex_js = "searchindex-be827a9c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,10 +198,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.6.0, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-linking-a-register-to-a-terminal"><a class="header" href="#middleware-linking-a-register-to-a-terminal">Middleware: linking a register to a terminal</a></h1>
-<p>11-Nov-2026.</p>
+<p>Last changed in v0.5.0.</p>
 <p>This is the walk for a POS vendor linking a register to a payment terminal at the counter, and
 for whoever writes the screen staff see while they do it. A register is one till of a POS: an
 app on a device, or a name a vendor’s server gives. Linking binds it to a terminal of the store
@@ -293,6 +293,7 @@ store must accept the caller’s vendor. Any other case is <code>403 not_permitt
 a store that does not exist, so a POS cannot tell which. A <code>409</code> here writes nothing and counts
 toward no limit. Each answer, and what to show, is in What the POS shows at each answer, below.</p>
 <h2 id="2-the-middleware-picks-the-words"><a class="header" href="#2-the-middleware-picks-the-words">2. The middleware picks the words</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>The middleware gives each <code>paired</code> terminal of the store with no binding a different pair of two words
 from its list, and answers <code>201</code>:</p>
 <pre><code class="language-json">{ "LinkIdentification": "lnk_...", "ExpiresInSeconds": 120 }
@@ -375,6 +376,7 @@ terminals and its unlink button all name it.</p>
 <p>A register may bind several terminals of one store, one request each, and a terminal binds one
 register. A register bound at one store cannot link at another until its bindings there end.</p>
 <h2 id="what-the-pos-shows-at-each-answer"><a class="header" href="#what-the-pos-shows-at-each-answer">What the POS shows at each answer</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>The POS never shows a word, because it never has one. At each answer it tells the staff member
 what happened and what to do next, in its own words.</p>
 <div class="table-wrapper">
@@ -438,6 +440,7 @@ last binding ends it sits at no store, and may link at another.</p>
 <p>A terminal removed, or a register removed, ends its bindings as well. A re-pair ends none,
 because the device and its serial are the same.</p>
 <h2 id="what-a-stores-fleet-owner-can-do"><a class="header" href="#what-a-stores-fleet-owner-can-do">What a store’s fleet owner can do</a></h2>
+<p>Changed in v0.4.0.</p>
 <p>The fleet owner that listed a store’s terminals sees each with the register and the vendor bound
 to it, at <code>GET /v1/merchant-stores/{StoreIdentification}/terminals</code>, so a binding it never made
 is visible. It acts on its <code>admin</code> server’s certificate, here <code>admin-chain.pem</code> and <code>admin.key</code>

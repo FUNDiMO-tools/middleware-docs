@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
+            window.path_to_searchindex_js = "searchindex-be827a9c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,10 +198,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.6.0, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-the-sandbox"><a class="header" href="#middleware-the-sandbox">Middleware: the sandbox</a></h1>
-<p>13-Nov-2026.</p>
+<p>Last changed in v0.6.0.</p>
 <p>The sandbox is a middleware of its own for testing a point of sale (POS) or a payment terminal
 against the middleware’s one schema, with no one from FUNDiMO in the room. It runs the same relay as
 <code>live</code>, beside simulated terminals, an MCP server for an agent, and conformance runs whose
@@ -217,7 +217,12 @@ The middleware cannot detect one in a string you choose, and every message that 
 logged, with the ids that tie it to one sale. A key, a pairing code and a header value never
 reach a line.</p>
 <h2 id="in-short"><a class="header" href="#in-short">In short</a></h2>
+<p>Changed in v0.6.0.</p>
 <ol>
+<li>Built against an earlier release? Read <code>mw://changes</code>, also served as
+<code>/docs/api/changes.md</code>: what changed in each release, newest first. Each page’s first line
+names the release of its last change, and each section changed since v0.2.0 names the
+release that changed it.</li>
 <li>Read <code>/llms.txt</code>, also served at <code>/</code>: the index of the middleware’s contracts, walks, field
 catalogue and conformance scenarios, which lists this page first.</li>
 <li>Read <code>mw://environments</code>, also served as <a href="environments.html"><code>/docs/api/environments.md</code></a>: the two environments,
@@ -248,6 +253,7 @@ enrolment, the edge in front of the sandbox, where it runs behind one, may also 
 the normal backoff, wait 1 second, double the wait after each failure up to 30 seconds, and add
 a little randomness.</p>
 <h2 id="1-a-key-and-a-world"><a class="header" href="#1-a-key-and-a-world">1. A key and a world</a></h2>
+<p>Changed in v0.5.0.</p>
 <pre><code class="language-sh">curl -s -X POST "$SANDBOX/sandbox/v1/keys"
 </code></pre>
 <p>No credential and no body are needed, and no contact detail is asked for or kept. The answer is
@@ -326,6 +332,7 @@ no handshake carries a certificate, and a sandbox with no CA issues none (step 6
 contract’s table for a refused connection reads by it (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, What a holder of
 a dead certificate does).</p>
 <h2 id="2-your-world"><a class="header" href="#2-your-world">2. Your world</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>Each terminal’s id is your <code>TesterIdentification</code>, a <code>-</code>, and a suffix. All nine terminals
 exist from the moment the key is issued, each is bound to your register, and your key may send
 a sale to any of them while your register is <code>active</code>, and read its sales whatever the
@@ -423,6 +430,7 @@ world that does. The simulated terminals never ask.</p>
 world with no call for 30 minutes has them closed, and the next request connects them again,
 keeping nothing: asked about a sale made before, they send nothing.</p>
 <h2 id="3-the-mcp-server"><a class="header" href="#3-the-mcp-server">3. The MCP server</a></h2>
+<p>Changed in v0.5.0.</p>
 <pre><code class="language-sh">claude mcp add --transport http mw-sandbox "$SANDBOX/mcp" --header "Authorization: Bearer sbx_..."
 </code></pre>
 <p>The command keeps the key in that client’s configuration. Then start a new session: a client reads
@@ -462,6 +470,7 @@ middleware this sandbox runs, in <code>serverInfo.version</code> and in the firs
 states its own release and reads no other: it never calls staging. Staging’s own
 <code>GET /v1/health</code> names the release staging runs, at the base URL <code>mw://environments</code> gives.</p>
 <h3 id="resources"><a class="header" href="#resources">Resources</a></h3>
+<p>Changed in v0.6.0.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -470,6 +479,7 @@ states its own release and reads no other: it never calls staging. Staging’s o
 <tbody>
 <tr><td><code>mw://start</code></td><td><code>text/markdown</code></td><td>No</td><td>This document</td></tr>
 <tr><td><code>mw://environments</code></td><td><code>text/markdown</code></td><td>No</td><td>The two environments, the sandbox and staging, and each one’s base URL</td></tr>
+<tr><td><code>mw://changes</code></td><td><code>text/markdown</code></td><td>No</td><td>What changed in each release, newest first, for a POS and a terminal. Also served as <code>/docs/api/changes.md</code></td></tr>
 <tr><td><code>mw://fields</code></td><td><code>application/json</code></td><td>No</td><td>The field catalogue: one row for each field of each message</td></tr>
 <tr><td><code>mw://fields/{Message}/{Path}</code></td><td><code>application/json</code></td><td>No</td><td>One row, such as <code>mw://fields/Sale/TransactionDetails.TotalAmount</code>. A resource template</td></tr>
 <tr><td><code>mw://refusals</code></td><td><code>application/json</code></td><td>No</td><td>Every code the middleware and the sandbox answer with, and <code>sandbox_fault</code>, which a log line alone carries: what it means, and what to do next. Also served as <a href="refusals.json"><code>/docs/api/refusals.json</code></a></td></tr>
@@ -492,13 +502,14 @@ states its own release and reads no other: it never calls staging. Staging’s o
 <code>wallet</code> or <code>npp</code>, when it is sent and what a POS does with it, and is <code>null</code> on a field that
 is no reference. A URI no resource has is JSON-RPC <code>-32602</code>, <code>Resource not found</code>.</p>
 <p>The same files are served over plain HTTP, for a reader with no MCP client: <code>/llms.txt</code>, also
-at <code>/</code>, <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a> (this document), <a href="environments.html"><code>/docs/api/environments.md</code></a>,
+at <code>/</code>, <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a> (this document), <a href="environments.html"><code>/docs/api/environments.md</code></a>, <code>/docs/api/changes.md</code>,
 <a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, <a href="openapi-terminal.yaml"><code>/docs/api/openapi-terminal.yaml</code></a>, <a href="pos.html"><code>/docs/api/pos.md</code></a>,
 <a href="terminal.html"><code>/docs/api/terminal.md</code></a>, <a href="fields.json"><code>/docs/api/fields.json</code></a>, <a href="conformance.json"><code>/docs/api/conformance.json</code></a>,
 <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, <a href="linking.html"><code>/docs/api/linking.md</code></a> and
 <a href="words.txt"><code>/docs/api/words.txt</code></a>. <code>mw://refusals</code>’s rows are served at <a href="refusals.json"><code>/docs/api/refusals.json</code></a>, with this
 sandbox’s own address in each <code>Next</code> that names one.</p>
 <h3 id="tools"><a class="header" href="#tools">Tools</a></h3>
+<p>Changed in v0.6.0.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -513,8 +524,8 @@ sandbox’s own address in each <code>Next</code> that names one.</p>
 <tr><td><code>terminal_next_instruction</code></td><td>Yes</td><td>Optional <code>WaitSeconds</code></td><td>The next instruction, <code>StatusRequest</code> or <code>Abort</code> sent to your <code>-manual</code> terminal, under the key <code>Instruction</code> whichever it is: its <code>MessageType</code> says which</td></tr>
 <tr><td><code>terminal_send_outcome</code></td><td>Yes</td><td><code>Outcome</code></td><td>Sends an outcome frame as your <code>-manual</code> terminal, and says whether it was <code>Sent</code>, any <code>Refusal</code>, and what was <code>Dropped</code></td></tr>
 <tr><td><code>read_log</code></td><td>Yes</td><td><code>Reference</code></td><td>The log lines of your sales a <code>TransactionReference</code> or a <code>SaleReferenceIdentification</code> names: the newest five, each with its lines in <code>seq</code> order, and in <code>SignInLines</code> its terminal’s sign-in lines from the sale’s instruction until the sale settled or its hold let the terminal go, refused asks among them, and a <code>LoginNeeded</code> refused <code>unknown_frame_type</code> on a connection that did not declare <code>SASQ</code>. A <code>LoginReference</code> names one sign-in instead: <code>SignIn</code> holds the ask that drew it, its <code>LoginRequest</code>, and the report of it once taken. A reference of the <code>sal_</code> shape is read as a <code>TransactionReference</code>, and one of the <code>lgn_</code> shape as a <code>LoginReference</code>. A <code>sale_state</code> line names the state in the middleware’s words, and <code>timed_out</code> is its word for <code>RJCT</code> with <code>AB11</code>, after ISO’s name for that code, whatever stopped the payment</td></tr>
-<tr><td><code>conformance_start</code></td><td>Yes</td><td><code>Side</code>, <code>ProductName</code>, <code>ProductVersion</code>, optional <code>Only</code></td><td>Starts a conformance run of your side (step 6). <code>ProductName</code> and <code>ProductVersion</code> are each 1 to 40 characters: ASCII letters, digits, the space and <code>. , ' &amp; ( ) / + % # -</code>, no space at either end, and at most 8 digits, as <code>tools/list</code> states them. Another is <code>invalid_argument</code>, naming it</td></tr>
-<tr><td><code>conformance_status</code></td><td>Yes</td><td><code>RunIdentification</code>, optional <code>WaitSeconds</code></td><td>Judges the current step and reads the run, with its verdicts so far. A step not yet met stays waiting (step 6)</td></tr>
+<tr><td><code>conformance_start</code></td><td>Yes</td><td><code>Side</code>, <code>ProductName</code>, <code>ProductVersion</code>, optional <code>Only</code> and <code>Amounts</code></td><td>Starts a conformance run of your side (step 6). <code>ProductName</code> and <code>ProductVersion</code> are each 1 to 40 characters: ASCII letters, digits, the space and <code>. , ' &amp; ( ) / + % # -</code>, no space at either end, and at most 8 digits, as <code>tools/list</code> states them. Another is <code>invalid_argument</code>, naming it. On <code>Side: terminal</code>, <code>Amounts</code> sets the <code>TotalAmount</code> of the sale of each scenario it names</td></tr>
+<tr><td><code>conformance_status</code></td><td>Yes</td><td><code>RunIdentification</code>, optional <code>WaitSeconds</code></td><td>Judges the current step and reads the run, with its verdicts so far and the <code>TransactionReferences</code> each step judged. A step not yet met stays waiting (step 6)</td></tr>
 <tr><td><code>conformance_report</code></td><td>Yes</td><td><code>RunIdentification</code></td><td>The signed report of a finished run</td></tr>
 </tbody>
 </table>
@@ -525,6 +536,7 @@ in a text block. An argument absent, or of the wrong type, is <code>invalid_argu
 argument and never its value. A message <code>validate_message</code> refuses is not a failure:
 <code>Accepted: false</code> is its answer. A tool’s arguments are never logged.</p>
 <h2 id="4-the-pos-journey"><a class="header" href="#4-the-pos-journey">4. The POS journey</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>For any POS: a cloud POS on its own server, or an app on a till. A POS sends nothing for a
 terminal’s sign-in, which the terminal journey walks, and a sale to a terminal that signs in
 reads as any sale.</p>
@@ -643,6 +655,7 @@ person reads them there and types them into the POS app, which sends them
 (<a href="linking.html"><code>/docs/api/linking.md</code></a>). The two apps pass the word to each other by no other path.</p>
 <p>A conformance run of a working POS takes under 3 minutes.</p>
 <h2 id="5-the-terminal-journey"><a class="header" href="#5-the-terminal-journey">5. The terminal journey</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>For any terminal. Steps 1 to 4 of the POS journey come first, then:</p>
 <div class="table-wrapper">
 <table>
@@ -756,11 +769,14 @@ says how a person reaches that screen and what it must be. A run sees your termi
 connection, never that screen.</p>
 <p>A conformance run of a working terminal takes under 3 minutes.</p>
 <h2 id="6-conformance"><a class="header" href="#6-conformance">6. Conformance</a></h2>
+<p>Changed in v0.6.0.</p>
 <p>A run walks its side’s scenarios in order, ten for a POS and twelve for a terminal, one step at
-a time, and judges each from the log alone. Each step has 300 seconds. <code>conformance_start</code> and
-<code>conformance_status</code> answer the current <code>Step</code>: its <code>Instruction</code>, the <code>Terminal</code> it names, which
-assertions it is <code>Waiting</code> for, and a <code>Note</code> of what the sandbox can see. <code>conformance_status</code>
-with <code>WaitSeconds</code> holds up to 25 seconds for a change.</p>
+a time, and judges each from the log alone. Each step has 300 seconds. A step that fails does
+not end the run: the next step opens as it closes, and the run walks to its last step, then
+reads <code>red</code>. <code>conformance_start</code> and <code>conformance_status</code> answer the current <code>Step</code>: its
+<code>Instruction</code>, the <code>Terminal</code> it names, which assertions it is <code>Waiting</code> for, the
+<code>TransactionReferences</code> of the sales it has judged, and a <code>Note</code> of what the sandbox can see.
+<code>conformance_status</code> with <code>WaitSeconds</code> holds up to 25 seconds for a change.</p>
 <p><code>conformance_start</code> answers the run’s <code>RunIdentification</code> and the <code>Step</code> it is on, and nothing
 else: it has no <code>Result</code> and no <code>Done</code>, which only a status read gives, so a missing <code>Result</code>
 here does not mean the run ended. Keep the id and read <code>conformance_status</code> with it. Starting a
@@ -775,6 +791,7 @@ POS run:</p>
     "Terminal": "sbx-3f9a1c2e7b10-approve",
     "DeadlineSeconds": 300,
     "Waiting": ["approved.one_sale", "approved.no_refusal", "approved.result_seen"],
+    "TransactionReferences": [],
     "Note": null
   }
 }
@@ -794,6 +811,7 @@ POS run:</p>
     "Terminal": "sbx-3f9a1c2e7b10-approve",
     "DeadlineSeconds": 300,
     "Waiting": ["approved.one_sale", "approved.no_refusal", "approved.result_seen"],
+    "TransactionReferences": [],
     "Note": null
   },
   "Done": [],
@@ -806,20 +824,34 @@ POS run:</p>
   "Result": "green",
   "Step": null,
   "Done": [
-    { "Scenario": "approved", "Verdict": "pass" },
-    { "Scenario": "declined", "Verdict": "pass" },
-    { "Scenario": "timed_out", "Verdict": "pass" },
-    { "Scenario": "unknown", "Verdict": "pass" },
-    { "Scenario": "card_field", "Verdict": "pass" },
-    { "Scenario": "duplicate_key", "Verdict": "pass" },
-    { "Scenario": "resend", "Verdict": "pass" },
-    { "Scenario": "restart", "Verdict": "pass" },
-    { "Scenario": "lost_instruction", "Verdict": "not_applicable" },
-    { "Scenario": "cancel", "Verdict": "not_applicable" }
+    { "Scenario": "approved", "Verdict": "pass", "TransactionReferences": ["sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f01"] },
+    { "Scenario": "declined", "Verdict": "pass", "TransactionReferences": ["sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f02"] },
+    { "Scenario": "timed_out", "Verdict": "pass", "TransactionReferences": ["sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f03"] },
+    { "Scenario": "unknown", "Verdict": "pass", "TransactionReferences": ["sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f04"] },
+    { "Scenario": "card_field", "Verdict": "pass", "TransactionReferences": ["sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f05"] },
+    { "Scenario": "duplicate_key", "Verdict": "pass", "TransactionReferences": ["sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f06"] },
+    { "Scenario": "resend", "Verdict": "pass", "TransactionReferences": ["sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f07"] },
+    { "Scenario": "restart", "Verdict": "pass", "TransactionReferences": ["sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f08"] },
+    { "Scenario": "lost_instruction", "Verdict": "not_applicable", "TransactionReferences": [] },
+    { "Scenario": "cancel", "Verdict": "not_applicable", "TransactionReferences": [] }
   ],
   "Note": null
 }
 </code></pre>
+<p>Each <code>Step</code> and each entry of <code>Done</code> names in <code>TransactionReferences</code> the sales its step judged:
+each sale made in the step by whoever sends the step’s sale, your POS on <code>Side: pos</code> and the
+sandbox on <code>Side: terminal</code>, in the order made. The first is the sale the step is about, and
+<code>read_log</code> with it gives that sale’s lines. A step whose sale is not yet made names none, and so
+does a <code>not_applicable</code> step. A step that opens after one that failed is judged on its own
+window, which may hold what your integration still did for the step before, a late read,
+create, outcome or refusal among it: read its <code>TransactionReferences</code> to see which sale it read.
+On <code>Side: terminal</code>, send nothing with <code>send_sale</code> while a run runs: the sandbox’s sales and
+yours are made on one key, and the first made in a step is the one it judges. While a run is
+<code>running</code>, <code>conformance_start</code> answers <code>run_in_progress</code>, unless one of the run’s steps has
+failed: then, once the new run can start, it ends that run where it stands, its open step not
+judged and its report built from the steps that were, <code>Complete</code> <code>false</code> and <code>Result</code> <code>red</code>,
+and starts the new run. A start refused, for want of a certificate or a place for your world,
+leaves the red run running.</p>
 <p>The top-level <code>Note</code> is <code>null</code> but on a run that could not be judged in full, where it says how
 many lines were lost or evicted and to run it again. On a terminal run whose terminal did not
 declare <code>SASQ</code>, it says once, green or not, that sign-in was not tested (below). It also speaks when the sandbox loses its
@@ -861,8 +893,8 @@ seconds longer for each step your terminal meets.</p>
 <tr><td><code>restart</code></td><td><code>-slow</code>: a 5 second outage from your first read</td><td>Reconnect with the contract’s backoff, and send the outcome</td></tr>
 <tr><td><code>lost_instruction</code></td><td>Not run: nothing changes for a POS, which reads the terminal’s answer as any late outcome</td><td>The sandbox takes your terminal’s place for the sale, so its instruction never reaches you: reconnect with <code>Mw-Message-Functions: SSMQ</code> declared, and when a <code>StatusRequest</code> asks about the sale, answer <code>RJCT</code> with <code>AB11</code></td></tr>
 <tr><td><code>cancel</code></td><td>Not run: a POS need not offer a cancel, and one that does tries it as Cancel a sale, above, walks it</td><td>With <code>SSAB</code> declared in <code>Mw-Message-Functions</code>, take the sale and hold its payment, no card presented: 3 seconds after the instruction the sandbox cancels the sale, as a POS does with <code>POST /v1/sales/{TransactionReference}/abort</code>, and your terminal is sent an <code>Abort</code>. Stop the payment and answer <code>RJCT</code> with <code>DS02</code></td></tr>
-<tr><td><code>sign_in</code></td><td>Not run: nothing changes for a POS, since the terminal signs in by itself</td><td>With <code>SASQ</code> declared in <code>Mw-Message-Functions</code>, start your terminal holding no session at its fleet’s payment system, asleep, its screen off and its app not in front. The sale’s instruction wakes it: send one <code>LoginNeeded</code>, open the <code>LoginRequest</code> and verify its group as step 5 walks, report the outcome of your sign-in at your fleet’s system with <code>LoginResponse</code>, naming the answer’s <code>LoginReference</code>, then answer the sale</td></tr>
-<tr><td><code>sign_in_none</code></td><td>Not run: nothing changes for a POS, since the terminal signs in by itself</td><td>With <code>SASQ</code> declared and no session held, take the sale: the sandbox ends your store’s sign-in attachment for the step and restores it after, so your <code>LoginNeeded</code> is refused <code>sign_in_not_available</code>. Ask no more on that connection, and answer the sale <code>RJCT</code> with <code>AB11</code></td></tr>
+<tr><td><code>sign_in</code></td><td>Not run: nothing changes for a POS, since the terminal signs in by itself</td><td>With <code>SASQ</code> declared in <code>Mw-Message-Functions</code>, restart your terminal’s application when the step’s <code>Note</code> says to, so that it connects again holding no session at its fleet’s payment system, and within 10 seconds of that connect have it asleep, its screen off and its app not in front. The sale’s instruction wakes it: send one <code>LoginNeeded</code>, open the <code>LoginRequest</code> and verify its group as step 5 walks, report the outcome of your sign-in at your fleet’s system with <code>LoginResponse</code>, naming the answer’s <code>LoginReference</code>, then answer the sale</td></tr>
+<tr><td><code>sign_in_none</code></td><td>Not run: nothing changes for a POS, since the terminal signs in by itself</td><td>With <code>SASQ</code> declared, restart your terminal’s application when the step’s <code>Note</code> says to, so that it connects again with no session held, then take the sale: the sandbox ends your store’s sign-in attachment for the step and restores it after, so your <code>LoginNeeded</code> is refused <code>sign_in_not_available</code>. Ask no more on that connection, and answer the sale <code>RJCT</code> with <code>AB11</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -870,18 +902,58 @@ seconds longer for each step your terminal meets.</p>
 outcome. Whoever drives the terminal presents the test card, cancels, or holds the payment with
 no card presented, as the step’s <code>Instruction</code> asks, and your terminal sends what it and its host
 did (step 5).</p>
+<p>Each terminal step’s sale is for 18.00 AUD unless <code>Amounts</code> names another for it, and its
+<code>Instruction</code> ends with the sale’s <code>TotalAmount</code>. Where your terminal’s host decides by amount,
+start the run with <code>Amounts</code>, an object naming a scenario for each <code>TotalAmount</code> you want, such
+as <code>{"declined": "12.34"}</code>: the step of each scenario it names sells that amount, and every other
+step 18.00. Each key is a terminal scenario that runs, every one but <code>duplicate_key</code>, and each
+value a string a sale’s
+<code>TotalAmount</code> takes, from <code>0.01</code> to <code>10000000.00</code> with two digits after the point, as
+<code>mw://fields</code> states the bound of <code>TransactionDetails.TotalAmount</code>. Anything else is
+<code>invalid_argument</code> naming <code>Amounts</code>, and so is an <code>Amounts</code> naming a scenario on <code>Side: pos</code>,
+where your POS chooses its own; <code>{}</code> is taken on either side, as no <code>Amounts</code>. The sale’s two
+items stay as they are: the middleware never adds a basket up. Each row of a report holds, in
+<code>TotalAmount</code>, the total its step’s sale’s instruction stated, on either side, and a row whose
+step made no sale holds none.</p>
 <p><code>sign_in</code> and <code>sign_in_none</code> apply only to a terminal that declares <code>SASQ</code>. Each reads what your
 terminal’s connection declared as the step opened, or, if it had not connected, its first connect
 in the step, when no line of the step was lost. Where that did not name <code>SASQ</code>, the step is
 <code>not_applicable</code>. Read as the step opened, that is at once: no sale is sent and nothing waits for
-its deadline. Read from a first connect in the step, it is at the next reading, the step’s sale
-already sent. Either way a run that passes every other step still reads <code>green</code>.
+its deadline. Read from a first connect in the step, it is at the next reading, and by then the
+step’s sale may have gone: <code>sign_in_none</code>’s goes once your terminal has connected after the step’s
+<code>Note</code> says to restart, and <code>sign_in</code>’s 10 seconds after that connect. Either way a run that
+passes every other step still reads <code>green</code>.
 Its row in the report holds <code>NotTested</code>, and the ended run’s <code>Note</code> says the same, once: “Sign-in
 was not tested: your terminal did not declare SASQ in Mw-Message-Functions. A terminal that needs
 the middleware to sign it in must declare SASQ on every upgrade and run again.” A sign-in step that
 runs first gives your store its stand-in again if it holds none. A terminal that
 declared <code>SASQ</code> and reconnects during the step without it fails <code>sign_in.login_declared</code>. A run
 sees frames alone, never your terminal’s screen.</p>
+<p>Each of the two sends its sale only once your terminal has connected during the step, so restart
+your terminal’s application when the step’s <code>Note</code> says to: one that held a session through the
+steps before would not ask, and one that asked in <code>sign_in</code> would ask a second time on one
+connection, which the contract allows only after its fleet refused what it was sent. The <code>Note</code>
+says to restart once the sandbox has set your store up for the step, and until your terminal
+connects, while the step’s deadline runs. A connect made before that <code>Note</code> does not count, one
+in the 3 seconds the step before held among them. <code>sign_in</code> then sends its sale 10 seconds after
+that connect, for your terminal to be asleep by then, and <code>sign_in_none</code> sends it at once. A
+terminal that asks at that connect, knowing it holds no session, meets <code>sign_in</code>’s ask as one on
+the sale’s instruction does; in <code>sign_in_none</code> that ask is refused, since the sandbox ends the
+attachment before it waits. A <code>conformance_status</code> read with <code>WaitSeconds</code> answers when the run
+changes from how it stood as the read came, and nothing changes while a sign-in step waits for
+your terminal: a read that comes after the step’s <code>Note</code> says to restart holds until your
+terminal connects, or its whole <code>WaitSeconds</code>, up to 25 seconds. So at these two steps read with
+a <code>WaitSeconds</code> of a second or two, or none, and restart as soon as the <code>Note</code> says to. On
+<code>sign_in</code>, the <code>Note</code> that says to have your terminal asleep is a change, and a held read answers
+with it.</p>
+<p>Inside 60 seconds of an answer to your terminal, the interval at the middleware’s default
+settings, an ask your store holds no credential for is refused <code>sign_in_not_available</code>, not
+<code>sign_in_limited</code>: the middleware looks for the store’s credential before it counts the ask, and
+counts no ask it refuses. So <code>sign_in_none</code>’s ask is refused <code>sign_in_not_available</code> however soon
+it follows <code>sign_in</code>’s answer. An ask that finds a credential inside those 60 seconds is refused
+<code>sign_in_limited</code>, unless your terminal reported its last answer <code>FAIL</code> and that report opened
+one more ask, as the contract’s After the report says; so start a run again no sooner than 60
+seconds after its <code>sign_in</code> was answered.</p>
 <p><code>mw://conformance</code>, also served as <a href="conformance.json"><code>/docs/api/conformance.json</code></a>, holds every assertion and
 what to change when one fails.</p>
 <ul>
@@ -941,6 +1013,7 @@ every run. A run gone any of these ways is <code>run_not_found</code>. Keep each
 <code>conformance_report</code> once its run ends.</p>
 <p><code>ReportVersion</code> counts the report’s own shape, not the release.</p>
 <h3 id="what-a-green-run-does-not-check"><a class="header" href="#what-a-green-run-does-not-check">What a green run does not check</a></h3>
+<p>Changed in v0.4.0.</p>
 <p>A green run proves your integration did what each step asked, once. It cannot see what your
 code would do on a day no step stages, so each rule below binds you and no scenario checks it.
 Each is stated where the link says.</p>
@@ -1008,6 +1081,7 @@ certificate and gives it to you; the sandbox does not serve it, since a root fet
 connection it vouches for proves nothing.</li>
 </ul>
 <h2 id="7-codes-the-sandbox-adds"><a class="header" href="#7-codes-the-sandbox-adds">7. Codes the sandbox adds</a></h2>
+<p>Changed in v0.6.0.</p>
 <p>The middleware’s own codes are in <a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>, <a href="openapi-terminal.yaml"><code>/docs/api/openapi-terminal.yaml</code></a>
 and the terminal contract, and a code only the Operator API’s routes answer is in the Operator
 API. The table holds the codes only the sandbox answers, and five of the middleware’s as the
@@ -1035,7 +1109,7 @@ body is the edge’s own.</p>
 <tr><td><code>sign_in_not_found</code></td><td>A tool</td><td>By a <code>LoginReference</code>: no line of your world’s log names it. Never issued to your world, or its lines have left the sandbox’s index: the two read the same</td><td>An ask the middleware refused has no <code>LoginReference</code>: read the sale it was asked during by its <code>TransactionReference</code>, whose <code>SignInLines</code> hold it; a refused ask made while no sale held your terminal is in no answer. Lines are kept until 30 minutes pass with no request of yours, within the bounds of the sandbox’s index, which a restart empties</td></tr>
 <tr><td><code>no_instruction</code></td><td>A tool</td><td>Nothing reached <code>-manual</code> in <code>WaitSeconds</code></td><td>Send a sale to your <code>-manual</code> terminal</td></tr>
 <tr><td><code>run_not_found</code></td><td>A tool</td><td>No such run in your world; one past your 32 newest; one let go once 24 hours had passed since your last run ended; or one lost to a restart of the sandbox</td><td>Runs live in memory, as the index does: start again, and keep each report with <code>conformance_report</code> once its run ends. Every line <code>read_log</code> gives carries <code>boot_id</code>, one for each start of the sandbox, and its <code>seq</code> begins again at a restart. A <code>boot_id</code> other than the one on the lines you read while the run went says the sandbox restarted, and your code did not lose the run</td></tr>
-<tr><td><code>run_in_progress</code></td><td>A tool</td><td>A run of yours is running</td><td>Finish it, or wait for its deadline</td></tr>
+<tr><td><code>run_in_progress</code></td><td>A tool</td><td>A run of yours is running, and none of its steps has failed</td><td>Finish it, or wait until each of its steps’ deadlines has passed. Once one of its steps fails, your next <code>conformance_start</code> ends it and starts</td></tr>
 <tr><td><code>run_not_finished</code></td><td>A tool</td><td><code>conformance_report</code> before the run ended</td><td>Read <code>conformance_status</code></td></tr>
 <tr><td><code>sandbox_rate</code></td><td>A tool, or <code>429</code> with this code at <code>/v1/*</code>, <code>/sandbox/v1/codes</code> and <code>/sandbox/v1/app-identities</code>. A <code>429</code> at <code>POST /v1/enrol</code> whose body is not an <code>Error</code> is the edge’s: the next row</td><td>Past a bound of yours: sales or tool calls a minute, requests in flight, codes or app identities an hour</td><td>Wait a minute, and retry with the same <code>IdempotencyKey</code>. If an earlier answer was lost, the sale may exist</td></tr>
 <tr><td>None: the body is the edge’s own, not an <code>Error</code></td><td><code>429</code> at <code>POST /v1/enrol</code></td><td>Sent by the edge in front of the sandbox, where it runs behind one, never by the sandbox itself: more enrolments came from this address in a minute than the edge allows. The code was not read, and no attempt is counted against it</td><td>Wait a minute, then try again with the same body. Do not read the body as an <code>Error</code></td></tr>

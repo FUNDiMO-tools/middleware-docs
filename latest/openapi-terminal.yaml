@@ -1,6 +1,6 @@
 openapi: '3.1.0'
 info:
-  title: 'Middleware v0.5.0: what a terminal calls'
+  title: 'Middleware v0.6.0: what a terminal calls'
   version: '1.0.0'
   summary: The relay between a point of sale, a payment terminal and FUNDiMO.
   description: |-

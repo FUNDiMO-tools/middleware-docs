@@ -447,7 +447,7 @@
     "Channel": "Error.Code",
     "Code": "run_in_progress",
     "Meaning": "A conformance run of this tester is already running.",
-    "Next": "Finish the run that is running, or wait for its deadline, then start again."
+    "Next": "Finish the run that is running, or wait until each of its steps' deadlines has passed, then start again. Once one of its steps fails, a new conformance_start ends it and starts."
   },
   {
     "Channel": "Error.Code",

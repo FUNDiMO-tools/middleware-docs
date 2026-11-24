@@ -520,7 +520,7 @@
       "Side": "terminal",
       "TerminalSuffix": "-yours",
       "Fault": null,
-      "Instruction": "From your own terminal code on {terminal}, with SASQ declared in Mw-Message-Functions, start your terminal holding no session at its fleet's payment system, asleep, its screen off and its application not in front, so that the sale the sandbox sends wakes it, it asks once with LoginNeeded, opens the LoginRequest, signs in with it and answers the sale. Report the outcome of your sign-in at your fleet's system with LoginResponse, naming the answer's LoginReference. A terminal that does not declare SASQ is not tested here.",
+      "Instruction": "From your own terminal code on {terminal}, with SASQ declared in Mw-Message-Functions, restart your terminal's application when this step's Note says to, so that it connects again holding no session at its fleet's payment system, and within 10 seconds of that connect have it asleep, its screen off and its application not in front, so that the sale the sandbox then sends wakes it, it asks once with LoginNeeded, opens the LoginRequest, signs in with it and answers the sale. Report the outcome of your sign-in at your fleet's system with LoginResponse, naming the answer's LoginReference. A terminal that does not declare SASQ is not tested here.",
       "Assertions": [
         {
           "Id": "sign_in.login_declared",
@@ -562,7 +562,7 @@
       "Side": "terminal",
       "TerminalSuffix": "-yours",
       "Fault": null,
-      "Instruction": "From your own terminal code on {terminal}, with SASQ declared in Mw-Message-Functions and no session held, take the sale the sandbox sends: the sandbox ends your store's sign-in attachment for the step, so your terminal's LoginNeeded is refused sign_in_not_available, and it asks no more on that connection and answers the sale with TransactionStatus RJCT and StatusReasonInformation.Reason AB11. A terminal that does not declare SASQ is not tested here.",
+      "Instruction": "From your own terminal code on {terminal}, with SASQ declared in Mw-Message-Functions, restart your terminal's application when this step's Note says to, so that it connects again with no session held, and take the sale the sandbox sends once it has connected: the sandbox ends your store's sign-in attachment for the step, so your terminal's LoginNeeded is refused sign_in_not_available, and it asks no more on that connection and answers the sale with TransactionStatus RJCT and StatusReasonInformation.Reason AB11. A terminal that does not declare SASQ is not tested here.",
       "Assertions": [
         {
           "Id": "sign_in_none.login_refused",

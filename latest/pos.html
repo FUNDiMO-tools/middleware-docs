@@ -58,7 +58,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-4a3a5c77.js";
+            window.path_to_searchindex_js = "searchindex-be827a9c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3b0d6c91.js"></script>
@@ -198,10 +198,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.5.0, 23-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v0.6.0, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-a-poss-sales-refunds-and-codes"><a class="header" href="#middleware-a-poss-sales-refunds-and-codes">Middleware: a POS’s sales, refunds and codes</a></h1>
-<p>21-Nov-2026.</p>
+<p>Last changed in v0.5.0.</p>
 <p>This page is for a POS vendor, and for whoever writes the screens a cashier sees: what the
 register shows and what the cashier does at each state of a sale or a refund, cancelling one,
 refunding, and every code a POS meets, by route. Each route’s fields and answers are in
@@ -215,6 +215,7 @@ holds its register’s own certificate, and sends none, or one naming itself: on
 cancel or link, naming another register, or sending it twice, is <code>403 not_permitted</code> (An app on a
 till, below).</p>
 <h2 id="a-sales-states"><a class="header" href="#a-sales-states">A sale’s states</a></h2>
+<p>Changed in v0.5.0.</p>
 <p><code>POST /v1/sales</code> answers <code>202</code> with the sale, <code>PDNG</code>, and its <code>TransactionReference</code>. Read it
 with <code>GET /v1/sales/{TransactionReference}?wait_seconds=25</code>, which holds the read up to 25
 seconds for a change, until it settles. Read a refund the same way, by its own
@@ -271,6 +272,7 @@ from another register, the same key makes a new sale. <code>409 idempotency_conf
 names a sale with a different body, so a sale may stand under it with no id to read: the register
 shows Unknown, and the cashier checks the terminal.</p>
 <h2 id="when-the-terminal-cannot-take-a-sale"><a class="header" href="#when-the-terminal-cannot-take-a-sale">When the terminal cannot take a sale</a></h2>
+<p>Changed in v0.5.0.</p>
 <p><code>POST /v1/sales</code> refuses a sale the terminal cannot take now. Nothing is created, and the
 <code>IdempotencyKey</code> is unspent: send the same sale with it again once the cause has passed.</p>
 <div class="table-wrapper">
@@ -286,6 +288,7 @@ shows Unknown, and the cashier checks the terminal.</p>
 </table>
 </div>
 <h2 id="cancelling-a-sale-or-a-refund"><a class="header" href="#cancelling-a-sale-or-a-refund">Cancelling a sale or a refund</a></h2>
+<p>Added in v0.4.0.</p>
 <p>A cancel button is optional. A register that has one may cancel a sale or a refund while it reads
 <code>PDNG</code>, or <code>UNKN</code> within its terminal’s hold. Send no body, with <code>Content-Length: 0</code>, from the
 register that made the sale:</p>
@@ -326,6 +329,7 @@ it is, or the cashier cancels at the terminal.</li>
 <p>The sandbox walks a cancel from your own code: <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 4. The POS journey, Cancel
 a sale.</p>
 <h2 id="refunding"><a class="header" href="#refunding">Refunding</a></h2>
+<p>Changed in v0.5.0.</p>
 <p>Refund from the POS. A refund is a <code>POST /v1/sales</code> of its own: <code>TransactionType</code> <code>RFND</code>, the
 sale’s <code>TransactionReference</code> in <code>OriginalTransaction</code>, the amount to refund in <code>TotalAmount</code>,
 your own reference for the refund, such as a credit note number, in
@@ -360,17 +364,20 @@ records.</p>
 </div>
 <p>Each creates nothing, and the <code>IdempotencyKey</code> is unspent.</p>
 <h2 id="a-payment-made-at-the-terminal"><a class="header" href="#a-payment-made-at-the-terminal">A payment made at the terminal</a></h2>
+<p>Added in v0.4.0.</p>
 <p>A sale or a refund made from the terminal’s own menu, and not sent by the POS, is reported to
 neither the POS nor the middleware, so it is in neither’s records. A refund made there leaves the
 sale refundable from the POS, which does not know of it. Where a refund is made at the
 terminal or another way, after <code>409 sale_not_refundable</code> among other times, record it in your POS
 by hand, so the sale is not refunded twice.</p>
 <h2 id="linking-and-moving-a-till"><a class="header" href="#linking-and-moving-a-till">Linking, and moving a till</a></h2>
+<p>Added in v0.4.0.</p>
 <p>A register takes sales on the terminals it is linked to. <a href="linking.html"><code>/docs/api/linking.md</code></a> walks linking at
 the counter, and what the register shows at each answer. Before a till moves to another store,
 unlink each of its terminals: a register still bound at one store cannot link at another, and is
 refused <code>409 register_in_other_store</code>.</p>
 <h2 id="an-app-on-a-till"><a class="header" href="#an-app-on-a-till">An app on a till</a></h2>
+<p>Added in v0.5.0.</p>
 <p>An app on a till that holds its register’s own certificate sells, reads, cancels, refunds and
 links on the same routes, with the same bodies and answers, as a POS on its own server, and sends
 no <code>Mw-Register</code>. One it sends names itself, once: naming another register, sending it twice, or
@@ -382,6 +389,7 @@ and a world. A device may also run a payment terminal’s app: two apps, each on
 certificate, linked as any register and terminal are, the person reading the word in the
 terminal’s app and typing it into the POS app (<a href="linking.html"><code>/docs/api/linking.md</code></a>).</p>
 <h2 id="the-codes-a-pos-meets-by-route"><a class="header" href="#the-codes-a-pos-meets-by-route">The codes a POS meets, by route</a></h2>
+<p>Added in v0.4.0.</p>
 <p>A refusal’s body is <code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>; in the
 sandbox, its gate’s <code>404</code> and its <code>503 ca_unavailable</code> add <code>Next</code> beside <code>Error</code>. Ignore a key
 you do not know. Each code’s meaning, and what your code does next, are its row of

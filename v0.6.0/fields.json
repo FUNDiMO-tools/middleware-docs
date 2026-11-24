@@ -1,0 +1,4138 @@
+[
+  {
+    "Message": "Sale",
+    "Path": "TransactionType",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionType",
+      "Tag": "TxTp",
+      "Definition": "Type of transaction being undertaken for the main service."
+    },
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "CRDP",
+        "RFND"
+      ]
+    },
+    "Example": "RFND",
+    "BadExample": "RESA",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "CRDP, \"Card payment.\", a sale, or RFND, \"Refund transaction.\", a refund of TotalAmount against the sale OriginalTransaction names. Absent is CRDP, so a sale need not send it. These are codes of ISO's CardPaymentServiceType16Code, which ISO names for cards, and the contract uses them for every rail.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "OriginalTransaction",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "OriginalTransaction",
+      "Tag": "OrgnlTx",
+      "Definition": "Identification of the original transaction."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a"
+    },
+    "BadExample": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "Required with RFND, and missing_field when absent then. With CRDP, or with no TransactionType, it is invalid_field. The sale to refund: an object of one key.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "OriginalTransaction.TransactionReference",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionReference",
+      "Tag": "TxRef",
+      "Definition": "Identification of the transaction that has to be unique for a time period."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^sal_[0-9a-f]{32}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "BadExample": "INV-1001",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "The sale to refund, by the id the middleware gave it: sal_ then 32 lowercase hex characters, never the POS's own reference. ISO nests it in TransactionIdentification beside a TransactionDateTime, and the POS names a sale by its reference alone.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "MerchantIdentification",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "Merchant/Identification",
+      "Tag": "Mrchnt/Id",
+      "Definition": "Identification of the merchant."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "M-1001",
+    "BadExample": "M.1001",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "ISO has no element of this name: its meaning sits at Merchant/Identification. The store's own id, or an accepted alias of it for the caller's vendor.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "POIIdentification",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "POIIdentification",
+      "Tag": "POIId",
+      "Definition": "Identification of the POI (Point Of Interaction) performing the transaction."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "T-APPROVE",
+    "BadExample": "T#1",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "The terminal to use.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "SaleReferenceIdentification",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "SaleReferenceIdentification",
+      "Tag": "SaleRefId",
+      "Definition": "Global reference of the sale transaction for the sale system."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,64}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "INV-1001",
+    "BadExample": "INV 1001",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "The POS's own reference for the sale.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "IdempotencyKey",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/-]{8,64}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "b8a1f5a0-3c1e-4c52-9d3e-0a4d7f1e6c11",
+    "BadExample": "abcdefg",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "ISO has no element. Closest is ExchangeIdentification (XchgId): \"Unique identification of an exchange occurrence.\" It promises nothing about a repeat. Scope is the register that sends the sale. Lifetime is the sale's: after retention the key starts a new sale.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "CreationDateTime",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "CreationDateTime",
+      "Tag": "CreDtTm",
+      "Definition": "Date and time at which the message was created."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\\.[0-9]{1,9})?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "2026-11-06T15:12:33+11:00",
+    "BadExample": "2026-11-06",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "As the POS clock states it, at most 35 characters. It checks shape, never truth. The middleware logs it and uses it for nothing, and it takes no part in comparing a repeat of a key.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "CashierIdentification",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "CashierIdentification",
+      "Tag": "CshrId",
+      "Definition": "Identification of the cashier who carried out the transaction."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,35}$",
+      "AlsoPattern": "^[^0-9]*([0-9][^0-9]*){0,12}$",
+      "Enum": null
+    },
+    "Example": "STAFF-0042",
+    "BadExample": "STAFF 0042",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "The POS's identifier for the user of the POS who made the sale, never the person's name. The middleware checks its shape, sends it on to the terminal, and sets it aside when it compares a repeat of a key.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionDetails",
+      "Tag": "TxDtls",
+      "Definition": "Details of the transaction."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "Currency": "AUD",
+      "TotalAmount": "12.50"
+    },
+    "BadExample": "AUD 12.50",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "The currency, the total and the basket.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.Currency",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "Currency",
+      "Tag": "Ccy",
+      "Definition": "Currency associated with the transaction."
+    },
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "AUD"
+      ]
+    },
+    "Example": "AUD",
+    "BadExample": "USD",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "Exactly AUD. One Currency governs every amount in a sale.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.TotalAmount",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "TotalAmount",
+      "Tag": "TtlAmt",
+      "Definition": "Total amount of the transaction."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.01",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12.50",
+    "BadExample": "12.5",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "What the customer pays and the terminal charges.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.DetailedAmount",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "DetailedAmount",
+      "Tag": "DtldAmt",
+      "Definition": "Detailed amounts associated with the total amount of transaction."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "ValueAddedTax": "1.14"
+    },
+    "BadExample": "1.14",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "The basket's header. Each member is optional and an amount. Empty reads as absent.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.DetailedAmount.AmountGoodsAndServices",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "AmountGoodsAndServices",
+      "Tag": "AmtGoodsAndSvcs",
+      "Definition": "Amount of purchase goods and services without tax."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "11.36",
+    "BadExample": "11.3",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "Goods and services before tax.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.DetailedAmount.ValueAddedTax",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "ValueAddedTax",
+      "Tag": "ValAddedTax",
+      "Definition": "Value added tax amount."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "1.14",
+    "BadExample": "1.1",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "Tax, which is GST. The middleware computes no tax. At most TotalAmount. ISO repeats it with an Amount and Label, and ours is one amount.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.DetailedAmount.Rebate",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "Rebate",
+      "Tag": "Rbt",
+      "Definition": "Global rebate of the transaction. This amount is counted as a negative amount."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "3.00",
+    "BadExample": "-3.00",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "Discount, already taken off TotalAmount. ISO has no Discount here. Repeats in ISO, and is one amount here.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.DetailedAmount.Surcharge",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "Surcharge",
+      "Tag": "Srchrg",
+      "Definition": "Additional charge paid by the cardholder. For example airline credit card surcharge."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "0.25",
+    "BadExample": "0.2",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "The store's own surcharge on the bill, such as 15% on a public holiday, which the POS added to TotalAmount before it sent the sale. Write it without its tax, as AmountGoodsAndServices is, and put its GST inside ValueAddedTax. A terminal adds nothing: not this surcharge again, and none of its own. Repeats in ISO, and is one amount here.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "SaleItem",
+      "Tag": "SaleItm",
+      "Definition": "Item purchased with the transaction."
+    },
+    "Bound": {
+      "Kind": "array",
+      "Minimum": null,
+      "Maximum": 100,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": [
+      {
+        "ProductAmount": "12.50",
+        "ProductDescription": "Flat white",
+        "ProductQuantity": 2,
+        "UnitPrice": "6.25"
+      }
+    ],
+    "BadExample": {
+      "ProductDescription": "Flat white"
+    },
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "Up to 100 items. Empty reads as absent. A retry sends the same items in the same order. The middleware never adds them up, and a basket never has to fail a sale.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].ProductDescription",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "ProductDescription",
+      "Tag": "PdctDesc",
+      "Definition": "Description of the product or item."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9.,'&()/+%#-]([A-Za-z0-9 .,'&()/+%#-]{0,38}[A-Za-z0-9.,'&()/+%#-])?$",
+      "AlsoPattern": "^[^0-9]*([0-9][^0-9]*){0,8}$",
+      "Enum": null
+    },
+    "Example": "Flat white",
+    "BadExample": "Gift 123456789",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "The name a PED shows: 1 to 40 characters, no leading or trailing space, at most 8 digits in total. A POS shortens a name to fit, or sends no items. nexo calls this ProductLabel.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].ProductQuantity",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "ProductQuantity",
+      "Tag": "PdctQty",
+      "Definition": "Product quantity."
+    },
+    "Bound": {
+      "Kind": "integer",
+      "Minimum": 1,
+      "Maximum": 100000,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": 2,
+    "BadExample": 100001,
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "A JSON integer. In ISO a decimal, and optional.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].UnitPrice",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "UnitPrice",
+      "Tag": "UnitPric",
+      "Definition": "Price per unit of product."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "6.25",
+    "BadExample": "6.2",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "Price of one unit, never negative: UnitPriceSign says when to show it so. Optional in ISO.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].UnitPriceSign",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "UnitPriceSign",
+      "Tag": "UnitPricSgn",
+      "Definition": "Sign of the unit price."
+    },
+    "Bound": {
+      "Kind": "boolean",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": false,
+    "BadExample": "false",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "false makes the price negative, for a discount line. Absent means plus.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].ProductAmount",
+    "SentBy": "pos",
+    "Required": true,
+    "Iso": {
+      "Element": "ProductAmount",
+      "Tag": "PdctAmt",
+      "Definition": "Monetary value of purchased product."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12.50",
+    "BadExample": "12.5",
+    "Refusal": "invalid_field",
+    "WhenMissing": "missing_field",
+    "Note": "The line's total after its discount and including its tax.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].ProductAmountSign",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "ProductAmountSign",
+      "Tag": "PdctAmtSgn",
+      "Definition": "Sign of the product amount."
+    },
+    "Bound": {
+      "Kind": "boolean",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": false,
+    "BadExample": "minus",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "As UnitPriceSign: false makes the amount negative. Absent means plus.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].ProductCode",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "ProductCode",
+      "Tag": "PdctCd",
+      "Definition": "Product code of the item."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,64}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "FW-2",
+    "BadExample": "FW 2",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "Stays in the middleware. Required in ISO, and optional here.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].ValueAddedTax",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "ValueAddedTax",
+      "Tag": "ValAddedTax",
+      "Definition": "Value added tax amount of the item included in the product amount."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "1.14",
+    "BadExample": "1.1",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "The tax included in this line's ProductAmount. Stays in the middleware.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].DiscountAmount",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "0.50",
+    "BadExample": "0.5",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "ISO has no element on an item. The name is from FleetLineItem7: \"Contains the discount amount applied to the fleet transaction (includes coupons).\" ISO's item rebate is a loyalty structure. The discount already taken off this line's ProductAmount. Stays in the middleware.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].EANUPC",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": {
+      "Element": "EANUPC",
+      "Tag": "EANUPC",
+      "Definition": "Standard European Article Number Universal Product Code of item purchased with the transaction."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[0-9]{8,14}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "9300675024235",
+    "BadExample": "930067",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "On stored value only in ISO, not on an item. Stays in the middleware.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].GTIN",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[0-9]{8,14}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "09300675024235",
+    "BadExample": "GTIN-1",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "ISO has no element: its ProductCode is free text, and ProductCodeSetIdentification says which codification it uses. Stays in the middleware.",
+    "Reference": null
+  },
+  {
+    "Message": "Sale",
+    "Path": "TransactionDetails.SaleItem[].SerialNumber",
+    "SentBy": "pos",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,35}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "SN-1001",
+    "BadExample": "SN 1001",
+    "Refusal": "invalid_field",
+    "WhenMissing": null,
+    "Note": "ISO has no element on an item. Stays in the middleware.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "TransactionType",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionType",
+      "Tag": "TxTp",
+      "Definition": "Type of transaction being undertaken for the main service."
+    },
+    "Bound": {
+      "Kind": "open_enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "RFND"
+      ]
+    },
+    "Example": "RFND",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "RFND on a refund, and absent on a sale, even one sent with CRDP: absent means a sale. A refund's TransactionStatus reads as a sale's: ACSP, refunded; RJCT, not refunded, whatever its Reason; UNKN, not known, so check the terminal before refunding another way, and never send the refund again under a new key. The list is open: a later version may add a type, whose TransactionStatus reads as a sale's too.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "TransactionReference",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionReference",
+      "Tag": "TxRef",
+      "Definition": "Identification of the transaction that has to be unique for a time period."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^sal_[0-9a-f]{32}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The middleware's id for the sale: sal_ then 32 lowercase hex characters. A 404 on an id the middleware gave you does not mean no sale happened.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "MerchantIdentification",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "Merchant/Identification",
+      "Tag": "Mrchnt/Id",
+      "Definition": "Identification of the merchant."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "M-1001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element of this name: its meaning sits at Merchant/Identification. As the POS sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "POIIdentification",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "POIIdentification",
+      "Tag": "POIId",
+      "Definition": "Identification of the POI (Point Of Interaction) performing the transaction."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "T-APPROVE",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the POS sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "SaleReferenceIdentification",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "SaleReferenceIdentification",
+      "Tag": "SaleRefId",
+      "Definition": "Global reference of the sale transaction for the sale system."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "INV-1001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the POS sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "TransactionDetails",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionDetails",
+      "Tag": "TxDtls",
+      "Definition": "Details of the transaction."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "Currency": "AUD",
+      "TotalAmount": "12.50"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The currency and the total, and the amount the host approved when the outcome that settled the sale stated one.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "TransactionDetails.Currency",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "Currency",
+      "Tag": "Ccy",
+      "Definition": "Currency associated with the transaction."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "AUD",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the POS sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "TransactionDetails.TotalAmount",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "TotalAmount",
+      "Tag": "TtlAmt",
+      "Definition": "Total amount of the transaction."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12.50",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "What the terminal was told to charge.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "TransactionDetails.AuthorisedAmount",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "AuthorisedAmount",
+      "Tag": "AuthrsdAmt",
+      "Definition": "Amount authorised for the payment transaction."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12.50",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The amount the host approved, as the outcome that settled the sale stated it: what the customer was charged, or on a refund what was refunded. Absent when that outcome stated none, and only an approval states one. When it differs from TotalAmount, record it as the amount charged: a lower one leaves the rest of the bill owed, and a higher one is more than the bill. On a refund, record it as the amount refunded: a lower one leaves the rest of the refund owed to the customer, and a higher one is more than was asked. Either way the terminal broke the contract.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "OriginalTransaction",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "OriginalTransaction",
+      "Tag": "OrgnlTx",
+      "Definition": "Identification of the original transaction."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "On a refund, the sale it refunds, as the POS sent it. Absent on a sale.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "OriginalTransaction.TransactionReference",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionReference",
+      "Tag": "TxRef",
+      "Definition": "Identification of the transaction that has to be unique for a time period."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^sal_[0-9a-f]{32}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The middleware's id for the sale refunded, as the POS sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "TransactionStatus",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionStatus",
+      "Tag": "TxSts",
+      "Definition": "Specifies the status of a transaction, as published in an external payment transaction status code list."
+    },
+    "Bound": {
+      "Kind": "open_enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "PDNG",
+        "ACSP",
+        "RJCT",
+        "UNKN"
+      ]
+    },
+    "Example": "ACSP",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Where the sale stands. PDNG: read again. ACSP: complete the sale. RJCT: no payment was taken, whatever its Reason, so take another tender. UNKN is the middleware's own, since ISO has no such code: the middleware does not know, and a payment may have been taken, so tell the cashier to check the terminal before another tender, and keep reading. The list is open: a later version may add a status, so treat a status you do not know as UNKN.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "StatusReasonInformation",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "StatusReasonInformation",
+      "Tag": "StsRsnInf",
+      "Definition": "Provides detailed information on the status reason."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "AdditionalInformation": "APPROVED",
+      "ResponseCode": "00"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Always present. null on PDNG and UNKN. With RJCT it holds the Reason, and with ACSP or RJCT whatever else the settling outcome carried that passed, so it is null on an ACSP whose outcome carried none. ISO repeats it, and ours is one object.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "StatusReasonInformation.Reason",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "Reason",
+      "Tag": "Rsn",
+      "Definition": "Specifies the reason for the status report."
+    },
+    "Bound": {
+      "Kind": "open_enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "AG07",
+        "AB11",
+        "DS02"
+      ]
+    },
+    "Example": "AG07",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "With RJCT only. AG07: the host or the card declined. AB11: no payment was taken otherwise. DS02, ISO's \"An authorized user has cancelled the order\": the sale was aborted with POST /v1/sales/{TransactionReference}/abort, and the terminal stopped the payment before it reached its host. With each of the three, no payment was taken. The list is open: a later version may add a reason, and a Reason you do not know changes nothing.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "StatusReasonInformation.ResponseCode",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "ResponseCode",
+      "Tag": "RspnCd",
+      "Definition": "Detailed results of the processing, conforming to ISO 8583 Response codes list.  This code list is maintained by the ISO 8583/MA (maintenance agency)."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "00",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The card host's code, when a settled sale's outcome carried it. ISO has it in cain only, and no host response code by that name.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "StatusReasonInformation.AdditionalInformation",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "AdditionalInformation",
+      "Tag": "AddtlInf",
+      "Definition": "Further details on the status reason.<br><br>Usage: Additional information can be used for several purposes such as the reporting of repaired information."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "APPROVED",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The host's text, as the terminal sent it, when a settled sale's outcome carried it.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "Card": {
+        "RetrievalReferenceNumber": "631012345678"
+      }
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: this name is the middleware's own. Always present, and null unless the sale is settled and its outcome carried a reference that passed. It then holds what passed, unchanged, under the same group and key, and those that failed their pattern are left out. Each key's Reference says whether a POS prints it, refunds against it or matches settlement on it. Treat its strings as opaque.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Card",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "AuthorisationCode": "A1B2C3",
+      "RetrievalReferenceNumber": "631012345678"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "A card payment, through a card terminal and its card host. Present when the settling outcome carried a key of it that passed, and it then holds those keys as the terminal sent them. ISO has no element: the group's name is the middleware's own.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Card.RetrievalReferenceNumber",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "RetrievalReferenceNumber",
+      "Tag": "RtrvlRefNb",
+      "Definition": "Reference supplied by the system retaining the original source information and used to assist in locating that information or a copy thereof."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "631012345678",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the terminal sent it. ISO has it in cain only.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Card.SystemTraceAuditNumber",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "SystemTraceAuditNumber",
+      "Tag": "SysTracAudtNb",
+      "Definition": "Number assigned by a transaction originator to assist in identifying a transaction uniquely. The trace number remains unchanged for all messages within a two-message exchange (for example, request/repeat and response)."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "000123",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the terminal sent it. ISO has it in cain only.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Card.AuthorisationCode",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "AuthorisationCode",
+      "Tag": "AuthstnCd",
+      "Definition": "Value assigned by the authorising party."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "A1B2C3",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the terminal sent it.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Card.AcquirerPOIIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12345678",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no named element. Its meaning sits in POI/Identification: \"Identification of the POI (Point Of Interaction) for the acquirer or its agent.\" nexo: AcquirerPOIID. The acquirer's terminal id. On a receipt.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Card.AcquirerMerchantIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "987654321",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no named element. Closest is cain Acceptor/Identification: \"Identification of the acceptor.\" nexo: MerchantID. The acquirer's merchant id. On a receipt.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Card.RefundReference",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "klujhadsc9ph87asd",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element. Closest is caaa RecipientTransactionIdentification (RcptTxId): \"Identification of the transaction assigned by the recipient party for the initiating party.\" The host's reference for a later refund. Not on a receipt: a POS keeps it to refund against.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, when its card host gave a reference to refund against.",
+      "PosUse": [
+        "refund"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Bank",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "AccountServicerReference": "BKREF-20261109-01"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "A payment from a bank account by the account's own bank, outside a card scheme and NPP. Present when the settling outcome carried a key of it that passed, and it then holds those keys as the terminal sent them. ISO has no element: the group's name is the middleware's own.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Bank.AccountServicerReference",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "AccountServicerReference",
+      "Tag": "AcctSvcrRef",
+      "Definition": "Unique reference, as assigned by the account servicing institution, to unambiguously identify the instruction."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "BKREF-20261109-01",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the terminal sent it: the reference the account's own bank gave the payment.",
+    "Reference": {
+      "Kind": "bank",
+      "SentWhen": "A terminal whose payment was taken from a bank account by the account's own bank, outside a card scheme and NPP, when that bank gave a reference.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Wallet",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "ProviderIdentification": "WalletCo",
+      "RecipientTransactionIdentification": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "A payment through a wallet or payment app. Present when the settling outcome carried a key of it that passed, and it then holds those keys as the terminal sent them. ISO has no element: the group's name is the middleware's own.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Wallet.ProviderIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "ProviderIdentification",
+      "Tag": "PrvdrId",
+      "Definition": "Identification of  the wallet provider."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "WalletCo",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the terminal sent it: the wallet's or payment app's provider, by name. ISO has it in cain's Wallet only.",
+    "Reference": {
+      "Kind": "wallet",
+      "SentWhen": "A terminal that took the payment through a wallet or payment app, naming its provider.",
+      "PosUse": [
+        "receipt"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.Wallet.RecipientTransactionIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "RecipientTransactionIdentification",
+      "Tag": "RcptTxId",
+      "Definition": "Identification of the transaction assigned by the recipient party for the initiating party."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the terminal sent it: the provider's id for the payment. ISO defines no element as a wallet's or a provider's transaction id, and this is the closest.",
+    "Reference": {
+      "Kind": "wallet",
+      "SentWhen": "A terminal that took the payment through a wallet or payment app, when the provider gave the payment an id.",
+      "PosUse": [
+        "receipt",
+        "refund",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.NPP",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "EndToEndIdentification": "INV-1001",
+      "MandateIdentification": "MNDT-0001",
+      "TransactionIdentification": "NPPTX0001"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "A payment over Australia's New Payments Platform, PayTo included. Present when the settling outcome carried a key of it that passed, and it then holds those keys as the terminal sent them. ISO has no element: the group's name is the middleware's own.",
+    "Reference": null
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.NPP.EndToEndIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "EndToEndIdentification",
+      "Tag": "EndToEndId",
+      "Definition": "Unique identification, as assigned by the initiating party, to unambiguously identify the transaction. This identification is passed on, unchanged, throughout the entire end-to-end chain.<br><br>Usage: The end-to-end identification can be used for reconciliation or to link tasks relating to the transaction. It can be included in several messages related to the transaction.<br><br>Usage: In case there are technical limitations to pass on multiple references, the end-to-end identification must be passed on throughout the entire end-to-end chain."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "INV-1001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the terminal sent it: the payer's reference, passed on unchanged end to end. NOTPROVIDED when the payer gave none.",
+    "Reference": {
+      "Kind": "npp",
+      "SentWhen": "A terminal whose payment went over NPP, PayTo included. NOTPROVIDED when the payer gave none.",
+      "PosUse": [
+        "receipt",
+        "refund",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.NPP.TransactionIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionIdentification",
+      "Tag": "TxId",
+      "Definition": "Unique identification, as assigned by the first instructing agent, to unambiguously identify the transaction that is passed on, unchanged, throughout the entire interbank chain. <br>Usage: The transaction identification can be used for reconciliation, tracking or to link tasks relating to the transaction on the interbank level. <br>Usage: The instructing agent has to make sure that the transaction identification is unique for a pre-agreed period."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "NPPTX0001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the terminal sent it: the payer's bank's id for the payment.",
+    "Reference": {
+      "Kind": "npp",
+      "SentWhen": "A terminal whose payment went over NPP, PayTo included: the payer's bank's id for it.",
+      "PosUse": [
+        "refund",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "SaleView",
+    "Path": "PaymentReference.NPP.MandateIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "MandateIdentification",
+      "Tag": "MndtRltdInf/MndtId",
+      "Definition": "Unique identification, as assigned by the creditor, to unambiguously identify the mandate."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "MNDT-0001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the terminal sent it: the PayTo mandate's id.",
+    "Reference": {
+      "Kind": "npp",
+      "SentWhen": "A terminal whose payment was a PayTo payment under a mandate.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Instruction",
+    "Path": "MessageType",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "Instruction"
+      ]
+    },
+    "Example": "Instruction",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element checked: this names the frame. One frame starts one payment.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionType",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionType",
+      "Tag": "TxTp",
+      "Definition": "Type of transaction being undertaken for the main service."
+    },
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "RFND"
+      ]
+    },
+    "Example": "RFND",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "RFND on a refund's instruction, and absent on a sale's, which reads as CRDP. Read it first: with RFND, refund TotalAmount against OriginalTransaction. The middleware sends a refund only to a terminal that declared RFND in Mw-Transaction-Types when it connected. A terminal that reads a code it does not take answers RJCT with AB11, and moves no money.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionReference",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionReference",
+      "Tag": "TxRef",
+      "Definition": "Identification of the transaction that has to be unique for a time period."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^sal_[0-9a-f]{32}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The sale, or with RFND the refund. Store it before taking the card, and return it as received.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "SaleReferenceIdentification",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "SaleReferenceIdentification",
+      "Tag": "SaleRefId",
+      "Definition": "Global reference of the sale transaction for the sale system."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "INV-1001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The POS's reference.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "CashierIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "CashierIdentification",
+      "Tag": "CshrId",
+      "Definition": "Identification of the cashier who carried out the transaction."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "STAFF-0042",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Present when the POS sent one. Show, print or pass it on, or ignore it.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionDetails",
+      "Tag": "TxDtls",
+      "Definition": "Details of the transaction."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "Currency": "AUD",
+      "TotalAmount": "12.50"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "What to charge, or with RFND to refund, and the items when there are any.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails.Currency",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "Currency",
+      "Tag": "Ccy",
+      "Definition": "Currency associated with the transaction."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "AUD",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "An instruction the terminal cannot act on, such as a Currency it does not support, gets RJCT with AB11, because no payment was taken.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails.TotalAmount",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "TotalAmount",
+      "Tag": "TtlAmt",
+      "Definition": "Total amount of the transaction."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12.50",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Charge this amount and show it as the total, or with RFND refund it.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails.SaleItem",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "SaleItem",
+      "Tag": "SaleItm",
+      "Definition": "Item purchased with the transaction."
+    },
+    "Bound": {
+      "Kind": "array",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": [
+      {
+        "ProductAmount": "12.50",
+        "ProductDescription": "Flat white",
+        "ProductQuantity": 2,
+        "UnitPrice": "6.25"
+      }
+    ],
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Present only when the sale has items. Show them if the terminal can, and ignore them if it cannot: they never change what is charged, and a terminal never adds them up.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails.SaleItem[].ProductDescription",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "ProductDescription",
+      "Tag": "PdctDesc",
+      "Definition": "Description of the product or item."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "Flat white",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Assume no length or alphabet, and clip what cannot be shown.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails.SaleItem[].ProductQuantity",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "ProductQuantity",
+      "Tag": "PdctQty",
+      "Definition": "Product quantity."
+    },
+    "Bound": {
+      "Kind": "integer",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": 2,
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "A JSON integer, for display.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails.SaleItem[].UnitPrice",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "UnitPrice",
+      "Tag": "UnitPric",
+      "Definition": "Price per unit of product."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "6.25",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Price of one unit, for display.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails.SaleItem[].UnitPriceSign",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "UnitPriceSign",
+      "Tag": "UnitPricSgn",
+      "Definition": "Sign of the unit price."
+    },
+    "Bound": {
+      "Kind": "boolean",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": false,
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "false means show the price as negative. Absent means plus. Sent only if the POS sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails.SaleItem[].ProductAmount",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "ProductAmount",
+      "Tag": "PdctAmt",
+      "Definition": "Monetary value of purchased product."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12.50",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The line's total, for display.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "TransactionDetails.SaleItem[].ProductAmountSign",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "ProductAmountSign",
+      "Tag": "PdctAmtSgn",
+      "Definition": "Sign of the product amount."
+    },
+    "Bound": {
+      "Kind": "boolean",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": false,
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "false means show the amount as negative. Absent means plus. Sent only if the POS sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "OriginalTransaction",
+      "Tag": "OrgnlTx",
+      "Definition": "Identification of the original transaction."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "POIIdentification": "T-APPROVE",
+      "PaymentReference": {
+        "Card": {
+          "RetrievalReferenceNumber": "631012345678"
+        }
+      },
+      "SaleReferenceIdentification": "INV-1001",
+      "TransactionDateTime": "2026-11-06T15:12:40+11:00",
+      "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "With RFND alone: the sale refunded, as the middleware holds it. Refund by its references where the host can retrieve the original transaction, and with the card presented where it cannot, never replaying the sale's authentication data. A payment over NPP, PayTo included, or through a wallet or payment app, is refunded through the app or provider that took it, by its group's ids. Absent on a sale's instruction.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.TransactionReference",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionReference",
+      "Tag": "TxRef",
+      "Definition": "Identification of the transaction that has to be unique for a time period."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^sal_[0-9a-f]{32}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The sale refunded: the TransactionReference its own instruction carried. The outcome returns the refund's TransactionReference, never this one.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.POIIdentification",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "POIIdentification",
+      "Tag": "POIId",
+      "Definition": "Identification of the POI (Point Of Interaction) performing the transaction."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "T-APPROVE",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The terminal that took the sale, which may be another than this one.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.SaleReferenceIdentification",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": {
+      "Element": "SaleReferenceIdentification",
+      "Tag": "SaleRefId",
+      "Definition": "Global reference of the sale transaction for the sale system."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "INV-1001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The POS's reference for the sale refunded.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.TransactionDateTime",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionDateTime",
+      "Tag": "TxDtTm",
+      "Definition": "Local date and time of the transaction assigned by the POI (Point Of Interaction)."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "2026-11-06T15:12:40+11:00",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "The sale's approving outcome's TransactionDateTime, as that terminal stated it, for a host whose original data needs it. Absent when it sent none.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "Card": {
+        "RetrievalReferenceNumber": "631012345678"
+      }
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: this name is the middleware's own, as on an outcome. What the sale's approving outcome carried that passed, under the same group and key, less Card.AcquirerMerchantIdentification, which describes the merchant and is the one card key a card number of 13 to 15 digits fits. Absent when nothing is left.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Card",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "AuthorisationCode": "A1B2C3",
+      "RetrievalReferenceNumber": "631012345678"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "A card payment, through a card terminal and its card host. Present when the sale's approving outcome carried a key of it that passed, AcquirerMerchantIdentification aside, and it then holds those keys as the terminal sent them. ISO has no element: the group's name is the middleware's own.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Card.RetrievalReferenceNumber",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "RetrievalReferenceNumber",
+      "Tag": "RtrvlRefNb",
+      "Definition": "Reference supplied by the system retaining the original source information and used to assist in locating that information or a copy thereof."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "631012345678",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the sale's approving terminal sent it. ISO has it in cain only.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Card.SystemTraceAuditNumber",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "SystemTraceAuditNumber",
+      "Tag": "SysTracAudtNb",
+      "Definition": "Number assigned by a transaction originator to assist in identifying a transaction uniquely. The trace number remains unchanged for all messages within a two-message exchange (for example, request/repeat and response)."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "000123",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the sale's approving terminal sent it. ISO has it in cain only.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Card.AuthorisationCode",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "AuthorisationCode",
+      "Tag": "AuthstnCd",
+      "Definition": "Value assigned by the authorising party."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "A1B2C3",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the sale's approving terminal sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Card.AcquirerPOIIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12345678",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no named element. Its meaning sits in POI/Identification: \"Identification of the POI (Point Of Interaction) for the acquirer or its agent.\" nexo: AcquirerPOIID. The acquirer's terminal id, as the sale's approving terminal sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Card.RefundReference",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "klujhadsc9ph87asd",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element. Closest is caaa RecipientTransactionIdentification (RcptTxId): \"Identification of the transaction assigned by the recipient party for the initiating party.\" The host's reference to refund against, as the sale's approving terminal sent it.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Bank",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "AccountServicerReference": "BKREF-20261109-01"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "A payment from a bank account by the account's own bank, outside a card scheme and NPP. Present when the sale's approving outcome carried a key of it that passed, and it then holds those keys as the terminal sent them. ISO has no element: the group's name is the middleware's own.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Bank.AccountServicerReference",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "AccountServicerReference",
+      "Tag": "AcctSvcrRef",
+      "Definition": "Unique reference, as assigned by the account servicing institution, to unambiguously identify the instruction."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "BKREF-20261109-01",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the sale's approving terminal sent it: the reference the account's own bank gave the payment.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Wallet",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "ProviderIdentification": "WalletCo",
+      "RecipientTransactionIdentification": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "A payment through a wallet or payment app. Present when the sale's approving outcome carried a key of it that passed, and it then holds those keys as the terminal sent them. Refund through the app or provider that took the payment. ISO has no element: the group's name is the middleware's own.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Wallet.ProviderIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "ProviderIdentification",
+      "Tag": "PrvdrId",
+      "Definition": "Identification of  the wallet provider."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "WalletCo",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the sale's approving terminal sent it: the wallet's or payment app's provider, by name. ISO has it in cain's Wallet only.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.Wallet.RecipientTransactionIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "RecipientTransactionIdentification",
+      "Tag": "RcptTxId",
+      "Definition": "Identification of the transaction assigned by the recipient party for the initiating party."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the sale's approving terminal sent it: the provider's id for the payment. ISO defines no element as a wallet's or a provider's transaction id, and this is the closest.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.NPP",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "EndToEndIdentification": "INV-1001",
+      "MandateIdentification": "MNDT-0001",
+      "TransactionIdentification": "NPPTX0001"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "A payment over Australia's New Payments Platform, PayTo included. Present when the sale's approving outcome carried a key of it that passed, and it then holds those keys as the terminal sent them. Refund through the app or provider that took the payment. ISO has no element: the group's name is the middleware's own.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.NPP.EndToEndIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "EndToEndIdentification",
+      "Tag": "EndToEndId",
+      "Definition": "Unique identification, as assigned by the initiating party, to unambiguously identify the transaction. This identification is passed on, unchanged, throughout the entire end-to-end chain.<br><br>Usage: The end-to-end identification can be used for reconciliation or to link tasks relating to the transaction. It can be included in several messages related to the transaction.<br><br>Usage: In case there are technical limitations to pass on multiple references, the end-to-end identification must be passed on throughout the entire end-to-end chain."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "INV-1001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the sale's approving terminal sent it: the payer's reference, passed on unchanged end to end. NOTPROVIDED when the payer gave none.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.NPP.TransactionIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionIdentification",
+      "Tag": "TxId",
+      "Definition": "Unique identification, as assigned by the first instructing agent, to unambiguously identify the transaction that is passed on, unchanged, throughout the entire interbank chain. <br>Usage: The transaction identification can be used for reconciliation, tracking or to link tasks relating to the transaction on the interbank level. <br>Usage: The instructing agent has to make sure that the transaction identification is unique for a pre-agreed period."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "NPPTX0001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the sale's approving terminal sent it: the payer's bank's id for the payment.",
+    "Reference": null
+  },
+  {
+    "Message": "Instruction",
+    "Path": "OriginalTransaction.PaymentReference.NPP.MandateIdentification",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "MandateIdentification",
+      "Tag": "MndtRltdInf/MndtId",
+      "Definition": "Unique identification, as assigned by the creditor, to unambiguously identify the mandate."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "MNDT-0001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "As the sale's approving terminal sent it: the PayTo mandate's id.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "MessageType",
+    "SentBy": "terminal",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "Outcome"
+      ]
+    },
+    "Example": "Outcome",
+    "BadExample": "Instruction",
+    "Refusal": "unknown_frame_type",
+    "WhenMissing": "unknown_frame_type",
+    "Note": "ISO has no element checked: this names the frame. Absent, or anything but Outcome, is refused.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "TransactionReference",
+    "SentBy": "terminal",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionReference",
+      "Tag": "TxRef",
+      "Definition": "Identification of the transaction that has to be unique for a time period."
+    },
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "BadExample": 1001,
+    "Refusal": "invalid_reference",
+    "WhenMissing": "missing_field",
+    "Note": "The instruction's, returned as received: the matching key. Any string is read, and one that names no sale of this terminal gets not_held or other_terminal.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "TransactionDateTime",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionDateTime",
+      "Tag": "TxDtTm",
+      "Definition": "Local date and time of the transaction assigned by the POI (Point Of Interaction)."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\\.[0-9]{1,9})?(Z|[+-]([01][0-9]|2[0-3]):[0-5][0-9])$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "2026-11-06T15:12:40+11:00",
+    "BadExample": "2026-11-06",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "As the terminal clock states it, at most 35 characters. On a receipt. It checks shape, never truth. The POS never sees it: the middleware logs it, and an approval's goes to the terminal of each refund of the sale, as OriginalTransaction.TransactionDateTime.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "TransactionStatus",
+    "SentBy": "terminal",
+    "Required": true,
+    "Iso": {
+      "Element": "TransactionStatus",
+      "Tag": "TxSts",
+      "Definition": "Specifies the status of a transaction, as published in an external payment transaction status code list."
+    },
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "ACSP",
+        "RJCT"
+      ]
+    },
+    "Example": "ACSP",
+    "BadExample": "ACSC",
+    "Refusal": "invalid_result",
+    "WhenMissing": "missing_field",
+    "Note": "On a receipt, as the result. ACSP: the host approved the whole TotalAmount. RJCT: no payment was taken, and StatusReasonInformation.Reason says why. If the terminal does not know whether a payment was taken, send nothing yet. ISO's code set holds more codes, and the middleware takes these two alone, in upper case.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "StatusReasonInformation",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "StatusReasonInformation",
+      "Tag": "StsRsnInf",
+      "Definition": "Provides detailed information on the status reason."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "AdditionalInformation": "APPROVED",
+      "ResponseCode": "00"
+    },
+    "BadExample": "APPROVED",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "Required with RJCT, which its Reason must explain, and optional with ACSP. The host's code and text go here with either status. ISO repeats it, and ours is one object. Anything but an object is dropped whole, and one left holding no key reads as absent.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "StatusReasonInformation.Reason",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "Reason",
+      "Tag": "Rsn",
+      "Definition": "Specifies the reason for the status report."
+    },
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "AG07",
+        "AB11",
+        "DS02"
+      ]
+    },
+    "Example": "AG07",
+    "BadExample": "AM04",
+    "Refusal": "invalid_result",
+    "WhenMissing": null,
+    "Note": "Required with RJCT, and missing_field when absent then. With any other status it is dropped alone. AG07: the host or the card declined. AB11: no payment was taken otherwise: a cancel at the terminal before anything reached the host, a host that did not answer where a reversal confirmed no charge, or an approval, of the whole amount or a part, that the terminal reversed. DS02, ISO's \"An authorized user has cancelled the order\": the terminal stopped the payment, before it reached its host, because the middleware sent an Abort for it. A terminal sends DS02 only in answer to an Abort, and a cancel at the terminal stays AB11. ISO's Reason is a choice of Code or Proprietary, and ours is the code alone, its Code (Cd): \"Reason for the status, as published in an external reason code list.\"",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "StatusReasonInformation.ResponseCode",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "ResponseCode",
+      "Tag": "RspnCd",
+      "Definition": "Detailed results of the processing, conforming to ISO 8583 Response codes list.  This code list is maintained by the ISO 8583/MA (maintenance agency)."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9]{1,3}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "00",
+    "BadExample": "0000",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "The card host's code, on a card payment only. On a receipt. ISO has it in cain only, not in a status report, and no host response code by that name.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "StatusReasonInformation.AdditionalInformation",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "AdditionalInformation",
+      "Tag": "AddtlInf",
+      "Definition": "Further details on the status reason.<br><br>Usage: Additional information can be used for several purposes such as the reporting of repaired information."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9.,'&()/+%#-]([A-Za-z0-9 .,'&()/+%#-]{0,33}[A-Za-z0-9.,'&()/+%#-])?$",
+      "AlsoPattern": "^[^0-9]*([0-9][^0-9]*){0,8}$",
+      "Enum": null
+    },
+    "Example": "APPROVED",
+    "BadExample": "APPROVED 123456789",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "The host's text, at most 8 digits in total. On a receipt. ISO allows 105 characters and repeats it, and ours is one text of 1 to 35.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "TransactionDetails",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionDetails",
+      "Tag": "TxDtls",
+      "Definition": "Details of the transaction."
+    },
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "AuthorisedAmount": "12.50"
+    },
+    "BadExample": "12.50",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "Holds AuthorisedAmount alone, with ACSP. ISO also has TotalAmount here: leave it out, since the total is the middleware's to state. Anything but an object is dropped whole, another key is dropped with its value unread, and one left holding no key reads as absent.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "TransactionDetails.AuthorisedAmount",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "AuthorisedAmount",
+      "Tag": "AuthrsdAmt",
+      "Definition": "Amount authorised for the payment transaction."
+    },
+    "Bound": {
+      "Kind": "amount",
+      "Minimum": "0.00",
+      "Maximum": "10000000.00",
+      "Pattern": "^(([0-9]|[1-9][0-9]{1,6})\\.[0-9]{2}|10000000\\.00)$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12.50",
+    "BadExample": "12.5",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "The amount the host approved: what the customer was charged, or on a refund what was refunded. Send it with ACSP, equal to the instruction's TotalAmount, since a terminal adds nothing to it. With any other status it is dropped alone: with RJCT no payment was taken, so none was approved. Not required: an outcome without it still applies, and states no amount. One that fails its pattern is dropped alone, and the outcome still applies.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "Card": {
+        "AuthorisationCode": "A1B2C3"
+      }
+    },
+    "BadExample": "A1B2C3",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "ISO has no element: this name is the middleware's own. Up to four groups, Card, Bank, Wallet and NPP, each holding its own keys. Anything but an object is dropped whole, another key is dropped with its value unread, and one left holding no key reads as absent. Never put card, bank or personal data in a reference: the patterns cannot keep all of it out. A card number of 13 to 19 digits, plain, spaced, dashed, among letters or between marks, or joined to its expiry or to track data, fits no key of Bank or NPP, no Card key but AcquirerMerchantIdentification, which a card number of 13 to 15 digits fits, and no Wallet key but one: a card number padded into a UUID's shape fits Wallet.RecipientTransactionIdentification, which holds a UUID. That takes intent.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Card",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "AuthorisationCode": "A1B2C3",
+      "RetrievalReferenceNumber": "631012345678"
+    },
+    "BadExample": "A1B2C3",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "A card payment, through a card terminal and its card host. A card terminal sends it on an outcome its card host answered, holding the host's references and never card data. ISO has no element: the group's name is the middleware's own. Anything but an object is dropped whole, another key is dropped with its value unread, and one left holding no key reads as absent.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Card.RetrievalReferenceNumber",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "RetrievalReferenceNumber",
+      "Tag": "RtrvlRefNb",
+      "Definition": "Reference supplied by the system retaining the original source information and used to assist in locating that information or a copy thereof."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9]{1,12}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "631012345678",
+    "BadExample": "6310123456789",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "On a receipt. ISO has it in cain only, at exactly 12.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Card.SystemTraceAuditNumber",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "SystemTraceAuditNumber",
+      "Tag": "SysTracAudtNb",
+      "Definition": "Number assigned by a transaction originator to assist in identifying a transaction uniquely. The trace number remains unchanged for all messages within a two-message exchange (for example, request/repeat and response)."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[0-9]{6}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "000123",
+    "BadExample": "123",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "Zero filled. On a receipt. ISO has it in cain only, at up to 12 digits.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Card.AuthorisationCode",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "AuthorisationCode",
+      "Tag": "AuthstnCd",
+      "Definition": "Value assigned by the authorising party."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9]{1,6}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "A1B2C3",
+    "BadExample": "AB12  ",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "On a receipt. The middleware does not trim, so strip padding. ISO allows up to 8.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Card.AcquirerPOIIdentification",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9]{1,8}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "12345678",
+    "BadExample": "123456789",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "ISO has no named element. Its meaning sits in POI/Identification: \"Identification of the POI (Point Of Interaction) for the acquirer or its agent.\" nexo: AcquirerPOIID. The acquirer's terminal id. On a receipt.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Card.AcquirerMerchantIdentification",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9]{1,15}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "987654321",
+    "BadExample": "MERCHANT-987654",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "ISO has no named element. Closest is cain Acceptor/Identification: \"Identification of the acceptor.\" nexo: MerchantID. The acquirer's merchant id. On a receipt.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, on an outcome its card host answered.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Card.RefundReference",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,35}$",
+      "AlsoPattern": "^[^0-9]*([0-9][^0-9]*){0,12}$",
+      "Enum": null
+    },
+    "Example": "klujhadsc9ph87asd",
+    "BadExample": "REF-1234567890123",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "ISO has no element. Closest is caaa RecipientTransactionIdentification (RcptTxId): \"Identification of the transaction assigned by the recipient party for the initiating party.\" The host's reference for a later refund, at most 12 digits in total. Not on a receipt: a POS keeps it to refund against.",
+    "Reference": {
+      "Kind": "card",
+      "SentWhen": "A card terminal, when its card host gave a reference to refund against.",
+      "PosUse": [
+        "refund"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Bank",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "AccountServicerReference": "BKREF-20261109-01"
+    },
+    "BadExample": "BKREF-20261109-01",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "A payment from a bank account by the account's own bank, outside a card scheme and NPP. A terminal sends it when that bank gave a reference. ISO has no element: the group's name is the middleware's own. Anything but an object is dropped whole, another key is dropped with its value unread, and one left holding no key reads as absent.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Bank.AccountServicerReference",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "AccountServicerReference",
+      "Tag": "AcctSvcrRef",
+      "Definition": "Unique reference, as assigned by the account servicing institution, to unambiguously identify the instruction."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,35}$",
+      "AlsoPattern": "^[^0-9]*([0-9][^0-9]*){0,12}$",
+      "Enum": null
+    },
+    "Example": "BKREF-20261109-01",
+    "BadExample": "4111-1111-1111-1111",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "The reference the account's own bank gave the payment, at most 12 digits in total. A reference to the instruction, never the account.",
+    "Reference": {
+      "Kind": "bank",
+      "SentWhen": "A terminal whose payment was taken from a bank account by the account's own bank, outside a card scheme and NPP, when that bank gave a reference.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Wallet",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "ProviderIdentification": "WalletCo",
+      "RecipientTransactionIdentification": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    },
+    "BadExample": "WalletCo",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "A payment through a wallet or payment app. A terminal that took the payment that way sends it, naming the provider, and with the provider's id for the payment when it gave one. ISO has no element: the group's name is the middleware's own. Anything but an object is dropped whole, another key is dropped with its value unread, and one left holding no key reads as absent.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Wallet.ProviderIdentification",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "ProviderIdentification",
+      "Tag": "PrvdrId",
+      "Definition": "Identification of  the wallet provider."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z][A-Za-z0-9._-]{0,34}$",
+      "AlsoPattern": "^[^0-9]*([0-9][^0-9]*){0,4}$",
+      "Enum": null
+    },
+    "Example": "WalletCo",
+    "BadExample": "jsmith@example.com",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "The wallet's or payment app's provider, by name: a letter, then up to 34 letters, digits, dots, underscores or dashes, at most 4 digits in total. ISO has it in cain's Wallet only.",
+    "Reference": {
+      "Kind": "wallet",
+      "SentWhen": "A terminal that took the payment through a wallet or payment app, naming its provider.",
+      "PosUse": [
+        "receipt"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.Wallet.RecipientTransactionIdentification",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "RecipientTransactionIdentification",
+      "Tag": "RcptTxId",
+      "Definition": "Identification of the transaction assigned by the recipient party for the initiating party."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,64}$",
+      "AlsoPattern": "^([^0-9]*([0-9][^0-9]*){0,12}|[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})$",
+      "Enum": null
+    },
+    "Example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "BadExample": "41111111111111112912",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "The provider's id for the payment: up to 64 characters with at most 12 digits in total, or a UUID. A longer number is dropped alone until a provider that issues one is integrated. ISO defines no element as a wallet's or a provider's transaction id, and this is the closest: a wallet that receives a merchant's request is its recipient.",
+    "Reference": {
+      "Kind": "wallet",
+      "SentWhen": "A terminal that took the payment through a wallet or payment app, when the provider gave the payment an id.",
+      "PosUse": [
+        "receipt",
+        "refund",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.NPP",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "EndToEndIdentification": "INV-1001",
+      "MandateIdentification": "MNDT-0001",
+      "TransactionIdentification": "NPPTX0001"
+    },
+    "BadExample": "INV-1001",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "A payment over Australia's New Payments Platform, PayTo included. A terminal whose payment went over NPP sends it. ISO has no element: the group's name is the middleware's own. Anything but an object is dropped whole, another key is dropped with its value unread, and one left holding no key reads as absent.",
+    "Reference": null
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.NPP.EndToEndIdentification",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "EndToEndIdentification",
+      "Tag": "EndToEndId",
+      "Definition": "Unique identification, as assigned by the initiating party, to unambiguously identify the transaction. This identification is passed on, unchanged, throughout the entire end-to-end chain.<br><br>Usage: The end-to-end identification can be used for reconciliation or to link tasks relating to the transaction. It can be included in several messages related to the transaction.<br><br>Usage: In case there are technical limitations to pass on multiple references, the end-to-end identification must be passed on throughout the entire end-to-end chain."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,35}$",
+      "AlsoPattern": "^[^0-9]*([0-9][^0-9]*){0,12}$",
+      "Enum": null
+    },
+    "Example": "INV-1001",
+    "BadExample": "+61412345678",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "The payer's reference, passed on unchanged end to end, at most 12 digits in total. NOTPROVIDED when the payer gave none.",
+    "Reference": {
+      "Kind": "npp",
+      "SentWhen": "A terminal whose payment went over NPP, PayTo included. NOTPROVIDED when the payer gave none.",
+      "PosUse": [
+        "receipt",
+        "refund",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.NPP.TransactionIdentification",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionIdentification",
+      "Tag": "TxId",
+      "Definition": "Unique identification, as assigned by the first instructing agent, to unambiguously identify the transaction that is passed on, unchanged, throughout the entire interbank chain. <br>Usage: The transaction identification can be used for reconciliation, tracking or to link tasks relating to the transaction on the interbank level. <br>Usage: The instructing agent has to make sure that the transaction identification is unique for a pre-agreed period."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,35}$",
+      "AlsoPattern": "^[^0-9]*([0-9][^0-9]*){0,12}$",
+      "Enum": null
+    },
+    "Example": "NPPTX0001",
+    "BadExample": "4111 1111 1111 1111",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "The payer's bank's id for the payment, which every later NPP message about it carries. Its 35th character marks a retry. It holds at most 12 digits in total until NPP's layout for it is known: a value outside that is dropped alone and the outcome stands.",
+    "Reference": {
+      "Kind": "npp",
+      "SentWhen": "A terminal whose payment went over NPP, PayTo included: the payer's bank's id for it.",
+      "PosUse": [
+        "refund",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Outcome",
+    "Path": "PaymentReference.NPP.MandateIdentification",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": {
+      "Element": "MandateIdentification",
+      "Tag": "MndtRltdInf/MndtId",
+      "Definition": "Unique identification, as assigned by the creditor, to unambiguously identify the mandate."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9._:/#-]{1,35}$",
+      "AlsoPattern": "^[^0-9]*([0-9][^0-9]*){0,12}$",
+      "Enum": null
+    },
+    "Example": "MNDT-0001",
+    "BadExample": "4111111111111",
+    "Refusal": "dropped",
+    "WhenMissing": null,
+    "Note": "The PayTo mandate's id, which on NPP the MMS generates, not the creditor. It holds at most 12 digits in total until its format is known: a value outside that is dropped alone and the outcome stands.",
+    "Reference": {
+      "Kind": "npp",
+      "SentWhen": "A terminal whose payment was a PayTo payment under a mandate.",
+      "PosUse": [
+        "receipt",
+        "settlement"
+      ]
+    }
+  },
+  {
+    "Message": "Refusal",
+    "Path": "MessageType",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "Refusal"
+      ]
+    },
+    "Example": "Refusal",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element checked: this names the frame. A dropped field is not refused, so it gets no frame.",
+    "Reference": null
+  },
+  {
+    "Message": "Refusal",
+    "Path": "ResponseReason",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "unparseable_frame",
+        "binary_frame",
+        "unknown_frame_type",
+        "missing_field",
+        "invalid_result",
+        "invalid_reference",
+        "not_held",
+        "other_terminal",
+        "terminal_not_permitted",
+        "recipient_key_invalid",
+        "sign_in_not_available",
+        "sign_in_limited",
+        "sign_in_unavailable"
+      ]
+    },
+    "Example": "invalid_result",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has the name and not this meaning: its ResponseReason is the host's text, and this is the middleware's own code. One refusal code. It never holds input.",
+    "Reference": null
+  },
+  {
+    "Message": "Refusal",
+    "Path": "TransactionReference",
+    "SentBy": "mw",
+    "Required": false,
+    "Iso": {
+      "Element": "TransactionReference",
+      "Tag": "TxRef",
+      "Definition": "Identification of the transaction that has to be unique for a time period."
+    },
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^sal_[0-9a-f]{32}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Never set in this version: the schema allows it for a later one, so ignore it. A Refusal is about the last frame the terminal sent on that connection.",
+    "Reference": null
+  },
+  {
+    "Message": "Error",
+    "Path": "Error",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "Code": "terminal_offline",
+      "Fields": [],
+      "Message": "The terminal is not connected."
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Not in ISO: this envelope is the middleware's own. The body of every non-2xx answer the middleware gives.",
+    "Reference": null
+  },
+  {
+    "Message": "Error",
+    "Path": "Error.Code",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "invalid_json",
+        "unknown_field",
+        "missing_field",
+        "invalid_field",
+        "body_unreadable",
+        "idempotency_conflict",
+        "terminal_offline",
+        "terminal_busy",
+        "sale_not_refundable",
+        "terminal_cannot_refund",
+        "sale_not_abortable",
+        "terminal_cannot_abort",
+        "body_too_large",
+        "store_unavailable",
+        "invalid_wait",
+        "invalid_query",
+        "sale_not_found",
+        "not_found",
+        "method_not_allowed",
+        "invalid_upgrade",
+        "upgrade_required",
+        "certificate_required",
+        "certificate_invalid",
+        "sandbox_key_on_live",
+        "sandbox_key_invalid",
+        "not_permitted",
+        "too_many_keys",
+        "alias_taken",
+        "serial_taken",
+        "certificate_expired",
+        "certificate_retired",
+        "edge_not_trusted",
+        "code_not_valid",
+        "attestation_failed",
+        "app_identity_unknown",
+        "model_not_allowed",
+        "attestation_status_unavailable",
+        "ca_unavailable",
+        "challenge_not_valid",
+        "renewal_not_due",
+        "renewal_rate",
+        "link_in_progress",
+        "no_terminal_to_link",
+        "too_many_terminals",
+        "register_in_other_store",
+        "link_rate",
+        "link_word_unknown",
+        "link_expired",
+        "adapter_not_taken",
+        "sign_in_not_configured",
+        "signin_credential_removed",
+        "kms_unavailable"
+      ]
+    },
+    "Example": "terminal_offline",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Not in ISO: the code is the middleware's own.",
+    "Reference": null
+  },
+  {
+    "Message": "Error",
+    "Path": "Error.Message",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "text",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "The terminal is not connected.",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Not in ISO. A fixed sentence per code, which never interpolates input.",
+    "Reference": null
+  },
+  {
+    "Message": "Error",
+    "Path": "Error.Fields",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "array",
+      "Minimum": null,
+      "Maximum": 32,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": [
+      "TransactionDetails.TotalAmount"
+    ],
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "Not in ISO. Always present. The fields the code is about, sorted, at most 32 named. A sender's own name shows only as the field name filter lets it.",
+    "Reference": null
+  },
+  {
+    "Message": "LinkWord",
+    "Path": "MessageType",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "LinkWord"
+      ]
+    },
+    "Example": "LinkWord",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element checked: this names the frame. The middleware sends it while a register links, and it needs nothing back.",
+    "Reference": null
+  },
+  {
+    "Message": "LinkWord",
+    "Path": "Word",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[a-z]{3,6}\\.[a-z]{3,6}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "rabbit.lamp",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is the middleware's own. The word to show on the terminal's screen: two different words of the middleware's list, each 3 to 6 lowercase letters, in order, joined by a dot, such as rabbit.lamp. The staff member types the two into the register, with the dot or a space between them. Show it until a LinkEnded comes or ExpiresInSeconds pass, and never log it.",
+    "Reference": null
+  },
+  {
+    "Message": "LinkWord",
+    "Path": "ExpiresInSeconds",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "integer",
+      "Minimum": 1,
+      "Maximum": 300,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": 120,
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is the middleware's own. How long to show the word, in whole seconds counted from when the terminal read the frame, so no clock is compared.",
+    "Reference": null
+  },
+  {
+    "Message": "LinkEnded",
+    "Path": "MessageType",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "LinkEnded"
+      ]
+    },
+    "Example": "LinkEnded",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element checked: this names the frame. It clears the word from the screen, and it needs nothing back.",
+    "Reference": null
+  },
+  {
+    "Message": "LinkEnded",
+    "Path": "Linked",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "boolean",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": true,
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is the middleware's own. true on the terminal the register linked, which may show that it linked, and false on every other.",
+    "Reference": null
+  },
+  {
+    "Message": "StatusRequest",
+    "Path": "MessageType",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "StatusRequest"
+      ]
+    },
+    "Example": "StatusRequest",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element checked: this names the frame. The middleware sends it only to a terminal that declared SSMQ in Mw-Message-Functions when it connected. That header is the middleware's own, and it holds ISO 20022 codes of Header41.MessageFunction, \"Identifies the type of process related to the message.\", for the frames a terminal answers and the one it asks by: SSMQ, \"Request the status of a previous message for which the Sale system has no response.\", SSAB, \"Abort the current process or the last request.\", for an Abort, which asks the terminal to stop a sale's payment, and SASQ, \"Request the management of a session: login, logout and diagnosis services. Initiated by the Sale system.\", for a LoginNeeded, by which the terminal asks to be signed in to its fleet's payment system. From the first ping of a connection, the middleware sends one for each sale of that terminal it still holds open, made in the last 23 hours while an earlier connection held the terminal, and asks about a sale once a connection. A terminal answers with an ordinary Outcome: the outcome it holds for the reference, unless it already sent it on this connection. It sends nothing while the payment is not finished. For a reference it holds no record of, it sends RJCT with AB11 only when its store of references reaches back further than SecondsSinceInstruction, and otherwise nothing.",
+    "Reference": null
+  },
+  {
+    "Message": "StatusRequest",
+    "Path": "TransactionReference",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^sal_[0-9a-f]{32}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO names the exchange otherwise here. Closest is ExchangeIdentification of MessageStatusRequestData2, the block StatusRequest of SaleToPOIMessageStatusRequestV08: \"Transaction identification.\" This key keeps the Instruction's name, ISO 20022 TransactionReference: \"Identification of the transaction that has to be unique for a time period.\" It is the TransactionReference of the Instruction asked about, the sale's or with RFND the refund's, as that Instruction carried it.",
+    "Reference": null
+  },
+  {
+    "Message": "StatusRequest",
+    "Path": "SecondsSinceInstruction",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "integer",
+      "Minimum": 0,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": 34,
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is the middleware's own, since MessageStatusRequestData2, ISO's block for a status request, carries no time. The whole seconds from the sale's creation to this frame, by the middleware's clock, rounded up, from 0. A terminal that holds no record of the reference compares it with how far back its own store of references reaches, on a clock that never jumps and never by the time of day, so no two clocks are compared. When the store reaches back further, the terminal keeps RJCT with AB11 as that reference's outcome and sends it, and an Instruction of it that comes later is never started and is answered with that outcome, unless it already sent it on that connection. Otherwise it sends nothing.",
+    "Reference": null
+  },
+  {
+    "Message": "Abort",
+    "Path": "MessageType",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "Abort"
+      ]
+    },
+    "Example": "Abort",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element checked: this names the frame, after ISO 20022's SaleToPOIAbort: \"The SaleToPOIAbort message is sent by a sale system to abort process on POI.\" The middleware sends it only to a terminal that declared SSAB in Mw-Message-Functions when it connected, when a POS asks to cancel a sale or a refund with POST /v1/sales/{TransactionReference}/abort while the sale still holds the terminal: one frame for each such request, queued behind any frame already waiting on the connection. A terminal that can still stop the payment, before it reached its host, stops it and answers with an ordinary Outcome, RJCT with DS02. Once the payment is with its host, it carries on and sends the host's outcome. For a reference whose payment has ended, it sends the outcome it holds, unless it already sent it on this connection, and for a reference it holds no record of, nothing. An Abort moves no timer, so a DS02 after the deadline is a late outcome.",
+    "Reference": null
+  },
+  {
+    "Message": "Abort",
+    "Path": "TransactionReference",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^sal_[0-9a-f]{32}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO names the exchange otherwise here. Closest is ExchangeIdentification of AbortData7, which the block Abort of SaleToPOIAbortV08 holds as SystemAbort: \"Message identifier.\" AbortData7 also requires an AbortReason, free text, and this frame carries no reason, since free text is where card and personal data slip in. This key keeps the Instruction's name, ISO 20022 TransactionReference: \"Identification of the transaction that has to be unique for a time period.\" It is the TransactionReference of the Instruction to stop, the sale's or with RFND the refund's, as that Instruction carried it.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginNeeded",
+    "Path": "MessageType",
+    "SentBy": "terminal",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "LoginNeeded"
+      ]
+    },
+    "Example": "LoginNeeded",
+    "BadExample": "Loginneeded",
+    "Refusal": "unknown_frame_type",
+    "WhenMissing": "unknown_frame_type",
+    "Note": "ISO has no element checked: this names the frame, the middleware's own. ISO 20022 has no request by which a terminal asks to be signed in. A terminal sends it to be signed in to its fleet's payment system, and only on a connection that declared SASQ in Mw-Message-Functions when it connected: ISO 20022's RetailerMessage1Code SASQ, \"Request the management of a session: login, logout and diagnosis services. Initiated by the Sale system.\" There the middleware answers it with a LoginRequest, or with a Refusal saying why not. On a connection that did not declare SASQ it is refused unknown_frame_type. Spelt any other way, the frame is read as an Outcome and refused unknown_frame_type.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginNeeded",
+    "Path": "RecipientKey",
+    "SentBy": "terminal",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "PublicKey": "BP6MGc4JBRkevCmKkkV5JTHybwzs4kYGOei8Oct_cGqCanebTPlpuKDlOcf2L7PTCtaqj4DjDx0Siq_WiiznLqA",
+      "Signature": "MEQCIBERERERERERERERERERERERERERERERERERERERERERAiAiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg"
+    },
+    "BadExample": "BP6MGc4JBRkevCmKkkV5JTHybwzs4kYGOei8Oct_cGqCanebTPlpuKDlOcf2L7PTCtaqj4DjDx0Siq_WiiznLqA",
+    "Refusal": "recipient_key_invalid",
+    "WhenMissing": "recipient_key_invalid",
+    "Note": "ISO has no element: the group is the middleware's own. The key the answer is sealed to: a fresh P-256 key pair the terminal makes for this one asking, in memory and not in its keystore, whose private key it drops once it has opened the answer. Absent, or not an object, and the ask is refused recipient_key_invalid, with nothing counted toward the terminal's limit.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginNeeded",
+    "Path": "RecipientKey.PublicKey",
+    "SentBy": "terminal",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9_-]{87}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "BP6MGc4JBRkevCmKkkV5JTHybwzs4kYGOei8Oct_cGqCanebTPlpuKDlOcf2L7PTCtaqj4DjDx0Siq_WiiznLqA",
+    "BadExample": "BP6MGc4JBRkevCmKkkV5JTHybwzs4kYGOei8Oct_cGqCanebTPlpuKDlOcf2L7PTCtaqj4DjDx0Siq_WiiznLqA=",
+    "Refusal": "recipient_key_invalid",
+    "WhenMissing": "recipient_key_invalid",
+    "Note": "ISO has no element: the field is the middleware's own. The fresh key's public part as RFC 9180 § 7.1.1 serialises a P-256 key: 65 bytes, 0x04 then X and Y, which are the last 65 bytes of the key's SubjectPublicKeyInfo, in base64url with no padding, so 87 characters. Another length, padding or alphabet, a first byte other than 0x04, or a point not on P-256, and the ask is refused recipient_key_invalid. The example is RFC 9180 § A.3.1's pkRm. The middleware's log holds it as <withheld>.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginNeeded",
+    "Path": "RecipientKey.Signature",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9_-]{1,96}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "MEQCIBERERERERERERERERERERERERERERERERERERERERERAiAiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg",
+    "BadExample": "MEQCIBERERERERERERERERERERERERERERERERERERERERERAiAiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg==",
+    "Refusal": "recipient_key_invalid",
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is the middleware's own. A DER ECDSA P-256 SHA-256 signature, at most 72 bytes, in base64url with no padding, so at most 96 characters, by the key of the certificate this connection presented, during a renewal's overlap that one and not the newer, over mw-signin-recipient-v1, a zero byte, the POIIdentification's bytes, a zero byte and PublicKey's 65 bytes. Required on a connection made with a certificate: there, one that is absent, malformed or does not verify, and the ask is refused recipient_key_invalid. A sandbox key's connection has no enrolled key and sends none, and one it sends is not checked. The example has a signature's shape alone. The middleware's log holds it as <withheld>.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginRequest",
+    "Path": "MessageType",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "LoginRequest"
+      ]
+    },
+    "Example": "LoginRequest",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element checked: this names the frame. ISO 20022's nearest is LoginRequest, of a session management request: \"Content of the Login Request message.\" The frame carries none of its elements. The middleware sends it on the connection that asked, once for each LoginNeeded it answers. Once the terminal has tried its fleet's payment system with what it seals, it reports what that system answered in one LoginResponse naming the group's LoginReference.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginRequest",
+    "Path": "Sealed",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "Ciphertext": "lBCfkZ_DE_rUYr4T8YvnPkwWL-HGT2pnyH-9m9966nZyzqH9DDcJvw8t5m2Axq_0jy7Rpl0Ikp1eSwtuyjMilpbQHFbebpvOk_WCMtWZVtgzXxVKbQP_5aZwD-ClLG-3cfl2CiUm_QYJWIJ93O3aII6uQKYYTKY3SFZZPccdgJdiD0clDN4ET8Q8S6S5UfDaYMJUenbeiXxsFTnDRIsUzpfRPyguEBLpb9vrnNkf2NFvMwRZTb6rfnB84Z0kITHiiIDpSAAgSDaE5f3VSPPakIIR_9-b2_ruJJAprjwvKhBKg2CSeZKkV_3L16mbFpGn3F-VyaHcBQ",
+      "EncapsulatedKey": "BKknGcYZXVCFEE9GmouYFNWDj_crYFAeLERm5eZ7MlrJhTbXthoa9LeOW3-VHAkAvoY8QDzmXJv8uTgmVyItGMQ",
+      "Suite": {
+        "Aead": "0x0001",
+        "Kdf": "0x0001",
+        "Kem": "0x0010"
+      }
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the group is the middleware's own. The answer, sealed by HPKE, RFC 9180, in base mode to the RecipientKey the ask sent, so it opens only with that key's private part. info is 58 bytes: mw-signin-v1, a zero byte, LoginRequest, a zero byte, and the SHA-256 of the POIIdentification's bytes, a zero byte and the 32 bytes of the connection's credential id, the SHA-256 of the certificate the connection presented or of its sandbox key. aad is empty. The examples of this frame are one answer of the sandbox's stand-in, sealed to the example of LoginNeeded's PublicKey, RFC 9180 § A.3.1's pkRm, for the POIIdentification poi_00000000000000000000000000000001 on a connection whose credential id is 32 bytes of 0x11.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginRequest",
+    "Path": "Sealed.Suite",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "object",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": {
+      "Aead": "0x0001",
+      "Kdf": "0x0001",
+      "Kem": "0x0010"
+    },
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the group is RFC 9180's suite, by its three ids, each written as the RFC writes it, 0x and four hex digits in upper case. This version seals by one suite: Kem 0x0010, DHKEM(P-256, HKDF-SHA256), Kdf 0x0001, HKDF-SHA256, and Aead 0x0001, AES-128-GCM. A later version may seal by another, so a terminal checks the suite before it opens Ciphertext, and opens only one it takes.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginRequest",
+    "Path": "Sealed.Suite.Kem",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^0x[0-9A-F]{4}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "0x0010",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is RFC 9180's KEM id. 0x0010, DHKEM(P-256, HKDF-SHA256), in this version.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginRequest",
+    "Path": "Sealed.Suite.Kdf",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^0x[0-9A-F]{4}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "0x0001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is RFC 9180's KDF id. 0x0001, HKDF-SHA256, in this version.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginRequest",
+    "Path": "Sealed.Suite.Aead",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^0x[0-9A-F]{4}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "0x0001",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is RFC 9180's AEAD id. 0x0001, AES-128-GCM, in this version.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginRequest",
+    "Path": "Sealed.EncapsulatedKey",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9_-]+$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "BKknGcYZXVCFEE9GmouYFNWDj_crYFAeLERm5eZ7MlrJhTbXthoa9LeOW3-VHAkAvoY8QDzmXJv8uTgmVyItGMQ",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is RFC 9180's enc, the sender's ephemeral public key, fresh for each answer, in base64url with no padding. Under KEM 0x0010 it is 65 bytes, a P-256 point serialised as PublicKey is, so 87 characters. Another KEM's enc has a length of its own, so the pattern fixes none, and a later suite's frame still validates. Under 0x0010 a terminal checks it is a point on P-256 before it opens Ciphertext. It is a public key, and the middleware's log holds it as it is.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginRequest",
+    "Path": "Sealed.Ciphertext",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^[A-Za-z0-9_-]+$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "lBCfkZ_DE_rUYr4T8YvnPkwWL-HGT2pnyH-9m9966nZyzqH9DDcJvw8t5m2Axq_0jy7Rpl0Ikp1eSwtuyjMilpbQHFbebpvOk_WCMtWZVtgzXxVKbQP_5aZwD-ClLG-3cfl2CiUm_QYJWIJ93O3aII6uQKYYTKY3SFZZPccdgJdiD0clDN4ET8Q8S6S5UfDaYMJUenbeiXxsFTnDRIsUzpfRPyguEBLpb9vrnNkf2NFvMwRZTb6rfnB84Z0kITHiiIDpSAAgSDaE5f3VSPPakIIR_9-b2_ruJJAprjwvKhBKg2CSeZKkV_3L16mbFpGn3F-VyaHcBQ",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element: the field is RFC 9180's ciphertext of a single-shot seal, the AEAD's 16-byte tag last, in base64url with no padding. Opened in base mode with the fresh key's private part, Sealed's info and an empty aad, it gives the JSON of the sign-in adapter's group, an object whose Adapter names the adapter: signed_value, or sandbox_signed_value in the sandbox. Its KeyIdentification is the credential's key id as its fleet set it, its Challenge the random value signed, as text, and its Signature the MAC over Challenge's ASCII bytes. After Signature the group holds its LoginReference, lgn_ then 32 lowercase hex characters, the middleware's name for this one answer, which the terminal's LoginResponse names, then each of the store's three it holds: AcceptorIdentification, which of its fleet's merchants the terminal signs in for, UserName, the merchant user, and ApplicationIdentification, the payment application. A key absent is a value the store does not hold, so the terminal sends its fleet's payment system that system's own default or none, and sends each it holds as that system needs it. A later adapter seals a group of its own, told apart by its Adapter. A terminal treats the group as input, not proof of its sender, takes it to its fleet's payment system itself in its own sign-in request, and never logs, stores or sends back Challenge or Signature. The example is a vector of the seal: it opens to a group of Adapter, KeyIdentification, Challenge and Signature alone, where an answer's group also holds its LoginReference. The middleware's log holds it as <withheld>.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginResponse",
+    "Path": "MessageType",
+    "SentBy": "terminal",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "LoginResponse"
+      ]
+    },
+    "Example": "LoginResponse",
+    "BadExample": "Loginresponse",
+    "Refusal": "unknown_frame_type",
+    "WhenMissing": "unknown_frame_type",
+    "Note": "ISO has no element checked: this names the frame, after ISO 20022's LoginResponse, the block a POI sends to answer a login, of a session management response: \"Content of the Login Response message.\" The frame carries none of its elements. A terminal sends it only on a connection that declared SASQ in Mw-Message-Functions when it connected: after it tried its fleet's payment system with the group a LoginRequest sealed, one LoginResponse naming that group's LoginReference, before its next frame of sign-in. It reports SUCC or FAIL, and never anything its fleet's system said. A report the middleware takes gets no frame back, and so does one naming no answer the middleware holds as the terminal's last one not yet reported, which changes nothing: its in line, and a fields_dropped line for any key it may not hold, are the only lines it gets. On a connection that did not declare SASQ it is refused unknown_frame_type. Spelt any other way, the frame is read as an Outcome and refused unknown_frame_type.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginResponse",
+    "Path": "LoginReference",
+    "SentBy": "terminal",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "pattern",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": "^lgn_[0-9a-f]{32}$",
+      "AlsoPattern": null,
+      "Enum": null
+    },
+    "Example": "lgn_0123456789abcdef0123456789abcdef",
+    "BadExample": "lgn_0123456789ABCDEF0123456789ABCDEF",
+    "Refusal": "invalid_reference",
+    "WhenMissing": "missing_field",
+    "Note": "ISO has no element: the field is the middleware's own. The LoginReference of the opened answer reported, as its group held it: lgn_ then 32 lowercase hex characters. The middleware draws one for each answer and seals it in that answer's group. A report is taken only where it names the terminal's last answer and that answer is not yet reported. Not of its shape, upper case included, it is refused invalid_reference. Until a lookup finds it is the terminal's last answer it is the terminal's word, and a value of its shape can carry a card number's digits. The middleware's log holds it as <withheld>. Only the line of a report taken names it.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginResponse",
+    "Path": "Response",
+    "SentBy": "terminal",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "SUCC",
+        "FAIL"
+      ]
+    },
+    "Example": "SUCC",
+    "BadExample": "WARN",
+    "Refusal": "invalid_result",
+    "WhenMissing": "missing_field",
+    "Note": "ISO has the name and not this element checked: its Response, of ResponseType11 in a session management response, is a Response11Code, of which the middleware takes two. SUCC, ISO's \"Processing OK. [...]\": its fleet's system opened a session with what it was sent. FAIL, ISO's \"Processing of the request fails for various reasons. [...]\": it did not, and ResponseReason says why. ISO's WARN is not taken. Any other word, or a value that is not a string, is refused invalid_result.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginResponse",
+    "Path": "ResponseReason",
+    "SentBy": "terminal",
+    "Required": false,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "not_covered",
+        "not_accepted",
+        "no_answer"
+      ]
+    },
+    "Example": "not_covered",
+    "BadExample": "busy",
+    "Refusal": "invalid_result",
+    "WhenMissing": null,
+    "Note": "Required with FAIL, and missing_field when absent then. With SUCC it is invalid_result. ISO has the name and not these codes: its ResponseReason, of ResponseType11, is a RetailerResultDetail1Code, and these are the middleware's own. not_covered: the fleet's system answered that the key does not cover the merchant it was sent for; not_accepted: it refused the sign-in for any other reason; no_answer: it did not answer, or could not be reached. Any other word, or a value that is not a string, is refused invalid_result. A terminal chooses the code by what its fleet's system answered, and sends nothing that system said.",
+    "Reference": null
+  }
+]
