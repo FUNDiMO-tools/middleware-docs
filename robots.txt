@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /$
+Allow: /*/$
+Allow: /*.html$
+Disallow: /
+
+User-agent: Claude-User
+Allow: /

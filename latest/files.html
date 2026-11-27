@@ -7,6 +7,7 @@
 
 
         <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
         <link rel="stylesheet" href="theme/fonts.css">
         <script>
             (function () {
@@ -58,10 +59,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-afda5709.js";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b0d6c91.js"></script>
+        <script src="toc-3d95a7df.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,7 +199,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="files-and-pdfs"><a class="header" href="#files-and-pdfs">Files and PDFs</a></h1>
 <p>Each file of this release, at an address that stays the same.</p>
@@ -210,6 +211,7 @@
 <tbody>
 <tr><td><a href="openapi-pos.yaml">openapi-pos.yaml</a></td><td>What a POS calls, as its API reference shows it: its routes, the five a POS vendor’s own <code>admin</code> server calls on its registers among them, and the schemas they use. OpenAPI 3.1.</td></tr>
 <tr><td><a href="openapi-terminal.yaml">openapi-terminal.yaml</a></td><td>What a terminal calls over HTTP, as its API reference shows it, and the schemas those routes use; and, under <code>components.schemas</code>, the schemas of the frames of its WebSocket, which the <a href="terminal.html">terminal contract</a> walks. OpenAPI 3.1.</td></tr>
+<tr><td><a href="openapi-admin.yaml">openapi-admin.yaml</a></td><td>What your own <code>admin</code> server calls, as its API reference shows it: your servers and apps, a fleet’s stores, terminals and sign-in, a POS vendor’s registers and aliases, enrolment and health, and the schemas they use. OpenAPI 3.1.</td></tr>
 <tr><td><a href="fields.json">fields.json</a></td><td>The field catalogue: one row per field of each message.</td></tr>
 <tr><td><a href="conformance.json">conformance.json</a></td><td>The conformance scenarios and the assertions each is judged by.</td></tr>
 <tr><td><a href="words.txt">words.txt</a></td><td>The word list: 1,024 words, one a line.</td></tr>

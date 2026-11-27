@@ -1,13 +1,13 @@
 openapi: '3.1.0'
 info:
-  title: 'Middleware v0.6.1: what a terminal calls'
+  title: 'Middleware v1.0.0: what a terminal calls'
   version: '1.0.0'
   summary: The relay between a point of sale, a payment terminal and FUNDiMO.
   description: |-
-    The routes a terminal calls: the WebSocket it holds, enrolling for a certificate, its daily
-    check, its challenge and its renewal, and the health check. The schemas of the frames that
-    travel over the WebSocket are under `components.schemas`, and the terminal contract,
-    `terminal.md`, walks each one. Each property's `x-sent-by` names who sends it.
+    The routes a terminal calls: the WebSocket it holds, the store's logo it shows, enrolling for a
+    certificate, its daily check, its challenge and its renewal, and the health check. The schemas of
+    the frames that travel over the WebSocket are under `components.schemas`, and the terminal
+    contract, `terminal.md`, walks each one. Each property's `x-sent-by` names who sends it.
     `/docs/api/environments.md` names each environment's base URL. This release publishes this
     document as `openapi-terminal.yaml`.
 
@@ -51,7 +51,7 @@ security:
   - sandboxKey: []
 tags:
   - name: terminals
-    description: Where a terminal holds its connection.
+    description: Where a terminal holds its connection, and reads its store's logo.
   - name: certificates
     description: >-
       A principal's client certificate: enrolment with a pairing code, the daily check, and renewal with a new key.
@@ -80,7 +80,7 @@ paths:
       operationId: connectTerminal
       summary: A terminal's WebSocket connection to the middleware.
       description: >-
-        A terminal's WebSocket connection, which it holds while it is on: the middleware sends `TerminalInstruction`, `TerminalRefusal`, `TerminalLinkWord`, `TerminalLinkEnded`, `TerminalStatusRequest`, `TerminalAbort` and `TerminalLoginRequest` on it, and the terminal sends `TerminalOutcome`, `TerminalLoginNeeded` and `TerminalLoginResponse`. `/docs/api/terminal.md` § Connect states its credential, its headers and its answers, and the page how to hold, reconnect, take a payment and report it.
+        A terminal's WebSocket connection, which it holds while it is on: the middleware sends `TerminalInstruction`, `TerminalRefusal`, `TerminalLinkWord`, `TerminalLinkEnded`, `TerminalStatusRequest`, `TerminalAbort`, `TerminalLoginRequest` and `TerminalLoginCheck` on it, and the terminal sends `TerminalOutcome`, `TerminalLoginNeeded` and `TerminalLoginResponse`. `/docs/api/terminal.md` § Connect states its credential, its headers and its answers, and the page how to hold, reconnect, take a payment and report it.
       parameters:
         - name: POIIdentification
           in: path
@@ -105,7 +105,7 @@ paths:
           required: false
           x-sent-by: terminal
           description: >-
-            The requests the terminal answers, and the one it asks by, as codes separated by commas with optional spaces: `SSMQ` lets the middleware send it a `TerminalStatusRequest`, `SSAB` a `TerminalAbort`, and `SASQ` answer its `TerminalLoginNeeded` with a `TerminalLoginRequest`. Absent means none, and so do an empty value, one over 256 bytes, and one naming no code the middleware knows, and without `SSAB` a POS's request to cancel a sale on the terminal is refused `409 terminal_cannot_abort`.
+            The requests the terminal answers, and the one it asks by, separated by commas: `SSMQ` lets the middleware send it a `TerminalStatusRequest`, `SSAB` a `TerminalAbort`, `SASQ` answer its `TerminalLoginNeeded` with a `TerminalLoginRequest`, and `LoginCheck` beside `SASQ` send it a `TerminalLoginCheck`. Absent means none, and so do an empty value, one over 256 bytes, and one naming no code the middleware knows, and without `SSAB` a POS's request to cancel a sale on the terminal is refused `409 terminal_cannot_abort`.
           schema:
             type: string
             maxLength: 256
@@ -113,6 +113,13 @@ paths:
       responses:
         '101':
           description: Switching Protocols; the WebSocket is open.
+          headers:
+            Mw-Logo-Tag:
+              description: Sent while the terminal's store holds a logo, the logo's tag, which `GET /v1/terminals/{POIIdentification}/logo` carries in its `ETag`.
+              required: false
+              schema:
+                type: string
+                pattern: '^"[0-9a-f]{64}"$'
         '400':
           description: |
             - `invalid_field`: `POIIdentification` fails its pattern, and `Error.Fields` is
@@ -205,6 +212,44 @@ paths:
                   value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
                 edge_not_trusted:
                   value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+  /v1/terminals/{POIIdentification}/logo:
+    get:
+      tags: [terminals]
+      operationId: readTerminalLogo
+      summary: The logo of the terminal's store.
+      description: The terminal's own certificate, or in the sandbox a `pos` key of its vendor, reads the logo of the terminal's store, admitted as its connect is. A terminal reads it when its connect's `Mw-Logo-Tag` names a tag it does not hold, sends the tag it holds in `If-None-Match`, and on a `404` shows none.
+      parameters:
+        - name: POIIdentification
+          in: path
+          required: true
+          x-sent-by: terminal
+          description: The terminal's id, as its connect names it.
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9_-]{1,64}$'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          $ref: '#/components/responses/LogoImage'
+        '304':
+          $ref: '#/components/responses/LogoNotModified'
+        '400':
+          description: '`invalid_field`: `POIIdentification` fails its pattern, and `Error.Fields` is `["POIIdentification"]`. Fix the id: retrying will not help.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_field:
+                  value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["POIIdentification"]}}
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
   /v1/enrol:
     post:
       tags: [certificates]
@@ -513,6 +558,15 @@ components:
       type: mutualTLS
       description: >-
         A client certificate from the middleware's own CA, presented at the TLS handshake with the issuing certificate beside it, as `CertificateChain` gave them, and never with an `Authorization` header. Its one SAN, a SPIFFE URI, names the environment, the role, `terminal`, `register`, `server` or `operator`, and the id, and a `server` certificate's scope decides what it reaches as a sandbox key's does.
+  parameters:
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      description: 'The tag of the logo the caller holds, as the `ETag` of its last read gave it: one naming the logo''s tag, or `*` while a logo is held, is answered `304` with no body. A value that is no list of entity tags, or is over 4,096 bytes, is read as absent.'
+      schema:
+        type: string
+        maxLength: 4096
   responses:
     Unauthorised:
       description: |
@@ -568,6 +622,16 @@ components:
               value: {"Error": {"Code": "not_permitted", "Message": "The caller is not permitted to do this.", "Fields": []}}
             certificate_retired:
               value: {"Error": {"Code": "certificate_retired", "Message": "The certificate presented is retired: a newer one of this identity is in use.", "Fields": []}}
+    OperatorNotFound:
+      description: >-
+        `not_found`: no row holds this id, or the caller may not see it. The two answer the same, so a caller learns nothing of another vendor's objects.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            not_found:
+              value: {"Error": {"Code": "not_found", "Message": "Nothing is served at this path.", "Fields": []}}
     OperatorBodyTooLarge:
       description: >-
         `body_too_large`: the body is over 65,536 bytes. Nothing was done, and no part of the body is logged.
@@ -596,6 +660,31 @@ components:
               value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
             edge_not_trusted:
               value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+    LogoImage:
+      description: The store's logo, its bytes as FUNDiMO set them, with its media type as `Content-Type`.
+      headers:
+        ETag:
+          description: The logo's tag, 66 characters, `"` then the lowercase hex of the image's SHA-256 then `"`, which the next read sends back in `If-None-Match`.
+          schema:
+            type: string
+            pattern: '^"[0-9a-f]{64}"$'
+      content:
+        image/png:
+          schema:
+            type: string
+            contentMediaType: image/png
+        image/jpeg:
+          schema:
+            type: string
+            contentMediaType: image/jpeg
+    LogoNotModified:
+      description: The logo the caller holds is still the store's, so the answer carries its tag and no body.
+      headers:
+        ETag:
+          description: The logo's tag, the one the request named.
+          schema:
+            type: string
+            pattern: '^"[0-9a-f]{64}"$'
   schemas:
     Amount:
       type: string
@@ -1092,8 +1181,9 @@ components:
             - `invalid_result`: `TransactionStatus` is not `ACSP` or `RJCT`, or is not a string, or
               with `RJCT` `StatusReasonInformation.Reason` is not `AG07`, `AB11` or `DS02`. In a
               `LoginResponse`, `Response` is not `SUCC` or `FAIL`, or is not a string, or with
-              `FAIL` `ResponseReason` is not one of `not_covered`, `not_accepted` and `no_answer`,
-              or with `SUCC` a `ResponseReason` is sent.
+              `FAIL` `ResponseReason` is not one of `not_covered`, `not_accepted`, `no_answer`,
+              `key_unknown`, `signature_refused` and `application_unknown`, or with `SUCC` a
+              `ResponseReason` is sent.
             - `invalid_reference`: `TransactionReference` is not a string. In a `LoginResponse`,
               `LoginReference` is not `lgn_` then 32 lowercase hex characters.
             - `not_held`: a well-formed outcome naming no sale the middleware holds, because the
@@ -1115,7 +1205,7 @@ components:
               terminal's store: none is attached, the credential is removed, the store or its owner
               is not in a state to act, or sign-in is off on this middleware. Answer the sale `RJCT`
               with `AB11`, unless a person signs in at the terminal by its fleet's own means, and
-              ask no more on this connection.
+              ask no more on this connection unless a `LoginCheck` comes.
             - `sign_in_limited`: the terminal was answered a sign-in less than
               `MW_SIGNIN_INTERVAL_SECS` ago, 60 seconds at the middleware's default settings, or has
               been answered `MW_SIGNIN_PER_DAY` times, 24 by default, in the day counted from that
@@ -1346,18 +1436,30 @@ components:
             `SUCC` when its fleet's system opened a session with what it was sent, and `FAIL` when it did not, with `ResponseReason` saying why.
         ResponseReason:
           type: [string, 'null']
-          enum: [not_covered, not_accepted, no_answer, null]
+          enum: [not_covered, not_accepted, no_answer, key_unknown, signature_refused, application_unknown, null]
           x-sent-by: terminal
           description: >-
-            Required with `FAIL`, and `missing_field` when absent then; with `SUCC` it is `invalid_result`, and a `null` reads as absent. `not_covered`: the fleet's system answered that the key does not cover the merchant it was sent for; `not_accepted`: it refused the sign-in for any other reason; `no_answer`: it did not answer, or could not be reached.
+            Required with `FAIL`, and `missing_field` when absent then; with `SUCC` it is `invalid_result`, and a `null` reads as absent. What each code means, and which to send when an answer could mean two, is in § The report of the page this frame's description links.
       examples:
         - {"MessageType": "LoginResponse", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "Response": "SUCC"}
         - {"MessageType": "LoginResponse", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "Response": "FAIL", "ResponseReason": "not_covered"}
+    TerminalLoginCheck:
+      type: object
+      required: [MessageType]
+      description: The middleware to the terminal, over the WebSocket, only on a connection that declared `LoginCheck` beside `SASQ`, to ask it to sign in now by one `TerminalLoginNeeded`, as `/docs/api/terminal.md` § Signing in says.
+      properties:
+        MessageType:
+          type: string
+          const: LoginCheck
+          x-sent-by: mw
+          description: The frame's name, `LoginCheck`.
+      examples:
+        - {"MessageType": "LoginCheck"}
     TerminalLoginSignedValue:
       type: object
       required: [Adapter, KeyIdentification, Challenge, Signature, LoginReference]
       description: >-
-        The group a terminal opens from a `TerminalLoginRequest`'s `Sealed.Ciphertext`: the JSON of the sign-in adapter's `SignedValue` group, what the terminal's fleet's payment system takes for a sign-in, made from the credential the fleet set for the terminal's store. It is no frame, holds no `MessageType` and travels inside the seal alone: `/docs/api/terminal.md` § Signing in says what a terminal does with it.
+        The group a terminal opens from a `TerminalLoginRequest`'s `Sealed.Ciphertext`: the JSON of the sign-in adapter's `SignedValue` group, what the terminal's fleet's payment system takes for a sign-in, made from the key pair the fleet set for the terminal's store, under the fleet's sign-in profile. It is no frame, holds no `MessageType` and travels inside the seal alone: `/docs/api/terminal.md` § Signing in says what a terminal does with it.
       properties:
         Adapter:
           type: string
@@ -1369,19 +1471,19 @@ components:
           type: string
           pattern: '^[!-~]{1,140}$'
           x-sent-by: mw
-          description: The fleet's key id at its payment system, as the fleet set it. Not a secret.
+          description: The access key id, the public half of the merchant's key pair at its fleet's payment system.
         Challenge:
           type: string
           pattern: '^[0-9A-Za-z_-]+$'
           x-sent-by: mw
           description: >-
-            The random value signed, fresh for each answer, as text, written as the credential's `Profile.ChallengeEncoding` says: lowercase hex, base64url with no padding, or a version 4 UUID's lowercase text.
+            The random value signed, fresh for each answer, as text, written as the fleet's sign-in profile's `ChallengeEncoding` says: lowercase hex, base64url with no padding, or a version 4 UUID's lowercase text.
         Signature:
           type: string
           pattern: '^[0-9A-Za-z+/=_-]+$'
           x-sent-by: mw
           description: >-
-            The MAC over `Challenge`'s ASCII bytes, by the credential's `Profile.Algorithm`, written as its `Profile.SignatureEncoding` says: lowercase hex, base64 standard and padded, or base64url with no padding.
+            The MAC over `Challenge`'s ASCII bytes, by the fleet's sign-in profile's `Algorithm`, written as its `SignatureEncoding` says: lowercase hex, base64 standard and padded, or base64url with no padding.
         LoginReference:
           type: string
           pattern: '^lgn_[0-9a-f]{32}$'
@@ -1404,7 +1506,7 @@ components:
           type: [string, 'null']
           pattern: '^[!-~]{1,140}$'
           x-sent-by: mw
-          description: The fleet's payment application in the store's credential, absent if none.
+          description: The fleet's application key, as its sign-in profile holds it, absent where it holds none.
       examples:
         - {"Adapter": "signed_value", "KeyIdentification": "key-example-1", "Challenge": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "Signature": "WlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlo=", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "AcceptorIdentification": "merchant-example-1", "UserName": "user-example-1", "ApplicationIdentification": "app-example-1"}
         - {"Adapter": "sandbox_signed_value", "KeyIdentification": "sandbox-signin-1", "Challenge": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "Signature": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a", "LoginReference": "lgn_0123456789abcdef0123456789abcdf0"}

@@ -7,6 +7,7 @@
 
 
         <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
         <link rel="stylesheet" href="theme/fonts.css">
         <script>
             (function () {
@@ -58,10 +59,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-afda5709.js";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b0d6c91.js"></script>
+        <script src="toc-3d95a7df.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,10 +199,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-the-two-environments"><a class="header" href="#middleware-the-two-environments">Middleware: the two environments</a></h1>
-<p>Last changed in v0.5.0.</p>
+<p>Last changed in v1.0.0.</p>
 <p>An integration meets the middleware in two environments open to it today: the sandbox, where it
 is built and tested alone, and staging, where it runs with real terminals and registers. This
 page names each one’s base URL, what differs between them, and what moving from the sandbox to
@@ -219,10 +220,10 @@ as <a href="environments.html"><code>/docs/api/environments.md</code></a>.</p>
 <tr><td>Version</td><td>The release the sandbox runs: <code>Version</code> in the answer to <code>GET /v1/health</code> at this base URL</td><td>The release staging runs: <code>Version</code> in the answer to <code>GET /v1/health</code> at this base URL</td></tr>
 <tr><td>For</td><td>Building and testing alone: a world of your own, simulated terminals, a conformance run and its signed report. A world lasts 30 days, and nothing in it is a record</td><td>Real terminals and real registers, on test cards only, never a real card</td></tr>
 <tr><td>Credential</td><td>A sandbox key, <code>sbx_...</code>, or a certificate the sandbox issued</td><td>A certificate staging issued, alone. A sandbox key is <code>401 sandbox_key_on_live</code></td></tr>
-<tr><td>How you start</td><td><code>POST /sandbox/v1/keys</code>, with no credential</td><td>FUNDiMO lists your first server and gives you its pairing code once. Ask for an <code>admin</code> one if your own back office will list your registers, devices and other servers</td></tr>
+<tr><td>How you start</td><td><code>POST /sandbox/v1/keys</code>, with no credential. For your back office’s server, <code>POST /sandbox/v1/codes</code> with <code>{"Role":"admin"}</code> under your key gives its code</td><td>FUNDiMO lists your first server and gives you its pairing code once. Ask for an <code>admin</code> one if your own back office will list your registers, devices and other servers. <a href="back-office.html"><code>/docs/api/back-office.md</code></a> walks your back office from that server</td></tr>
 <tr><td>Your app on a device</td><td>You register it: <code>POST /sandbox/v1/app-identities</code></td><td>The operator or your <code>admin</code> server registers it</td></tr>
 <tr><td>Attestation</td><td>Not required</td><td>Checked. A device that fails is refused or marked as <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, Which devices the middleware admits, says. The operator’s allowed list of device models starts empty: ask for yours</td></tr>
-<tr><td>Registers and terminals</td><td>One register and nine terminals of your world, linked from the start. The register is a server’s, or with <code>{"Register":"device"}</code> your app’s on a device; seven terminals are simulated, <code>-manual</code> is driven through the MCP server’s tools, and <code>-yours</code> is your own</td><td>A register for each till and a terminal by its serial, each listed, and each linked at the counter</td></tr>
+<tr><td>Registers and terminals</td><td>One register and nine terminals of your world, linked from the start. The register is a server’s, or with <code>{"Register":"device"}</code> your app’s on a device; seven terminals are simulated, <code>-manual</code> is driven through the MCP server’s tools, and <code>-yours</code> is your own. Your <code>admin</code> server may list more, each linked as on staging</td><td>A register for each till and a terminal by its serial, each listed, and each linked at the counter</td></tr>
 <tr><td>These pages, the MCP server, conformance</td><td>Served at its base URL: <code>/llms.txt</code> and <code>/mcp</code></td><td>None: read them at the sandbox</td></tr>
 </tbody>
 </table>
@@ -230,11 +231,13 @@ as <a href="environments.html"><code>/docs/api/environments.md</code></a>.</p>
 <p>Each refuses the other’s credentials: a <code>live</code> middleware refuses every sandbox key and every
 sandbox certificate, and the sandbox refuses every live credential. The messages are the same in
 both: a sale, its reads, a terminal’s frames. What changes is the base URL, the credential and
-onboarding. The sandbox answers <code>404</code> to the Operator API and serves its own routes under
-<code>/sandbox/v1/</code> in their place, and a terminal enrols there under the serial <code>&lt;tester&gt;-yours</code> and a
-register on a device under <code>&lt;tester&gt;-register</code>, each on staging under its own. Each walk’s In the
-sandbox section gives the rest: <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>
-and <a href="linking.html"><code>/docs/api/linking.md</code></a>.</p>
+onboarding. The sandbox serves its own routes under <code>/sandbox/v1/</code>. It passes the Operator API
+routes of <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> to your world’s own <code>admin</code> server, and answers every
+other caller <code>404</code> at them (<a href="back-office.html"><code>/docs/api/back-office.md</code></a>, Trying it in the sandbox). Your world’s own
+terminal enrols there under the serial <code>&lt;tester&gt;-yours</code> and its register on a device under
+<code>&lt;tester&gt;-register</code>, each on staging under its own. Each walk’s In the sandbox section gives the
+rest: <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a> and
+<a href="linking.html"><code>/docs/api/linking.md</code></a>.</p>
 <p>Neither environment is promised to be serving at every hour. <code>GET /v1/health</code> at a base URL
 answers <code>200</code> when it is.</p>
 <p><code>Version</code> in the answer to <code>GET /v1/health</code> is the release of the middleware that environment

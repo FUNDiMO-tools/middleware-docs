@@ -7,6 +7,7 @@
 
 
         <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
         <link rel="stylesheet" href="theme/fonts.css">
         <script>
             (function () {
@@ -58,10 +59,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-afda5709.js";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b0d6c91.js"></script>
+        <script src="toc-3d95a7df.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,10 +199,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-linking-a-register-to-a-terminal"><a class="header" href="#middleware-linking-a-register-to-a-terminal">Middleware: linking a register to a terminal</a></h1>
-<p>Last changed in v0.5.0.</p>
+<p>Last changed in v1.0.0.</p>
 <p>This is the walk for a POS vendor linking a register to a payment terminal at the counter, and
 for whoever writes the screen staff see while they do it. A register is one till of a POS: an
 app on a device, or a name a vendor’s server gives. Linking binds it to a terminal of the store
@@ -440,12 +441,13 @@ last binding ends it sits at no store, and may link at another.</p>
 <p>A terminal removed, or a register removed, ends its bindings as well. A re-pair ends none,
 because the device and its serial are the same.</p>
 <h2 id="what-a-stores-fleet-owner-can-do"><a class="header" href="#what-a-stores-fleet-owner-can-do">What a store’s fleet owner can do</a></h2>
-<p>Changed in v0.4.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>The fleet owner that listed a store’s terminals sees each with the register and the vendor bound
-to it, at <code>GET /v1/merchant-stores/{StoreIdentification}/terminals</code>, so a binding it never made
-is visible. It acts on its <code>admin</code> server’s certificate, here <code>admin-chain.pem</code> and <code>admin.key</code>
-(<a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a>), and can do two things a POS cannot. The three routes of this
-section are in the Operator API, which FUNDiMO gives a vendor with an <code>admin</code> server directly.</p>
+to it, at <code>GET /v1/merchant-stores/{StoreIdentification}/terminals</code>, read a page at a time until
+<code>NextPage</code> is <code>null</code>, so a binding it never made is visible. It acts on its <code>admin</code> server’s
+certificate, here <code>admin-chain.pem</code> and <code>admin.key</code> (<a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a>), and can do
+two things a POS cannot. The three routes of this section are in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>, a
+back office’s file, which <a href="back-office.html"><code>/docs/api/back-office.md</code></a> walks.</p>
 <p><strong>End a binding</strong>, of any register, with <code>DELETE /v1/terminals/{POIIdentification}/binding</code>.
 The terminal’s owner may, and so may the operator:</p>
 <pre><code class="language-sh">curl -s -X DELETE "$MW/v1/terminals/poi_.../binding" \

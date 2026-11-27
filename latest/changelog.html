@@ -7,6 +7,7 @@
 
 
         <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
         <link rel="stylesheet" href="theme/fonts.css">
         <script>
             (function () {
@@ -58,10 +59,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-afda5709.js";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b0d6c91.js"></script>
+        <script src="toc-3d95a7df.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,9 +199,77 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="what-changed"><a class="header" href="#what-changed">What changed</a></h1>
+<h2 id="v100-27-nov-2026"><a class="header" href="#v100-27-nov-2026">v1.0.0 (27-Nov-2026)</a></h2>
+<p>A vendor’s own back office now has its routes published, and the sandbox answers them inside your
+world. A POS’s sales and refunds, and a terminal’s frames, work as before. What breaks is a back
+office’s, and <code>mw://world</code>’s <code>SignIn</code>: each is under Breaking below.</p>
+<h3 id="breaking"><a class="header" href="#breaking">Breaking</a></h3>
+<ul>
+<li><strong>Admin, Operator</strong>: A sign-in credential is a merchant’s key pair alone. Its create and replace
+take <code>Adapter</code>, <code>KeyIdentification</code> and, for <code>signed_value</code>, <code>Secret</code> with <code>SecretEncoding</code> beside
+it. A body holding <code>Profile</code> or <code>ApplicationIdentification</code> is <code>400 unknown_field</code>: set them once,
+on the fleet’s sign-in profile.</li>
+<li><strong>POS, Terminal</strong>: <code>mw://world</code>’s <code>SignIn</code> moves <code>SecretEncoding</code> out of <code>Profile</code>, beside
+<code>Secret</code>. It also shows the fleet’s sign-in profile, <code>ApplicationIdentification</code> and <code>Profile</code>,
+beside <code>Adapter</code>.</li>
+<li><strong>Admin, Operator</strong>: Five lists are read a page at a time. Send <code>page_size</code>, 1 to 100 and 50
+unless sent, then send each <code>NextPage</code> back as <code>page_after</code> until it is <code>null</code>. The five are
+merchant stores, a store’s terminals, a vendor’s servers, aliases and a fleet’s sign-in
+credentials.</li>
+<li><strong>POS, Admin</strong>: A vendor’s own <code>admin</code> server must send an <code>IdempotencyKey</code> on six creates, and
+may send 60 writes a minute. Without a key, <code>POST /v1/registers</code> and the creates of a store, a
+terminal, a server, an app identity and a sign-in credential are <code>400 missing_field</code>. Past the
+limit a write is <code>429 write_rate</code>: wait the seconds its <code>Retry-After</code> gives, then send it again.</li>
+</ul>
+<h3 id="added"><a class="header" href="#added">Added</a></h3>
+<ul>
+<li><strong>Admin, Operator</strong>: A fleet’s sign-in profile, set with <code>PUT /v1/vendors/{VendorIdentification}/signin-profile</code> and read with <code>GET</code> on it. Every key pair of
+the fleet signs under it.</li>
+<li><strong>Admin, Operator</strong>: A store’s sign-in, set and checked in two calls. <code>PUT /v1/merchant-stores/{StoreIdentification}/signin-key</code> sets and attaches the store’s own key pair.
+<code>POST /v1/merchant-stores/{StoreIdentification}/signin-check</code> answers ten checks and <code>Ready</code> with
+no sale, and may ask one of the store’s <code>paired</code> terminals to sign in.</li>
+<li><strong>POS, Terminal, Admin</strong>: The back office, published: a vendor’s own <code>admin</code> server has an OpenAPI
+document of its own, and a page that walks it. The sandbox serves them at
+<a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> and <a href="back-office.html"><code>/docs/api/back-office.md</code></a>, and as
+<code>mw://docs/openapi-admin.yaml</code> and <code>mw://docs/back-office.md</code>. The docs site publishes both.</li>
+<li><strong>POS, Terminal, Admin</strong>: A sandbox world has a back office of its own. <code>POST /sandbox/v1/codes</code>
+with <code>{"Role":"admin"}</code> gives a code for your world’s <code>admin</code> server, and <code>mw://world</code>’s
+<code>BackOffice</code> and a twelfth tool, <code>read_back_office</code>, show what it sent. What the world came with
+is read-only (<code>409 sandbox_read_only</code>), and a world holds at most 60 objects of each kind (<code>409 sandbox_object_limit</code>) and takes 240 back-office writes an hour.</li>
+<li><strong>POS, Terminal, Admin</strong>: Conformance runs of a back office, in the sandbox. <code>conformance_start</code>
+takes <code>Side</code> <code>fleet</code>, five scenarios, or <code>pos_vendor</code>, four, and <code>mw://conformance</code> lists their
+rows.</li>
+<li><strong>POS, Admin, Operator</strong>: A create sent again with the same <code>IdempotencyKey</code> finds what the first
+one made. The same body answers <code>200</code> with the object, and another body is <code>409 idempotency_conflict</code>. A key is kept 24 hours.</li>
+<li><strong>POS, Terminal, Admin, Operator</strong>: Who made what. Each server, app identity, store, alias,
+terminal, register and sign-in credential names who made it, in <code>CreatedBy</code>, and each log line
+names who acted, in <code>actor</code> and <code>object</code>. Each is <code>null</code> where nothing is recorded, as for an
+object made before this release, and in <code>read_log</code>.</li>
+<li><strong>Admin, Operator</strong>: A vendor’s own <code>admin</code> server reads its own vendor, with <code>GET /v1/vendors/{VendorIdentification}</code>, and lists its app identities, with <code>GET /v1/vendors/{VendorIdentification}/app-identities</code>. Neither counts as a write.</li>
+<li><strong>Terminal, Admin</strong>: A terminal can sign in with no sale. One that declares <code>LoginCheck</code> beside
+<code>SASQ</code> may be sent <code>{"MessageType":"LoginCheck"}</code>, and its conformance run has a thirteenth
+scenario, <code>sign_in_check</code>; <code>AppliesIfDeclared</code> in <code>mw://conformance</code> gains <code>Beside</code> for it. A
+terminal that does not declare it is sent nothing new.</li>
+<li><strong>Terminal, Admin, Operator</strong>: Three more reasons for a failed sign-in, <code>key_unknown</code>,
+<code>signature_refused</code> and <code>application_unknown</code>. After each, ask again no sooner than 60 seconds
+later, and send them only to a middleware of this release. The conformance row <code>sign_in.one_ask</code>
+now asks again at once only after <code>not_accepted</code> or <code>no_answer</code>.</li>
+<li><strong>POS, Terminal</strong>: A store’s logo, shown on its terminals and registers. A terminal reads it with
+<code>GET /v1/terminals/{POIIdentification}/logo</code> when its connect’s <code>101</code> names a new tag in
+<code>Mw-Logo-Tag</code>, and a register with <code>GET /v1/register/logo</code>; <code>If-None-Match</code> gives <code>304</code> for an
+unchanged logo. The hosted sandbox answers both reads <code>404 not_found</code> for now.</li>
+</ul>
+<h3 id="changed"><a class="header" href="#changed">Changed</a></h3>
+<ul>
+<li><strong>POS</strong>: <code>idempotency_conflict</code>’s <code>Message</code> on <code>POST /v1/sales</code> now reads “The idempotency key
+names a different request.” Its code and status are unchanged.</li>
+<li><strong>Terminal</strong>: The sealed sign-in group’s <code>KeyIdentification</code> is described as the store’s key
+pair’s access key id, and its <code>ApplicationIdentification</code> as the fleet’s application key. No
+frame, key or rule changed.</li>
+</ul>
 <h2 id="v061-24-nov-2026"><a class="header" href="#v061-24-nov-2026">v0.6.1 (24-Nov-2026)</a></h2>
 <p>A device’s renewal that sends no attestation chain now needs its challenge, in the sandbox and on
 a middleware set to mark, as the device walk has always said.</p>
@@ -217,7 +286,7 @@ chain or without one.</li>
 its last change. A conformance run goes on past a failed step, names the sale each step judged,
 sells the amount a terminal tester asks for, and waits for a terminal to restart at its two
 sign-in steps.</p>
-<h3 id="breaking"><a class="header" href="#breaking">Breaking</a></h3>
+<h3 id="breaking-1"><a class="header" href="#breaking-1">Breaking</a></h3>
 <ul>
 <li><strong>Terminal</strong>: A conformance run’s <code>sign_in</code> and <code>sign_in_none</code> send their sale only once your
 terminal connects during the step, <code>sign_in</code>’s 10 seconds after (23-Nov-2026). Restart your
@@ -225,7 +294,7 @@ terminal’s application when either step’s <code>Note</code> says to, as its 
 that keeps the connection it held, or connects again before that <code>Note</code>, is sent no sale and
 fails the step.</li>
 </ul>
-<h3 id="added"><a class="header" href="#added">Added</a></h3>
+<h3 id="added-1"><a class="header" href="#added-1">Added</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: The sandbox serves what changed in each release, newest first, as
 <code>mw://changes</code> and at <code>/docs/api/changes.md</code>, and <code>/llms.txt</code> and <code>mw://start</code> point to it
@@ -242,7 +311,7 @@ terminal scenario it names, and each terminal step’s <code>Instruction</code> 
 stay out, and lets <code>Claude-User</code>, an assistant fetching on a person’s request, read <code>/</code>,
 <code>/llms.txt</code> and <code>/docs/api/</code>.</li>
 </ul>
-<h3 id="changed"><a class="header" href="#changed">Changed</a></h3>
+<h3 id="changed-1"><a class="header" href="#changed-1">Changed</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: Each page the sandbox serves opens with the release of its last change, and
 each of its sections changed since v0.2.0 names the release that changed it (23-Nov-2026). The
@@ -260,7 +329,7 @@ approval of a sale carries references of its own. A sandbox code can now make it
 for renewal at once. The sandbox’s MCP server says what its trial of 18-Nov-2026 could not find: a
 terminal’s sign-in lines, how long a run is kept, the bound on a run’s declared names, and the code
 of a key it does not know.</p>
-<h3 id="added-1"><a class="header" href="#added-1">Added</a></h3>
+<h3 id="added-2"><a class="header" href="#added-2">Added</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: <code>POST /sandbox/v1/codes</code> takes <code>"Due": true</code> beside <code>Role</code>, for a code whose
 certificate is due for renewal at once (22-Nov-2026). The certificate it enrols is issued 16
@@ -276,7 +345,7 @@ sale whose <code>SaleReferenceIdentification</code> has that shape is read by it
 <li><strong>POS, Terminal</strong>: <code>mw://world</code> read under a key unknown or expired answers with <code>data</code>
 naming <code>key_not_recognised</code> and how to get a new key (23-Nov-2026).</li>
 </ul>
-<h3 id="changed-1"><a class="header" href="#changed-1">Changed</a></h3>
+<h3 id="changed-2"><a class="header" href="#changed-2">Changed</a></h3>
 <ul>
 <li><strong>POS</strong>: Linking says to store a request’s <code>LinkIdentification</code> and go back to it after a
 restart, and <code>link_in_progress</code> covers the register’s own open request (22-Nov-2026). Its
@@ -319,7 +388,7 @@ terminal’s, in place of the whole document, and a POS’s own page with every 
 It can also open a world whose one register is an app on a device, so a POS app on a till enrols
 as its own register, with a five-word code, and sells and runs the POS conformance run on its own
 certificate before staging. No route, body, setting, job or migration of the relay changed.</p>
-<h3 id="breaking-1"><a class="header" href="#breaking-1">Breaking</a></h3>
+<h3 id="breaking-2"><a class="header" href="#breaking-2">Breaking</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: The sandbox serves the OpenAPI document by reader (21-Nov-2026).
 <a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a> and <a href="openapi-terminal.yaml"><code>/docs/api/openapi-terminal.yaml</code></a>, and
@@ -330,7 +399,7 @@ certificate before staging. No route, body, setting, job or migration of the rel
 its place; an <code>admin</code> server’s routes, but the five on a POS vendor’s registers, are in the
 Operator API, which FUNDiMO gives with that server.</li>
 </ul>
-<h3 id="added-2"><a class="header" href="#added-2">Added</a></h3>
+<h3 id="added-3"><a class="header" href="#added-3">Added</a></h3>
 <ul>
 <li><strong>POS</strong>: A POS’s own page, and every code in one file (21-Nov-2026). The sandbox serves
 <a href="pos.html"><code>/docs/api/pos.md</code></a>, also <code>mw://docs/pos.md</code>: what a register shows at each state of a sale and
@@ -344,7 +413,7 @@ to the nine terminals, with no <code>pos</code> server. <code>POST /sandbox/v1/c
 gives that register’s five-word code and re-pairs it, so it takes no sale until the app enrols.
 A <code>Side: pos</code> conformance run in that world judges the register’s own newest certificate.</li>
 </ul>
-<h3 id="changed-2"><a class="header" href="#changed-2">Changed</a></h3>
+<h3 id="changed-3"><a class="header" href="#changed-3">Changed</a></h3>
 <ul>
 <li><strong>POS</strong>: The key route’s <code>201</code> and <code>mw://world</code> name the world’s kind (22-Nov-2026). Both carry
 <code>Register</code>, <code>server</code> or <code>device</code>, and a device world’s <code>mw://world</code> its
@@ -357,7 +426,7 @@ a JSON object still gives a server’s world. <code>code_not_valid</code>’s <c
 <p>The published docs site’s build now gives the site the look of FUNDiMO’s main site, in a light
 theme and a dark one. The device walk now says that other makers’ devices are intended. No route,
 body, setting, job or migration changed.</p>
-<h3 id="changed-3"><a class="header" href="#changed-3">Changed</a></h3>
+<h3 id="changed-4"><a class="header" href="#changed-4">Changed</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: The device walk, <code>mw://onboarding/device</code>, now says it is written for one
 maker’s devices today (21-Nov-2026). Other makers’ devices are intended, each with a walk of
@@ -373,14 +442,14 @@ connection when a POS’s sale reaches another of its instances, and the termina
 after any close. The OpenAPI document’s descriptions are now short and its <code>info.version</code> stays
 <code>1.0.0</code>: apart from the new field and the edge’s <code>411</code>, no route, body, field, bound, enum or
 refusal changed.</p>
-<h3 id="breaking-2"><a class="header" href="#breaking-2">Breaking</a></h3>
+<h3 id="breaking-3"><a class="header" href="#breaking-3">Breaking</a></h3>
 <ul>
 <li><strong>Terminal</strong>: A terminal conformance run’s sale now carries <code>CashierIdentification</code>
 (19-Nov-2026). A terminal that refuses an <code>Instruction</code> holding a key it does not know cannot
 pass the run. Ignore the key, or use it. A report that was green is not green again until the
 terminal does this.</li>
 </ul>
-<h3 id="added-3"><a class="header" href="#added-3">Added</a></h3>
+<h3 id="added-4"><a class="header" href="#added-4">Added</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: <code>CashierIdentification</code>, the user of the POS who made a sale or a refund
 (19-Nov-2026). A POS may send it, as an identifier it chooses and never the person’s name. The
@@ -388,7 +457,7 @@ middleware checks its shape and sends it on in the <code>Instruction</code>. A t
 passes it on, or ignores it, and one that checks frames against the published field list takes
 the new list.</li>
 </ul>
-<h3 id="changed-4"><a class="header" href="#changed-4">Changed</a></h3>
+<h3 id="changed-5"><a class="header" href="#changed-5">Changed</a></h3>
 <ul>
 <li><strong>POS</strong>: A POS’s rules stay in the OpenAPI document, each said once, on the operation, answer
 or field it governs (19-Nov-2026). ISO 20022’s definitions are in <a href="fields.json"><code>/docs/api/fields.json</code></a> and
@@ -422,7 +491,7 @@ enrols each register again. A terminal that does not know whether a payment was 
 out and reports it, and a POS can now read the amount the host approved and ask the terminal to
 cancel a sale in flight. A terminal can now ask the middleware to sign it in to its fleet’s own
 payment system, with a credential its fleet set for the store.</p>
-<h3 id="breaking-3"><a class="header" href="#breaking-3">Breaking</a></h3>
+<h3 id="breaking-4"><a class="header" href="#breaking-4">Breaking</a></h3>
 <ul>
 <li><strong>Terminal</strong>: A terminal conformance run has a ninth scenario, <code>lost_instruction</code>
 (16-Nov-2026). The run takes the terminal’s place for one sale, so its instruction never
@@ -445,7 +514,7 @@ this.</li>
 <code>/v1/installations</code> answers <code>404 not_found</code>. A POS changes each name, lists and enrols each
 register again, and takes a new sandbox key.</li>
 </ul>
-<h3 id="added-4"><a class="header" href="#added-4">Added</a></h3>
+<h3 id="added-5"><a class="header" href="#added-5">Added</a></h3>
 <ul>
 <li><strong>Terminal</strong>: The upgrade’s header <code>Mw-Message-Functions</code>, and the <code>StatusRequest</code> frame
 (16-Nov-2026). A connection that declares <code>SSMQ</code> is sent a <code>StatusRequest</code> for each sale the
@@ -552,7 +621,7 @@ was opened, so there is no <code>LoginReference</code> to name.</li>
 terminal spends one answer, and so does each restart of it. <code>sign_in_limited</code> still answers an
 ask within 60 seconds of the last answer.</li>
 </ul>
-<h3 id="changed-5"><a class="header" href="#changed-5">Changed</a></h3>
+<h3 id="changed-6"><a class="header" href="#changed-6">Changed</a></h3>
 <ul>
 <li><strong>Terminal</strong>: A terminal that does not know whether a payment was taken must find out
 (16-Nov-2026). It asks its host for the payment by the reference it stored, or reverses it and
@@ -570,7 +639,7 @@ with FUNDiMO.</li>
 <p>The first numbered release. Every build from 07-Nov-2026 to this one called itself 0.1.0, so a
 report naming <code>SandboxVersion</code> 0.1.0 may come from any of them. Its <code>FinishedAt</code> dates it
 against the dated bullets below.</p>
-<h3 id="breaking-4"><a class="header" href="#breaking-4">Breaking</a></h3>
+<h3 id="breaking-5"><a class="header" href="#breaking-5">Breaking</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: Every operation but <code>GET /v1/health</code> needs a credential, the terminal’s
 WebSocket upgrade among them (08-Nov-2026). In the sandbox it is a sandbox key, sent as
@@ -600,7 +669,7 @@ server’s code did not change. A device code issued before the deploy and not y
 refused. A device whose answer was lost in the 15 minutes before the deploy is paired again,
 with a new code.</li>
 </ul>
-<h3 id="added-5"><a class="header" href="#added-5">Added</a></h3>
+<h3 id="added-6"><a class="header" href="#added-6">Added</a></h3>
 <ul>
 <li><strong>POS, Terminal</strong>: The relay, and the terminal contract’s version 1 (07-Nov-2026). A POS
 creates a sale with <code>POST /v1/sales</code>, and reads it with <code>GET /v1/sales/{TransactionReference}</code>,
@@ -676,7 +745,7 @@ screen.</li>
 in <code>serverInfo.version</code> and the first sentence of its <code>instructions</code>. Each host states it in
 <code>GET /v1/health</code>, as <code>Version</code>, and a report in <code>SandboxVersion</code>.</li>
 </ul>
-<h3 id="changed-6"><a class="header" href="#changed-6">Changed</a></h3>
+<h3 id="changed-7"><a class="header" href="#changed-7">Changed</a></h3>
 <ul>
 <li><strong>POS</strong>: A sale outlives a restart of the middleware (08-Nov-2026). The same <code>IdempotencyKey</code>
 after a restart answers the sale as it stands. <code>503 at_capacity</code> is gone, and

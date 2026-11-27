@@ -32,8 +32,8 @@
   {
     "Channel": "Error.Code",
     "Code": "idempotency_conflict",
-    "Meaning": "The same key came with a different body, and the first sale is unchanged.",
-    "Next": "A retry sends the same sale. After a lost answer this means a sale may exist under the key with no id to read, so treat the sale as unknown: tell the cashier to check the terminal before another tender."
+    "Meaning": "The same key came with a different body: on POST /v1/sales the first sale is unchanged, and on an Operator API create the first object is.",
+    "Next": "A retry sends the same body. On a sale, after a lost answer, a sale may exist under the key with no id to read, so treat it as unknown: tell the cashier to check the terminal before another tender. On a create, send the same body under the key to read the object it made, and a new key for a new object."
   },
   {
     "Channel": "Error.Code",
@@ -92,7 +92,7 @@
   {
     "Channel": "Error.Code",
     "Code": "invalid_query",
-    "Meaning": "A query parameter of GET /v1/sales is malformed, out of its range, or given twice. Fields names each one.",
+    "Meaning": "A query parameter of a listing read in pages is malformed, out of its range, or given twice. Fields names each one.",
     "Next": "Fix each parameter named, or leave it out to take its default. Nothing was read."
   },
   {
@@ -105,7 +105,7 @@
     "Channel": "Error.Code",
     "Code": "not_found",
     "Meaning": "The path is unknown, or on the Operator API the id names nothing the caller may see, which answers the same as an id no row holds.",
-    "Next": "Start at GET /llms.txt, the index of what is served here, or POST /mcp, an MCP server over Streamable HTTP. A sandbox key: POST /sandbox/v1/keys, with no credential. Under /v1 only these paths are served: /v1/sales, /v1/sales/{TransactionReference}, /v1/sales/{TransactionReference}/abort, /v1/terminals/{POIIdentification}/connect, /v1/health, /v1/enrol, /v1/certificates/{one segment}, /v1/links and every path below it, and /v1/register/terminals."
+    "Next": "Start at GET /llms.txt, the index of what is served here, or POST /mcp, an MCP server over Streamable HTTP. A sandbox key: POST /sandbox/v1/keys, with no credential. Under /v1 only these paths are served: /v1/sales, /v1/sales/{TransactionReference}, /v1/sales/{TransactionReference}/abort, /v1/terminals/{POIIdentification}/connect, /v1/health, /v1/enrol, /v1/certificates/{one segment}, /v1/links and every path below it, and /v1/register/terminals. The routes of /docs/api/openapi-admin.yaml answer your world's admin server certificate alone: POST /sandbox/v1/codes with {\"Role\": \"admin\"} gives its code."
   },
   {
     "Channel": "Error.Code",
@@ -195,7 +195,7 @@
     "Channel": "Error.Code",
     "Code": "code_not_valid",
     "Meaning": "The pairing code is wrong, unknown, expired or spent, the serial is not the listing's, the principal is not listed, or its vendor is suspended. One code for every reason, so enrolment names no serial, id or state. A code already spent, sent again with another key, is this too.",
-    "Next": "Check the code as it was given, and a device's serial, and send again inside the code's 15 minutes: each refusal of a code neither spent nor burned counts an attempt on it. Past that, get a fresh code with POST https://mw.sandbox.fundimo.com.au/sandbox/v1/codes under your sandbox key, with {\"Role\": \"server\"}, {\"Role\": \"terminal\"} or {\"Role\": \"register\"}, as your world's kind takes; in live, ask whoever listed the principal for one. A server that gets this on a fresh code treats it as an alarm: someone else may have spent it, and in live the vendor's servers show the key that did."
+    "Next": "Check the code as it was given, and a device's serial, and send again inside the code's 15 minutes: each refusal of a code neither spent nor burned counts an attempt on it. Past that, get a fresh code with POST https://mw.sandbox.fundimo.com.au/sandbox/v1/codes under your sandbox key, with {\"Role\": \"server\"}, {\"Role\": \"terminal\"}, {\"Role\": \"register\"} or {\"Role\": \"admin\"}, as your world's kind takes; in live, ask whoever listed the principal for one. A server that gets this on a fresh code treats it as an alarm: someone else may have spent it, and in live the vendor's servers show the key that did."
   },
   {
     "Channel": "Error.Code",
@@ -289,21 +289,33 @@
   },
   {
     "Channel": "Error.Code",
+    "Code": "write_rate",
+    "Meaning": "This vendor's admin servers and keys, together, sent as many Operator API writes in the last 60 seconds as the middleware takes, 60 at its default MW_ADMIN_WRITES_PER_MINUTE. A write is a POST, PUT or DELETE; reads are never counted, nor are the operator's and onboarding's requests. Nothing of this request was read or written, and it was not counted.",
+    "Next": "Wait the whole seconds Retry-After gives, then send the same request again. Spread a large batch of writes over minutes."
+  },
+  {
+    "Channel": "Error.Code",
     "Code": "adapter_not_taken",
-    "Meaning": "A sign-in credential's Adapter is the other environment's, or the body holds a Secret where none is taken: a sandbox takes sandbox_signed_value alone, with no Secret, not even null or empty, and a live middleware takes signed_value alone. Nothing else of the body was read, and nothing was written.",
-    "Next": "Fix the body: in a sandbox, Adapter sandbox_signed_value and no Secret; on a live middleware, Adapter signed_value and the fleet's Secret. Retrying the same body will not help: it is refused the same way."
+    "Meaning": "A sign-in credential's Adapter is the other environment's, or the body holds a Secret or a SecretEncoding where neither is taken: a sandbox takes sandbox_signed_value alone, with no Secret and no SecretEncoding, not even null or empty, and a live middleware takes signed_value alone. Nothing else of the body was read, and nothing was written.",
+    "Next": "Fix the body: in a sandbox, Adapter sandbox_signed_value and no Secret or SecretEncoding; on a live middleware, Adapter signed_value with the key pair's Secret and its SecretEncoding. Retrying the same body will not help: it is refused the same way."
   },
   {
     "Channel": "Error.Code",
     "Code": "sign_in_not_configured",
-    "Meaning": "Sign-in is off on this middleware: no MW_SIGNIN_KMS_KEY is set, so it has no key to seal a fleet's Secret under. Only a create or a replace of a signed_value credential is refused, and nothing was written: every other route of a sign-in credential still works.",
+    "Meaning": "Sign-in is off on this middleware: no MW_SIGNIN_KMS_KEY is set, so it has no key to seal a fleet's Secret under. A create or a replace of a signed_value credential is refused, and so is setting a store's key pair, PUT /v1/merchant-stores/{StoreIdentification}/signin-key. Nothing was written, and every other route of a sign-in credential still works.",
     "Next": "Ask the operator to set MW_SIGNIN_KMS_KEY on this middleware. Retrying will not help until it is set: until then the same request is refused the same way."
   },
   {
     "Channel": "Error.Code",
     "Code": "signin_credential_removed",
     "Meaning": "The sign-in credential named is removed, so it can be neither replaced nor attached to a store, and it is unchanged. A removed credential stays removed.",
-    "Next": "Create a new credential with POST /v1/vendors/{VendorIdentification}/signin-credentials, and attach it to the store with PUT /v1/merchant-stores/{StoreIdentification}/signin-credential. Retrying will not help: the removed one stays removed."
+    "Next": "Set a new key pair, its access key id and its Secret, as a new credential with POST /v1/vendors/{VendorIdentification}/signin-credentials, and attach it to the store with PUT /v1/merchant-stores/{StoreIdentification}/signin-credential. Retrying will not help: the removed one stays removed."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "signin_profile_not_set",
+    "Meaning": "The fleet holds no sign-in profile, and a key pair signs only under its fleet's profile, which says how a signed value is made. A create of a sign-in credential, POST /v1/vendors/{VendorIdentification}/signin-credentials, is refused, and so is setting a store's key pair, PUT /v1/merchant-stores/{StoreIdentification}/signin-key. No credential is created or replaced: nothing was sealed and nothing was written. It is answered before sign_in_not_configured, so a middleware with sign-in off answers this first. Every other route of a sign-in credential still works.",
+    "Next": "Set the fleet's sign-in profile with PUT /v1/vendors/{VendorIdentification}/signin-profile, then send the same body again. Retrying will not help until the profile is set: until then the same body is refused the same way."
   },
   {
     "Channel": "Error.Code",
@@ -338,7 +350,7 @@
   {
     "Channel": "ResponseReason",
     "Code": "invalid_result",
-    "Meaning": "TransactionStatus is not ACSP or RJCT, or is not a string, or with RJCT StatusReasonInformation.Reason is not AG07, AB11 or DS02. In a LoginResponse, Response is not SUCC or FAIL, or is not a string, or with FAIL ResponseReason is not one of not_covered, not_accepted and no_answer, or with SUCC a ResponseReason is sent.",
+    "Meaning": "TransactionStatus is not ACSP or RJCT, or is not a string, or with RJCT StatusReasonInformation.Reason is not AG07, AB11 or DS02. In a LoginResponse, Response is not SUCC or FAIL, or is not a string, or with FAIL ResponseReason is not one of not_covered, not_accepted, no_answer, key_unknown, signature_refused and application_unknown, or with SUCC a ResponseReason is sent.",
     "Next": "A bug: alert someone. Do not resend that frame. Keep it, so the outcome can be sent once the code is fixed."
   },
   {
@@ -375,7 +387,7 @@
     "Channel": "ResponseReason",
     "Code": "sign_in_not_available",
     "Meaning": "The middleware holds no sign-in credential it can use for the terminal's store: none is attached, the credential is removed, the store or its owner is not in a state to act, or sign-in is off on this middleware. A terminal signed out is normal. Nothing was counted.",
-    "Next": "Answer the sale RJCT with AB11, unless a person signs in at the terminal by its fleet's own means, and ask no more on this connection."
+    "Next": "Answer the sale RJCT with AB11, unless a person signs in at the terminal by its fleet's own means, and ask no more on this connection unless a LoginCheck comes."
   },
   {
     "Channel": "ResponseReason",
@@ -486,9 +498,21 @@
     "Next": "Keys free up as they expire. Try again in an hour."
   },
   {
+    "Channel": "Error.Code",
+    "Code": "sandbox_read_only",
+    "Meaning": "This object came with your sandbox world. A back office reads it and does not change it.",
+    "Next": "Make your own: POST /v1/merchant-stores for a store, then its terminals; POST /v1/registers for a register. For a code for your -yours terminal, or in a world of a register on a device for that register, POST /sandbox/v1/codes. Only the sandbox answers this code."
+  },
+  {
+    "Channel": "Error.Code",
+    "Code": "sandbox_object_limit",
+    "Meaning": "Your sandbox world holds as many of these as it may.",
+    "Next": "A world's vendor holds at most 60 of each kind of object, removed ones counted, and gives no code past 300 certificates not past their NotAfter. Take a new key for a new world. Only the sandbox answers this code."
+  },
+  {
     "Channel": "log line",
     "Code": "sandbox_fault",
-    "Meaning": "The sandbox lost the answer to this sale on purpose, in a conformance run's resend step, after the sale was made.",
-    "Next": "Send the same sale again with the same IdempotencyKey: the relay answers it as it stands, and makes no second one. That retry is what the resend step judges."
+    "Meaning": "The sandbox lost the answer to this sale on purpose, in a conformance run's resend step, after the sale was made; or to this create, in a lost_answer step, after the object was made.",
+    "Next": "Send the same sale, or the same create, again with the same IdempotencyKey: the relay answers it as it stands, and makes no second one. That retry is what the resend step, or the lost_answer step, judges."
   }
 ]

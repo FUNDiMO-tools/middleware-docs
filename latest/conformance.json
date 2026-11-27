@@ -548,11 +548,12 @@
         },
         {
           "Id": "sign_in.one_ask",
-          "Fix": "Your terminal must send one LoginNeeded on a connection and read its answer before its next frame, ask once more, at once, only after it reports that answer FAIL for a reason other than not_covered that follows a SUCC or is its first, never ask a third time on a connection, and never ask again on a timer."
+          "Fix": "Your terminal must send one LoginNeeded on a connection and read its answer before its next frame, ask once more, at once, only after it reports that answer FAIL for not_accepted or no_answer that follows a SUCC or is its first, never ask a third time on a connection, and never ask again on a timer."
         }
       ],
       "AppliesIfDeclared": {
         "Code": "SASQ",
+        "Beside": null,
         "NotTested": "Sign-in was not tested: your terminal did not declare SASQ in Mw-Message-Functions. A terminal that needs the middleware to sign it in must declare SASQ on every upgrade and run again."
       },
       "NotApplicable": null
@@ -579,8 +580,265 @@
       ],
       "AppliesIfDeclared": {
         "Code": "SASQ",
+        "Beside": null,
         "NotTested": "Sign-in was not tested: your terminal did not declare SASQ in Mw-Message-Functions. A terminal that needs the middleware to sign it in must declare SASQ on every upgrade and run again."
       },
+      "NotApplicable": null
+    },
+    {
+      "Id": "sign_in_check",
+      "Side": "terminal",
+      "TerminalSuffix": "-yours",
+      "Fault": null,
+      "Instruction": "From your own terminal code on {terminal}, with LoginCheck declared beside SASQ in Mw-Message-Functions, keep your terminal connected, with no restart: the sandbox sends no sale and, once your terminal's sign-in limit leaves it an answer, one LoginCheck, so send one LoginNeeded on that connection, though an earlier ask there was refused, open the LoginRequest, sign in with it, report the outcome of that sign-in with LoginResponse naming the answer's LoginReference, and send no Outcome and no second LoginNeeded for it. A terminal that does not declare LoginCheck beside SASQ is not tested here.",
+      "Assertions": [
+        {
+          "Id": "sign_in_check.declared",
+          "Fix": "Your terminal must name LoginCheck beside SASQ in the Mw-Message-Functions header of every upgrade, a reconnect during the step included, because the middleware sends a LoginCheck only on a connection that declared both."
+        },
+        {
+          "Id": "sign_in_check.login_asked",
+          "Fix": "Your terminal must answer a LoginCheck with one LoginNeeded on the connection it came on, at once and with no sale, whether or not it holds a session and whatever an earlier ask on that connection was refused."
+        },
+        {
+          "Id": "sign_in_check.login_sent",
+          "Fix": "Your terminal must keep reading its connection after it sends LoginNeeded, so the middleware can deliver the LoginRequest that answers it."
+        },
+        {
+          "Id": "sign_in_check.login_reported",
+          "Fix": "Your terminal must report the outcome of its sign-in at its fleet's payment system in one LoginResponse naming the LoginReference of the LoginRequest it opened, with Response SUCC, or FAIL and the ResponseReason that fits, so the middleware takes it as the report of that answer."
+        },
+        {
+          "Id": "sign_in_check.no_outcome",
+          "Fix": "Your terminal must send no Outcome for a LoginCheck, because a check is no sale and its result is the LoginResponse alone."
+        },
+        {
+          "Id": "sign_in_check.no_refusal",
+          "Fix": "Your terminal sent a frame the middleware refused, so change what the Refusal's ResponseReason names."
+        },
+        {
+          "Id": "sign_in_check.one_ask",
+          "Fix": "Your terminal must send one LoginNeeded for a LoginCheck and not ask again for it on that connection, after a FAIL it reports included, and never on a timer."
+        }
+      ],
+      "AppliesIfDeclared": {
+        "Code": "LoginCheck",
+        "Beside": "SASQ",
+        "NotTested": "The sign-in check was not tested: your terminal did not declare LoginCheck beside SASQ in Mw-Message-Functions. A terminal that takes the middleware's LoginCheck must declare both on every upgrade and run again."
+      },
+      "NotApplicable": null
+    },
+    {
+      "Id": "store_live",
+      "Side": "fleet",
+      "TerminalSuffix": "",
+      "Fault": null,
+      "Instruction": "From your own back office, create one store with POST /v1/merchant-stores, then take it live with PUT /v1/merchant-stores/{StoreIdentification}/state and Event live.",
+      "Assertions": [
+        {
+          "Id": "store_live.one_store",
+          "Fix": "Your back office must create the store once, under one IdempotencyKey, with POST /v1/merchant-stores, so exactly one create is answered 201."
+        },
+        {
+          "Id": "store_live.live",
+          "Fix": "Your back office must take the store it created live with PUT /v1/merchant-stores/{StoreIdentification}/state and Event live, which is answered 200 with State live."
+        },
+        {
+          "Id": "store_live.no_refusal",
+          "Fix": "Your back office sent a request the middleware refused, so change what the answer's Error.Code and Error.Fields name, and on 409 sandbox_object_limit, which refuses a create once your world holds 60 objects of its kind, removed ones counted, take a new sandbox key for a new world."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "terminal_listed",
+      "Side": "fleet",
+      "TerminalSuffix": "",
+      "Fault": null,
+      "Instruction": "From your own back office, list one terminal by its SerialNumber at a store of your own with POST /v1/merchant-stores/{StoreIdentification}/terminals, then read that store's terminals with GET /v1/merchant-stores/{StoreIdentification}/terminals.",
+      "Assertions": [
+        {
+          "Id": "terminal_listed.one_terminal",
+          "Fix": "Your back office must list the terminal once, under one IdempotencyKey, with POST /v1/merchant-stores/{StoreIdentification}/terminals, so exactly one listing is answered 201."
+        },
+        {
+          "Id": "terminal_listed.read_back",
+          "Fix": "Your back office must read the store's terminals with GET /v1/merchant-stores/{StoreIdentification}/terminals after the listing, and find in Terminals the POIIdentification the listing gave."
+        },
+        {
+          "Id": "terminal_listed.no_refusal",
+          "Fix": "Your back office sent a request the middleware refused, so change what the answer's Error.Code and Error.Fields name, and on 409 sandbox_object_limit, which refuses a create once your world holds 60 objects of its kind, removed ones counted, take a new sandbox key for a new world."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "lost_answer",
+      "Side": "fleet",
+      "TerminalSuffix": "",
+      "Fault": {
+        "Kind": "LoseAnswer",
+        "When": "first_store_create"
+      },
+      "Instruction": "From your own back office, create one store with POST /v1/merchant-stores: the sandbox loses the answer on purpose after the store is made, so send the same create again under the same IdempotencyKey.",
+      "Assertions": [
+        {
+          "Id": "lost_answer.one_store",
+          "Fix": "Your back office must send a create whose answer was lost again under the same IdempotencyKey, never a new one, so exactly one store create is answered 201."
+        },
+        {
+          "Id": "lost_answer.repeated",
+          "Fix": "Your back office must send the lost POST /v1/merchant-stores again with the same body and the same IdempotencyKey, which the middleware answers 200 with the StoreIdentification of the store the first send made."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "sign_in_set",
+      "Side": "fleet",
+      "TerminalSuffix": "",
+      "Fault": null,
+      "Instruction": "From your own back office, set your fleet's sign-in profile with PUT /v1/vendors/{VendorIdentification}/signin-profile, create a key pair with POST /v1/vendors/{VendorIdentification}/signin-credentials, then attach it to a store of your own with PUT /v1/merchant-stores/{StoreIdentification}/signin-credential.",
+      "Assertions": [
+        {
+          "Id": "sign_in_set.profile",
+          "Fix": "Your back office must set the fleet's sign-in profile with PUT /v1/vendors/{VendorIdentification}/signin-profile, so it is answered 200."
+        },
+        {
+          "Id": "sign_in_set.credential",
+          "Fix": "Your back office must create a key pair with POST /v1/vendors/{VendorIdentification}/signin-credentials once the profile is set, so it is answered 201."
+        },
+        {
+          "Id": "sign_in_set.attached",
+          "Fix": "Your back office must attach the key pair it created to a store of its own with PUT /v1/merchant-stores/{StoreIdentification}/signin-credential, naming its SignInCredentialIdentification, so it is answered 200."
+        },
+        {
+          "Id": "sign_in_set.no_refusal",
+          "Fix": "Your back office sent a request the middleware refused, so change what the answer's Error.Code and Error.Fields name, and on 409 sandbox_object_limit, which refuses a create once your world holds 60 objects of its kind, removed ones counted, take a new sandbox key for a new world."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "terminal_removed",
+      "Side": "fleet",
+      "TerminalSuffix": "",
+      "Fault": null,
+      "Instruction": "From your own back office, ask a new code for a terminal of your own with POST /v1/terminals/{POIIdentification}/pairing-code, then remove it with PUT /v1/terminals/{POIIdentification}/state and State removed.",
+      "Assertions": [
+        {
+          "Id": "terminal_removed.new_code",
+          "Fix": "Your back office must ask a new code for a terminal of its own with POST /v1/terminals/{POIIdentification}/pairing-code, so it is answered 201."
+        },
+        {
+          "Id": "terminal_removed.removed",
+          "Fix": "Your back office must then remove the same terminal with PUT /v1/terminals/{POIIdentification}/state and State removed, so it is answered 204."
+        },
+        {
+          "Id": "terminal_removed.no_refusal",
+          "Fix": "Your back office sent a request the middleware refused, so change what the answer's Error.Code and Error.Fields name, and on 409 sandbox_object_limit, which refuses a create once your world holds 60 objects of its kind, removed ones counted, take a new sandbox key for a new world."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "register_listed",
+      "Side": "pos_vendor",
+      "TerminalSuffix": "",
+      "Fault": null,
+      "Instruction": "From your own back office, list one register with POST /v1/registers and no SerialNumber, so it is of Kind server, then read your registers with GET /v1/registers.",
+      "Assertions": [
+        {
+          "Id": "register_listed.one_register",
+          "Fix": "Your back office must list the register once, under one IdempotencyKey, with POST /v1/registers and no SerialNumber, so exactly one listing is answered 201 with Kind server."
+        },
+        {
+          "Id": "register_listed.read_back",
+          "Fix": "Your back office must read its registers with GET /v1/registers after the listing, and find in Registers the RegisterIdentification the listing gave."
+        },
+        {
+          "Id": "register_listed.no_refusal",
+          "Fix": "Your back office sent a request the middleware refused, so change what the answer's Error.Code and Error.Fields name, and on 409 sandbox_object_limit, which refuses a create once your world holds 60 objects of its kind, removed ones counted, take a new sandbox key for a new world."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "lost_answer",
+      "Side": "pos_vendor",
+      "TerminalSuffix": "",
+      "Fault": {
+        "Kind": "LoseAnswer",
+        "When": "first_register_create"
+      },
+      "Instruction": "From your own back office, list one register with POST /v1/registers: the sandbox loses the answer on purpose after the register is made, so send the same create again under the same IdempotencyKey.",
+      "Assertions": [
+        {
+          "Id": "lost_answer.one_register",
+          "Fix": "Your back office must send a create whose answer was lost again under the same IdempotencyKey, never a new one, so exactly one register create is answered 201."
+        },
+        {
+          "Id": "lost_answer.repeated",
+          "Fix": "Your back office must send the lost POST /v1/registers again with the same body and the same IdempotencyKey, which the middleware answers 200 with the RegisterIdentification of the register the first send made."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "device_register",
+      "Side": "pos_vendor",
+      "TerminalSuffix": "",
+      "Fault": null,
+      "Instruction": "From your own back office, list one register with POST /v1/registers and a SerialNumber, so it is of Kind device, ask a new code for it with POST /v1/registers/{RegisterIdentification}/pairing-code, then remove it with DELETE /v1/registers/{RegisterIdentification}.",
+      "Assertions": [
+        {
+          "Id": "device_register.listed",
+          "Fix": "Your back office must list the register with POST /v1/registers and a SerialNumber, so it is answered 201 with Kind device."
+        },
+        {
+          "Id": "device_register.new_code",
+          "Fix": "Your back office must ask a new code for the register it listed with POST /v1/registers/{RegisterIdentification}/pairing-code, so it is answered 201."
+        },
+        {
+          "Id": "device_register.removed",
+          "Fix": "Your back office must then remove the same register with DELETE /v1/registers/{RegisterIdentification}, so it is answered 200."
+        },
+        {
+          "Id": "device_register.no_refusal",
+          "Fix": "Your back office sent a request the middleware refused, so change what the answer's Error.Code and Error.Fields name, and on 409 sandbox_object_limit, which refuses a create once your world holds 60 objects of its kind, removed ones counted, take a new sandbox key for a new world."
+        }
+      ],
+      "AppliesIfDeclared": null,
+      "NotApplicable": null
+    },
+    {
+      "Id": "server_listed",
+      "Side": "pos_vendor",
+      "TerminalSuffix": "",
+      "Fault": null,
+      "Instruction": "From your own back office, list one server of Scope pos with POST /v1/vendors/{VendorIdentification}/servers, then remove it with DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}, and where your world already holds two pos servers not removed, remove one of them first, or the listing meets 409 too_many_keys.",
+      "Assertions": [
+        {
+          "Id": "server_listed.listed",
+          "Fix": "Your back office must list a server of Scope pos with POST /v1/vendors/{VendorIdentification}/servers, so it is answered 201, and where your world already holds two pos servers not removed, remove one of them first, since a third is 409 too_many_keys."
+        },
+        {
+          "Id": "server_listed.removed",
+          "Fix": "Your back office must then remove the server it listed with DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}, so it is answered 200."
+        },
+        {
+          "Id": "server_listed.no_refusal",
+          "Fix": "Your back office sent a request the middleware refused, so change what the answer's Error.Code and Error.Fields name, and on 409 sandbox_object_limit, which refuses a create once your world holds 60 objects of its kind, removed ones counted, take a new sandbox key for a new world."
+        }
+      ],
+      "AppliesIfDeclared": null,
       "NotApplicable": null
     }
   ]

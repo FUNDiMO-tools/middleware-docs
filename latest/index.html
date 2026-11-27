@@ -3,10 +3,11 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Start: POS or terminal? - FUNDiMO middleware API</title>
+        <title>Start: POS, terminal or back office? - FUNDiMO middleware API</title>
 
 
         <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
         <link rel="stylesheet" href="theme/fonts.css">
         <script>
             (function () {
@@ -58,10 +59,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-afda5709.js";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b0d6c91.js"></script>
+        <script src="toc-3d95a7df.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,11 +199,12 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="fundimo-middleware-api"><a class="header" href="#fundimo-middleware-api"><span class="mw-wm">FUNDiMO</span> middleware API</a></h1>
-<p>The middleware is the relay between a point of sale, a payment terminal and FUNDiMO. A POS
-vendor and a terminal vendor each integrate into one schema, and each has a path of its own.</p>
+<p>The middleware is the relay between a point of sale, a payment terminal and FUNDiMO. A POS, a
+terminal and a vendor’s own back office each integrate into one schema, and each has a path of
+its own.</p>
 <div class="mw-choose">
 <a class="mw-card" href="pos/index.html"><strong>I am building a POS</strong><br>
 A cloud POS on its own server, or an app on a till: sales, refunds, cancel, and linking a
@@ -210,6 +212,9 @@ register to a terminal.</a>
 <a class="mw-card" href="terminal/index.html"><strong>I am building a terminal</strong><br>
 A terminal's app: the WebSocket, instructions and outcomes, the link word, sign-in, and
 enrolling a device.</a>
+<a class="mw-card" href="back-office.html"><strong>I am running a back office</strong><br>
+Your own admin server: your servers and apps, a fleet's stores, terminals and sign-in, and a
+POS vendor's registers and aliases.</a>
 </div>
 
 <p>What to know first:</p>

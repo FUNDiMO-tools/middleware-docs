@@ -7,6 +7,7 @@
 
 
         <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
         <link rel="stylesheet" href="theme/fonts.css">
         <script>
             (function () {
@@ -58,10 +59,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-afda5709.js";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b0d6c91.js"></script>
+        <script src="toc-3d95a7df.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,10 +199,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-the-terminal-contract"><a class="header" href="#middleware-the-terminal-contract">Middleware: the terminal contract</a></h1>
-<p>Last changed in v0.4.0. Its frames are at version 5, the last of this page’s own count, which
+<p>Last changed in v1.0.0. Its frames are at version 5, the last of this page’s own count, which
 numbers the frames of this page alone and ends at 5. From now on, the frames change with a
 release of the middleware, and that release is not this count. Read the release in
 <code>serverInfo.version</code> from the sandbox’s MCP server, or in <code>SandboxVersion</code> in a conformance
@@ -236,8 +237,9 @@ what that system answered in a <code>LoginResponse</code> (Signing in, below). Y
 terminal’s side from this document alone. The schema of each frame,
 <code>TerminalInstruction</code>, <code>TerminalOutcome</code>, <code>TerminalRefusal</code>, <code>TerminalLinkWord</code>,
 <code>TerminalLinkEnded</code>, <code>TerminalStatusRequest</code>, <code>TerminalAbort</code>, <code>TerminalLoginNeeded</code>,
-<code>TerminalLoginRequest</code> and <code>TerminalLoginResponse</code>, is also in <a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a>
-beside it, for a client that validates what it sends and receives.</p>
+<code>TerminalLoginRequest</code>, <code>TerminalLoginResponse</code> and <code>TerminalLoginCheck</code>, is also in
+<a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a> beside it, for a client that validates what it sends and
+receives.</p>
 <p>An instruction is a sale, or with <code>TransactionType</code> <code>RFND</code> a refund, and only a terminal that
 declared <code>RFND</code> is sent a refund. Field names are ISO 20022 element names as written, in
 PascalCase. Every field below says who sends it: <code>mw</code> or <code>terminal</code>. Every amount is a
@@ -245,6 +247,7 @@ JSON string in decimal major units with a dot and exactly two fraction digits, s
 <code>"12.50"</code>. It is never a JSON number and never negative, and one <code>Currency</code>, <code>AUD</code>, governs
 every amount in a sale.</p>
 <h2 id="in-short"><a class="header" href="#in-short">In short</a></h2>
+<p>Changed in v1.0.0.</p>
 <ol>
 <li>Open a WebSocket to <code>/v1/terminals/{POIIdentification}/connect</code>, presenting the
 terminal’s credential on the upgrade, and hold it while the terminal is on. Reconnect
@@ -272,6 +275,10 @@ terminal holds (Abort, below).</li>
 connect or when an <code>Instruction</code> arrives, wake if it sleeps, send one <code>LoginNeeded</code> with a
 fresh key, open the <code>LoginRequest</code> that answers it, sign in with what it holds, and report
 what its fleet’s payment system answered in one <code>LoginResponse</code> (Signing in, below).</li>
+<li>If the terminal declared <code>LoginCheck</code> beside <code>SASQ</code> and a <code>LoginCheck</code> frame arrives while no
+payment, person or sign-in holds it, send one <code>LoginNeeded</code> with a fresh key, whether or not
+it holds a session, open the answer, sign in, and report in one <code>LoginResponse</code>, waking
+nothing and sending no <code>Outcome</code> (The check, below).</li>
 </ol>
 <p>The sections below say what each step means, and what to do when a step goes wrong.</p>
 <h2 id="address"><a class="header" href="#address">Address</a></h2>
@@ -296,7 +303,7 @@ boot, may choose one instead. A listed terminal may connect once it is <code>pai
 sandbox, a seed pairs it. It must not be a card or account number: the middleware cannot detect one
 in it, and the id is logged.</p>
 <h2 id="connect"><a class="header" href="#connect">Connect</a></h2>
-<p>Changed in v0.4.0.</p>
+<p>Changed in v1.0.0.</p>
 <p><code>GET /v1/terminals/{POIIdentification}/connect</code> with a WebSocket upgrade (RFC 6455):
 <code>Connection: Upgrade</code>, <code>Upgrade: websocket</code>, <code>Sec-WebSocket-Version: 13</code> and a
 <code>Sec-WebSocket-Key</code>. Every message either way is a text frame holding one JSON object in
@@ -342,7 +349,7 @@ middleware’s requests it answers, and whether it asks to be signed in, in the 
 <code>Mw-Message-Functions</code>, read as <code>Mw-Transaction-Types</code> is: codes
 separated by commas with optional spaces, read as one list when the header is sent more than
 once, matched exactly, case and all, a code the middleware does not know ignored, and kept for
-that connection alone, so send it on every upgrade. Its
+that connection alone, so send it on every upgrade. Three of its
 codes are ISO 20022’s <code>MessageFunction</code>, of <code>Header41</code>: “Identifies the type of process related
 to the message.” <code>SSMQ</code>, “Request the status of a previous message for which the Sale system
 has no response.”, says the terminal answers a <code>StatusRequest</code> (StatusRequest, below), such as
@@ -351,24 +358,34 @@ terminal answers an <code>Abort</code> (Abort, below), such as <code>Mw-Message-
 terminal that answers both. <code>SASQ</code>, “Request the management of a session: login, logout and
 diagnosis services. Initiated by the Sale system.”, says the terminal asks to be signed in to its
 fleet’s payment system, and can be woken (Signing in, below), such as
-<code>Mw-Message-Functions: SASQ, SSAB, SSMQ</code> for a terminal that does all three. The middleware sends
-an <code>Abort</code> only on a connection whose upgrade declared <code>SSAB</code>: a POS that asks to cancel a sale on
-a terminal connected without it is refused <code>409 terminal_cannot_abort</code>, and the terminal is sent
-nothing. The middleware answers a <code>LoginNeeded</code> only on a connection whose upgrade declared
-<code>SASQ</code>: on any other it is refused <code>unknown_frame_type</code>. Absent, empty, over 256 bytes, or naming
-no code the middleware knows, the header declares none, the terminal is sent no <code>StatusRequest</code>
-and no <code>Abort</code>, and its <code>LoginNeeded</code> is refused. Declare <code>SSMQ</code> only once the terminal answers a
-<code>StatusRequest</code>, <code>SSAB</code> only once it answers an <code>Abort</code>, and <code>SASQ</code> only once it does all that
-Signing in, below, says. The middleware reads the header only once the credential has passed,
-and a refused upgrade reads it not at all. ISO 20022 has no element for the header itself: its
-name is the middleware’s own.</p>
+<code>Mw-Message-Functions: SASQ, SSAB, SSMQ</code> for a terminal that does all three. The fourth,
+<code>LoginCheck</code>, is the middleware’s own: ISO 20022’s list of these codes, <code>RetailerMessage1Code</code>,
+holds 17, and none of them is for it (Sources, below). <code>LoginCheck</code> says the terminal takes a
+<code>LoginCheck</code> frame, which asks it to sign in there and then (The check, below), such as
+<code>Mw-Message-Functions: SASQ, SSAB, SSMQ, LoginCheck</code>. It counts only beside <code>SASQ</code>, since the
+terminal answers the frame with a <code>LoginNeeded</code>: declared without <code>SASQ</code>, it is sent no
+<code>LoginCheck</code>. The middleware sends an <code>Abort</code> only on a connection whose upgrade declared <code>SSAB</code>:
+a POS that asks to cancel a sale on a terminal connected without it is refused
+<code>409 terminal_cannot_abort</code>, and the terminal is sent nothing. The middleware answers a
+<code>LoginNeeded</code> only on a connection whose upgrade declared <code>SASQ</code>: on any other it is refused
+<code>unknown_frame_type</code>. Absent, empty, over 256 bytes, or naming no code the middleware knows, the
+header declares none, the terminal is sent no <code>StatusRequest</code>, no <code>Abort</code> and no <code>LoginCheck</code>,
+and its <code>LoginNeeded</code> is refused. Declare <code>SSMQ</code> only once the terminal answers a
+<code>StatusRequest</code>, <code>SSAB</code> only once it answers an <code>Abort</code>, <code>SASQ</code> only once it does all that
+Signing in, below, says, and <code>LoginCheck</code> only once it does all that The check, below, says. The
+middleware reads the header only once the credential has passed, and a refused upgrade reads it
+not at all. ISO 20022 has no element for the header itself: its name is the middleware’s own.</p>
+<p><strong>The store’s logo.</strong> The <code>101</code> carries the header <code>Mw-Logo-Tag</code> while the terminal’s store holds a
+logo: the logo’s tag, which changes when the logo does. While the store holds none, the <code>101</code>
+carries no <code>Mw-Logo-Tag</code>. On a tag you do not hold, read the logo once (The store’s logo, below).
+The header’s name is the middleware’s own. No frame changes for it.</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Status</th><th><code>Error.Code</code></th><th>When</th><th>What to do</th></tr>
 </thead>
 <tbody>
-<tr><td><code>101</code></td><td></td><td>Upgraded. Replaces any current connection for that id</td><td>Hold it. Reset the reconnect backoff only once it has stayed open 10 seconds (Reconnect, below)</td></tr>
+<tr><td><code>101</code></td><td></td><td>Upgraded. Replaces any current connection for that id. Carries <code>Mw-Logo-Tag</code> while the store holds a logo</td><td>Hold it. Reset the reconnect backoff only once it has stayed open 10 seconds (Reconnect, below). On a <code>Mw-Logo-Tag</code> you do not hold, read the logo once (The store’s logo, below)</td></tr>
 <tr><td><code>400</code></td><td><code>invalid_field</code></td><td><code>POIIdentification</code> fails its pattern, with <code>Fields: ["POIIdentification"]</code></td><td>Fix the id. Retrying will not help</td></tr>
 <tr><td><code>400</code></td><td><code>invalid_upgrade</code></td><td>A bad WebSocket version or key</td><td>Fix the client</td></tr>
 <tr><td><code>401</code></td><td><code>certificate_required</code></td><td>No credential came</td><td>Present the certificate, or in the sandbox the key. A terminal with no certificate enrols first</td></tr>
@@ -418,6 +435,7 @@ only when a person brings a new code. A terminal decides none of this by its own
 <p>A non-2xx answer from the middleware has the body
 <code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>.</p>
 <h2 id="hold"><a class="header" href="#hold">Hold</a></h2>
+<p>Changed in v1.0.0.</p>
 <p>Keep the connection open while the terminal is on. The middleware sends a WebSocket Ping every
 <code>MW_WS_PING_SECS</code>, 30 seconds by default. Answer each with a Pong, which most WebSocket
 libraries do by themselves. The middleware treats 2.5 intervals with no frame of any kind from the
@@ -429,10 +447,10 @@ middleware’s Pings cannot be counted, so send your own: set the library’s pi
 socket for want of a Pong as that silence, and reconnect. The middleware answers each Ping with
 a Pong, and counts it as a frame from the terminal. Since such a library shows none of the
 middleware’s Pings, the later frame of Resending is safe, below, is the next text frame from the
-middleware: an <code>Instruction</code>, a <code>StatusRequest</code>, an <code>Abort</code>, a <code>LinkWord</code>, a <code>LinkEnded</code> or a
-<code>LoginRequest</code>. An <code>Instruction</code> that comes is the next payment as well.</p>
+middleware: an <code>Instruction</code>, a <code>StatusRequest</code>, an <code>Abort</code>, a <code>LinkWord</code>, a <code>LinkEnded</code>, a
+<code>LoginRequest</code> or a <code>LoginCheck</code>. An <code>Instruction</code> that comes is the next payment as well.</p>
 <h2 id="reconnect"><a class="header" href="#reconnect">Reconnect</a></h2>
-<p>Changed in v0.3.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>After any close, and after a failed connect the table above does not say to fix, reconnect
 with a backoff: wait 1 second, double the wait after each failure up to 30 seconds, and add
 a little randomness. A connection that closes within 10 seconds of opening counts as a
@@ -472,11 +490,50 @@ retired, within <code>MW_WS_PING_SECS</code>, and its log’s <code>terminal_dis
 reason <code>revoked</code>. While that lasts, the next connect is refused: <code>403 not_permitted</code> backs off
 to one hour, and a retired credential’s refusal is read by the holder’s table above. Keep any
 outcome you hold.</p>
-<p>A hosted middleware may run two instances for a while, and a POS’s sale can reach the one your
-connection is not on. That instance answers the POS <code>409 terminal_offline</code>, and the one your
-connection is on closes it within a few seconds; its log’s <code>terminal_disconnected</code> line gives the
-reason <code>moved</code>. Reconnect as after any close: your next connection reaches the instance taking
-new requests.</p>
+<p>A hosted middleware may run two instances for a while, and a POS’s sale, or a check of the
+store’s sign-in naming your terminal (The check, below), can reach the one your connection is not
+on. That instance answers the POS <code>409 terminal_offline</code>, and the check <code>terminal_offline</code>, and
+the one your connection is on closes it within a few seconds, after a check only where nothing
+else kept the terminal from being asked; its log’s <code>terminal_disconnected</code> line gives the reason
+<code>moved</code>. Reconnect as after any close: your next connection reaches the instance taking new
+requests.</p>
+<h2 id="the-stores-logo"><a class="header" href="#the-stores-logo">The store’s logo</a></h2>
+<p>Added in v1.0.0.</p>
+<p>A store may hold one logo, a PNG or a JPEG, which FUNDiMO sets for the store’s terminals and
+registers to show. The middleware sends no frame for it. A terminal learns the logo’s tag from its
+connect’s <code>101</code>, in <code>Mw-Logo-Tag</code> (Connect, above), and reads the image with an HTTP request beside
+its connection. The tag is 66 characters: <code>"</code>, the 64 lowercase hex digits of the image’s SHA-256,
+then <code>"</code>. It changes when the logo does, and only then.</p>
+<p><strong>When to read it.</strong> Keep the image and its tag, across a reconnect and a restart. After each
+<code>101</code>, compare its <code>Mw-Logo-Tag</code> with the tag you hold:</p>
+<ul>
+<li>A <code>101</code> naming a tag you do not hold: read the logo once, as below.</li>
+<li>A <code>101</code> naming the tag you hold: read nothing, and show what you hold.</li>
+<li>A <code>101</code> with no <code>Mw-Logo-Tag</code>: show none, and read nothing. The store holds no logo.</li>
+</ul>
+<p>Read the logo only then, once a change, and never on a timer: a new logo reaches the terminal at
+its next connect.</p>
+<p><strong>The read.</strong> <code>GET /v1/terminals/{POIIdentification}/logo</code>, with the terminal’s own id, under the
+credential of its connect. It is admitted as connect is: the terminal’s own certificate, or in the
+sandbox a <code>pos</code> key of its vendor, on a <code>paired</code> terminal. Send the tag you hold, quotes and all, as
+the value of <code>If-None-Match</code>, and no <code>If-None-Match</code> while you hold none.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status</th><th><code>Error.Code</code></th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>200</code></td><td></td><td>The store’s logo. The body is the image, its <code>Content-Type</code> is <code>image/png</code> or <code>image/jpeg</code>, and its <code>ETag</code> is its tag, the same text as <code>Mw-Logo-Tag</code></td><td>Keep the image and its <code>ETag</code>, and show it. Keep this <code>ETag</code>, not the <code>101</code>’s tag: the two differ only when the logo changed between them</td></tr>
+<tr><td><code>304</code></td><td></td><td>The tag you sent is the logo’s. No body</td><td>Keep what you hold, and show it</td></tr>
+<tr><td><code>404</code></td><td><code>not_found</code></td><td>The store holds no logo</td><td>Show none</td></tr>
+<tr><td>Anything else</td><td></td><td>A <code>400</code>, a <code>401</code>, a <code>403</code>, a <code>503</code> or a dropped connection: no verdict on the logo</td><td>Keep what you hold. Read again after the next <code>101</code> naming a tag you do not hold</td></tr>
+</tbody>
+</table>
+</div>
+<p>If the terminal cannot decode the image, show none. Keep its tag, so the same image is not read
+again.</p>
+<p>In the hosted sandbox, no store holds a logo until a later release. No <code>101</code> there carries
+<code>Mw-Logo-Tag</code>, and the read answers <code>404</code> <code>not_found</code>.</p>
 <h2 id="linking-to-a-register"><a class="header" href="#linking-to-a-register">Linking to a register</a></h2>
 <p>A register links to a terminal at the counter, by a word the terminal shows. The register
 asks the middleware, the middleware gives each unbound <code>paired</code> terminal of the store a different word, and
@@ -511,7 +568,7 @@ itself, so a terminal has no menu to open and nothing to choose. The middleware 
 terminal in a sale until the sale ends, and to a bound terminal none at all. Never log the
 word, and never send it back: the middleware’s own log holds it as <code>&lt;withheld&gt;</code>.</p>
 <h2 id="instruction"><a class="header" href="#instruction">Instruction</a></h2>
-<p>Changed in v0.3.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>The middleware to the terminal. One frame starts one payment: a sale, or with
 <code>TransactionType</code> <code>RFND</code> a refund (A refund, below).</p>
 <pre><code class="language-json">{ "MessageType": "Instruction", "TransactionReference": "sal_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a", "SaleReferenceIdentification": "INV-1001", "TransactionDetails": { "Currency": "AUD", "TotalAmount": "12.50", "SaleItem": [ { "ProductDescription": "Flat white", "ProductQuantity": 2, "UnitPrice": "6.25", "ProductAmount": "12.50" } ] } }
@@ -563,8 +620,9 @@ field no pattern, so the bound can widen later. The POS’s <code>ProductCode</c
 product identifiers and the basket’s header stay in the middleware.</p>
 <p><strong>What a terminal ignores.</strong> Ignore any key a frame the middleware sends does not name, at any
 depth, on an <code>Instruction</code>, a <code>Refusal</code>, a <code>LinkWord</code>, a <code>LinkEnded</code>, a <code>StatusRequest</code>, an
-<code>Abort</code> and a <code>LoginRequest</code>, and in the <code>SignedValue</code> group a <code>LoginRequest</code> opens to: a later
-version may add some. Ignore a frame of any <code>MessageType</code> the terminal does not know.</p>
+<code>Abort</code>, a <code>LoginRequest</code> and a <code>LoginCheck</code>, and in the <code>SignedValue</code> group a <code>LoginRequest</code>
+opens to: a later version may add some. Ignore a frame of any <code>MessageType</code> the terminal does not
+know.</p>
 <p><strong>The middleware sends each instruction once.</strong> A drop does not bring it back. Instead, the
 middleware asks about an instruction lost in a drop on a later connection of the terminal, by
 a <code>StatusRequest</code>, when that connection declared <code>SSMQ</code> (StatusRequest, below). If a
@@ -798,12 +856,13 @@ this connection;</li>
 <li>that, for a reference it holds no record of, it sends nothing.</li>
 </ul>
 <h2 id="signing-in"><a class="header" href="#signing-in">Signing in</a></h2>
+<p>Changed in v1.0.0.</p>
 <p>A terminal may need a session at its fleet’s own payment system before it can take a payment,
 and may hold none: after its process starts, or once that system ended the session. A terminal
 that declared <code>SASQ</code> (Connect, above) asks the middleware for what that system takes for a
 sign-in, with a <code>LoginNeeded</code>. The middleware answers on the same connection with a
-<code>LoginRequest</code>, made from the credential the fleet set for the terminal’s store and sealed to a
-key the terminal made for that one asking, or with a <code>Refusal</code> saying why not. The terminal opens
+<code>LoginRequest</code>, made from the key pair the fleet set for the terminal’s store, under the fleet’s
+sign-in profile, and sealed to a key the terminal made for that one asking, or with a <code>Refusal</code> saying why not. The terminal opens
 the answer, takes it to its fleet’s payment system itself, and reports what that system answered
 in a <code>LoginResponse</code>. The middleware never sees the session and cannot end it: ending one is the
 fleet’s. A POS changes nothing for it: it sends no new field and reads no new code, and a sale to
@@ -814,21 +873,26 @@ which a terminal asks for a login: <code>LoginNeeded</code> is the middleware’
 named after ISO 20022’s <code>LoginRequest</code>, of <code>SessionManagementRequest9</code>, “Content of the Login
 Request message.”, and carries none of its elements. <code>LoginResponse</code> is named after ISO 20022’s
 <code>LoginResponse</code>, the block a POI sends to answer a login, of <code>SessionManagementResponse9</code>,
-“Content of the Login Response message.”, and carries none of its elements either. Each
-definition is ISO’s, from M3 (Sources, below).</p>
+“Content of the Login Response message.”, and carries none of its elements either. <code>LoginCheck</code>,
+by which the middleware asks a terminal to sign in (The check, below), is the middleware’s own
+name too: ISO 20022’s nearest is <code>DiagnosisRequest</code>, of <code>SessionManagementRequest9</code>, “Content of
+the Diagnosis Request message.”, whose elements name acquirers and hosts and open no session.
+Each definition is ISO’s, from M3 (Sources, below).</p>
 <h3 id="when-to-ask"><a class="header" href="#when-to-ask">When to ask</a></h3>
+<p>Changed in v1.0.0.</p>
 <p><strong>Declare it.</strong> Send <code>SASQ</code> in <code>Mw-Message-Functions</code> on every upgrade, once the terminal does
 all this section says. Declaring <code>SASQ</code> declares that the terminal can be woken.</p>
 <p><strong>Wake.</strong> Given an <code>Instruction</code> while it is asleep, its screen off or its application not in
 front, a terminal that declared <code>SASQ</code> turns the screen on and brings its payment screen to the
 front over the lock screen, then asks if it holds no session. The middleware cannot see the
 screen, and neither can a conformance run, so this is the contract’s rule alone.</p>
-<p><strong>Ask.</strong> A terminal asks only while it holds no session at its fleet’s payment system: on an
-<code>Instruction</code>, or at connect where it knows it holds none, which takes the round trip off the
-sale’s path. It asks at most once a connection, unless its fleet’s payment system refused what it
-was sent. For each asking it makes a fresh P-256 key pair in memory, not in its keystore, and
-sends one <code>LoginNeeded</code> holding the public key, then reads the answer before its next frame, as
-Refusal, below, asks of every frame.</p>
+<p><strong>Ask.</strong> Of its own accord, a terminal asks only while it holds no session at its fleet’s
+payment system: on an <code>Instruction</code>, or at connect where it knows it holds none, which takes the
+round trip off the sale’s path. It asks at most once a connection, unless its fleet’s payment
+system refused what it was sent, or a <code>LoginCheck</code> comes, which it answers whether or not it
+holds a session (The check, below). For each asking it makes a fresh P-256 key pair in memory,
+not in its keystore, and sends one <code>LoginNeeded</code> holding the public key, then reads the answer
+before its next frame, as Refusal, below, asks of every frame.</p>
 <h3 id="the-ask-loginneeded"><a class="header" href="#the-ask-loginneeded">The ask: <code>LoginNeeded</code></a></h3>
 <p>The terminal to the middleware, on a connection whose upgrade declared <code>SASQ</code>:</p>
 <pre><code class="language-json">{ "MessageType": "LoginNeeded", "RecipientKey": { "PublicKey": "BP6MGc4JBRkevCmKkkV5JTHybwzs4kYGOei8Oct_cGqCanebTPlpuKDlOcf2L7PTCtaqj4DjDx0Siq_WiiznLqA", "Signature": "MEQCIBERERERERERERERERERERERERERERERERERERERERERAiAiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg" } }
@@ -865,6 +929,7 @@ longer hold its connection is answered <code>terminal_not_permitted</code> first
 dropped by its path and named in the middleware’s log, its value unread. The log holds
 <code>PublicKey</code> and <code>Signature</code> as <code>&lt;withheld&gt;</code>.</p>
 <h3 id="the-answer-loginrequest"><a class="header" href="#the-answer-loginrequest">The answer: <code>LoginRequest</code></a></h3>
+<p>Changed in v1.0.0.</p>
 <p>The middleware to the terminal, on the connection that asked, once for each ask it answers. The
 terminal reports what it did with it in one <code>LoginResponse</code> (The report, below):</p>
 <pre><code class="language-json">{ "MessageType": "LoginRequest", "Sealed": { "Suite": { "Kem": "0x0010", "Kdf": "0x0001", "Aead": "0x0001" }, "EncapsulatedKey": "BKknGcYZXVCFEE9GmouYFNWDj_crYFAeLERm5eZ7MlrJhTbXthoa9LeOW3-VHAkAvoY8QDzmXJv8uTgmVyItGMQ", "Ciphertext": "lBCfkZ_DE_rUYr4T8YvnPkwWL-HGT2pnyH-9m9966nZyzqH9DDcJvw8t5m2Axq_0jy7Rpl0Ikp1eSwtuyjMilpbQHFbebpvOk_WCMtWZVtgzXxVKbQP_5aZwD-ClLG-3cfl2CiUm_QYJWIJ93O3aII6uQKYYTKY3SFZZPccdgJdiD0clDN4ET8Q8S6S5UfDaYMJUenbeiXxsFTnDRIsUzpfRPyguEBLpb9vrnNkf2NFvMwRZTb6rfnB84Z0kITHiiIDpSAAgSDaE5f3VSPPakIIR_9-b2_ruJJAprjwvKhBKg2CSeZKkV_3L16mbFpGn3F-VyaHcBQ" } }
@@ -873,13 +938,14 @@ terminal reports what it did with it in one <code>LoginResponse</code> (The repo
 holds the group’s first four keys alone. An answer’s <code>Ciphertext</code>, opened, gives the
 <code>SignedValue</code> group: its four keys, <code>Adapter</code>, <code>KeyIdentification</code>, <code>Challenge</code> and <code>Signature</code>,
 then <code>LoginReference</code>, then each of <code>AcceptorIdentification</code>, <code>UserName</code> and
-<code>ApplicationIdentification</code> the terminal’s store holds, in that order. A key absent is a value
-the store does not hold. Here, the group of a store that holds all three:</p>
+<code>ApplicationIdentification</code> held for the terminal’s store, in that order: the store’s, its
+attachment’s and its fleet’s. A key absent is a value the store or its fleet’s profile does not
+hold. Here, the group of a store for which all three are held:</p>
 <pre><code class="language-json">{ "Adapter": "signed_value", "KeyIdentification": "key-example-1", "Challenge": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "Signature": "WlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlo=", "LoginReference": "lgn_0123456789abcdef0123456789abcdef", "AcceptorIdentification": "merchant-example-1", "UserName": "user-example-1", "ApplicationIdentification": "app-example-1" }
 </code></pre>
 <p>Its <code>Challenge</code> is the worked vector’s, its <code>Signature</code> is filler of a signature’s shape, made by
-no key, and its other values are made up, no fleet’s. A store that holds none of the three is
-sent the four keys and <code>LoginReference</code> alone.</p>
+no key, and its other values are made up, no fleet’s. A store for which none of the three is held
+is sent the four keys and <code>LoginReference</code> alone.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -893,13 +959,13 @@ sent the four keys and <code>LoginReference</code> alone.</p>
 <tr><td><code>Sealed.Ciphertext</code></td><td><code>mw</code></td><td>RFC 9180’s single-shot seal of the group’s JSON, the AEAD’s 16-byte tag last, in base64url with no padding. The middleware’s log holds it as <code>&lt;withheld&gt;</code></td></tr>
 <tr><td><code>SignedValue</code></td><td><code>mw</code></td><td>Sealed: the group the plaintext is the JSON of. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
 <tr><td><code>SignedValue.Adapter</code></td><td><code>mw</code></td><td>Sealed: what made the group, <code>signed_value</code>, or <code>sandbox_signed_value</code> in the sandbox. A later kind seals a group of its own, told apart by its <code>Adapter</code></td></tr>
-<tr><td><code>SignedValue.KeyIdentification</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>KeyIdentification</code>, “Identification of the cryptographic key.”, here the id of the fleet’s key at its payment system, as the fleet set it</td></tr>
-<tr><td><code>SignedValue.Challenge</code></td><td><code>mw</code></td><td>Sealed: the random value signed, as text: lowercase hex, base64url with no padding, or a version 4 UUID’s 36 characters in lowercase, as the fleet’s credential says. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
-<tr><td><code>SignedValue.Signature</code></td><td><code>mw</code></td><td>Sealed: the MAC over <code>Challenge</code>’s ASCII bytes, written as the fleet’s credential says. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
+<tr><td><code>SignedValue.KeyIdentification</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>KeyIdentification</code>, “Identification of the cryptographic key.”, here the access key id of the key pair the store signs with: its public half at the fleet’s payment system, whose other half is its secret, as the fleet set it, and what a fleet may call an access key id or an API access key</td></tr>
+<tr><td><code>SignedValue.Challenge</code></td><td><code>mw</code></td><td>Sealed: the random value signed, as text: lowercase hex, base64url with no padding, or a version 4 UUID’s 36 characters in lowercase, as the fleet’s sign-in profile says. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
+<tr><td><code>SignedValue.Signature</code></td><td><code>mw</code></td><td>Sealed: the MAC over <code>Challenge</code>’s ASCII bytes, keyed with the key pair’s secret and written as the fleet’s sign-in profile says. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
 <tr><td><code>SignedValue.LoginReference</code></td><td><code>mw</code></td><td>Sealed: the middleware’s name for this one answer, <code>lgn_</code> then 32 lowercase hex characters, drawn for each answer, so every group holds one. Name it in the <code>LoginResponse</code> that reports the answer (The report, below). Not a secret. ISO 20022 has no element for it: the name is the middleware’s own</td></tr>
 <tr><td><code>SignedValue.AcceptorIdentification</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>AcceptorIdentification</code>, “Identification of the card acceptor performing the transaction.”, here the store’s own number at its fleet’s payment system: which of the fleet’s merchants the terminal signs in for. Absent where the store holds none</td></tr>
 <tr><td><code>SignedValue.UserName</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>UserName</code>, “User name identifying the client.”, here the merchant user the fleet named for the store at its payment system. It names an account, never a person or an e-mail address. Absent where the store holds none</td></tr>
-<tr><td><code>SignedValue.ApplicationIdentification</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>ApplicationIdentification</code>, “Identification of the payment application, user of the acquirer protocol.”, here the fleet’s payment application, as the credential the fleet set for the store names it. Absent where the store holds none</td></tr>
+<tr><td><code>SignedValue.ApplicationIdentification</code></td><td><code>mw</code></td><td>Sealed: ISO 20022’s <code>ApplicationIdentification</code>, “Identification of the payment application, user of the acquirer protocol.”, here the fleet’s application key, as its sign-in profile holds it, and what a fleet may call an App key or an organisation token. Absent where the profile holds none</td></tr>
 </tbody>
 </table>
 </div>
@@ -938,18 +1004,19 @@ the terminal, and does not prove who sealed it.</li>
 </table>
 </div>
 <h3 id="what-to-do-with-it"><a class="header" href="#what-to-do-with-it">What to do with it</a></h3>
+<p>Changed in v1.0.0.</p>
 <p>The terminal takes the opened <code>SignedValue</code> to its fleet’s payment system itself, in its own
 sign-in request, with whatever else that system needs that the terminal holds, such as its
 serial. With the signed value, it sends that system <code>AcceptorIdentification</code>, <code>UserName</code> and
-<code>ApplicationIdentification</code> as it needs them. A key absent is a value the store does not hold,
-so it sends that system’s own default for it, or none. It keeps the session while its process
-lives, and starts the sale on the path its application takes for a sale it starts itself. It
-does not sign out when its screen leaves the front. It asks again only when its fleet’s payment
-system refuses the session. Never log, store or send back <code>Challenge</code>, <code>Signature</code> or the fresh
-private key, and never log the session. Then report what that system answered (The report,
-below).</p>
+<code>ApplicationIdentification</code> as it needs them. A key absent is a value the store or its fleet’s
+profile does not hold, so it sends that system’s own default for it, or none. It keeps the
+session while its process lives, and starts the sale on the path its application takes for a
+sale it starts itself. It does not sign out when its screen leaves the front. It asks again only when its fleet’s payment
+system refuses the session, or a <code>LoginCheck</code> comes (The check, below). Never log, store or send
+back <code>Challenge</code>, <code>Signature</code> or the fresh private key, and never log the session. Then report
+what that system answered (The report, below).</p>
 <h3 id="the-report-loginresponse"><a class="header" href="#the-report-loginresponse">The report: <code>LoginResponse</code></a></h3>
-<p>Changed in v0.3.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>The terminal to the middleware, on the connection that asked, once it has tried its fleet’s
 payment system with an opened answer: one <code>LoginResponse</code> naming the group’s <code>LoginReference</code>,
 before its next frame of sign-in. Send <code>SUCC</code> if that system opened a session with what it was
@@ -966,7 +1033,7 @@ sent, or <code>FAIL</code> with the code that fits. Put nothing that system said
 <tr><td><code>MessageType</code></td><td><code>terminal</code></td><td><code>LoginResponse</code></td></tr>
 <tr><td><code>LoginReference</code></td><td><code>terminal</code></td><td>The opened group’s <code>LoginReference</code>, as the group held it: <code>lgn_</code> then 32 lowercase hex characters. ISO 20022 has no element for it: the name is the middleware’s own. The middleware’s log holds it as <code>&lt;withheld&gt;</code> in the report’s <code>in</code> line, and names it in the line of a report taken</td></tr>
 <tr><td><code>Response</code></td><td><code>terminal</code></td><td><code>SUCC</code>, ISO’s “Processing OK. […]”: its fleet’s system opened a session with what it was sent. <code>FAIL</code>, ISO’s “Processing of the request fails for various reasons. […]”: it did not. ISO 20022’s <code>Response11Code</code>, of which the middleware takes these two: <code>WARN</code> is not taken</td></tr>
-<tr><td><code>ResponseReason</code></td><td><code>terminal</code></td><td>With <code>FAIL</code>, and required with it; never with <code>SUCC</code>. One of the three codes below, the middleware’s own: ISO 20022 has the name and not these codes</td></tr>
+<tr><td><code>ResponseReason</code></td><td><code>terminal</code></td><td>With <code>FAIL</code>, and required with it; never with <code>SUCC</code>. One of the six codes below, the middleware’s own: ISO 20022 has the name and not these codes</td></tr>
 </tbody>
 </table>
 </div>
@@ -977,11 +1044,17 @@ sent, or <code>FAIL</code> with the code that fits. Put nothing that system said
 </thead>
 <tbody>
 <tr><td><code>not_covered</code></td><td>The fleet’s system answered that the key does not cover the merchant it was sent for</td></tr>
-<tr><td><code>not_accepted</code></td><td>It refused the sign-in for any other reason</td></tr>
+<tr><td><code>not_accepted</code></td><td>It refused the sign-in for any other reason, or for one the terminal cannot tell apart</td></tr>
 <tr><td><code>no_answer</code></td><td>It did not answer, or could not be reached</td></tr>
+<tr><td><code>key_unknown</code></td><td>It answered that it does not know the access key id</td></tr>
+<tr><td><code>signature_refused</code></td><td>It knows the access key id, and answered that the signature does not verify</td></tr>
+<tr><td><code>application_unknown</code></td><td>It answered that it does not know the application key, or that no application is tied to it</td></tr>
 </tbody>
 </table>
 </div>
+<p>A terminal chooses the code by what its fleet’s system answered. Where that answer could mean two
+codes, it sends <code>not_accepted</code> for a refusal, and <code>no_answer</code> for an error it cannot tell from no
+answer.</p>
 <p>Send no other key: any other key of a report is dropped by its path and named in the
 middleware’s log, its value unread.</p>
 <p><strong>What the middleware does with it.</strong> A report the middleware takes gets no frame back, and nor
@@ -995,17 +1068,69 @@ with the backoff Reconnect, above, gives; after <code>sign_in_unavailable</code>
 later. A report holding two faults is refused for the first of <code>missing_field</code>,
 <code>invalid_result</code> and <code>invalid_reference</code>, in that order. None of these refusals closes the
 connection (Refusal, below).</p>
-<p><strong>After the report.</strong> After a <code>FAIL</code> other than <code>not_covered</code> that follows a <code>SUCC</code>, or is the
-terminal’s first, ask again at once, once: the middleware answers that one ask inside its
+<p><strong>After the report.</strong> After a <code>FAIL</code> <code>not_accepted</code> or <code>no_answer</code> that follows a <code>SUCC</code>, or is
+the terminal’s first, ask again at once, once: the middleware answers that one ask inside its
 interval. If that ask is refused <code>sign_in_limited</code>, the middleware counted a failure the
-terminal did not see, so wait 60 seconds. After any other <code>FAIL</code>, <code>not_covered</code> among them, ask
-again no sooner than 60 seconds later. After <code>not_covered</code>, also tell someone: the store’s
-credential does not cover the merchant it was sent for, and asking again does not change that.</p>
+terminal did not see, so wait 60 seconds. After any other <code>FAIL</code>, ask again no sooner than 60
+seconds later. After <code>not_covered</code>, <code>key_unknown</code>, <code>signature_refused</code> or <code>application_unknown</code>,
+also tell someone: the store’s credential, its key pair or its set-up at the fleet’s system must
+change first, and asking again does not change that. After the report of a check’s sign-in, do
+not ask again at once: the answer a first <code>not_accepted</code> or <code>no_answer</code> opened stands for the
+next ask, a check’s or the terminal’s own. These waits are for the terminal’s own asks, and a
+<code>LoginCheck</code> that comes inside the 60 seconds is answered all the same (The check, below).</p>
+<h3 id="the-check-logincheck"><a class="header" href="#the-check-logincheck">The check: <code>LoginCheck</code></a></h3>
+<p>Added in v1.0.0.</p>
+<p>The middleware to the terminal, only on a connection whose upgrade declared <code>LoginCheck</code> beside
+<code>SASQ</code> (Connect, above): sign in now, with no sale.</p>
+<pre><code class="language-json">{ "MessageType": "LoginCheck" }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Sent by</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>MessageType</code></td><td><code>mw</code></td><td><code>LoginCheck</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Ignore any other key: a later version may add some.</p>
+<p><strong>When it comes.</strong> A <code>LoginCheck</code> comes only to a connection whose upgrade declared <code>LoginCheck</code>
+beside <code>SASQ</code>, when the store’s fleet or FUNDiMO checks the store’s sign-in naming the terminal,
+such as once the store’s key is set. The middleware sends it only where it could answer an ask
+then, and not where it reads a sale holding the terminal; one that comes in a payment is dropped
+(What the terminal does, below). A check counts as an ask: the ask it leads to
+spends one of the terminal’s answers, so a sale just after a check whose sign-in gave no session,
+at a terminal that held none, can be answered <code>RJCT</code> with <code>AB11</code>, its own ask refused
+<code>sign_in_limited</code>, unless that check’s <code>FAIL</code> opened an answer.</p>
+<p><strong>What the terminal does.</strong> It drops a <code>LoginCheck</code>, and does nothing for it then or later, where
+a payment is in progress or its result is not yet known, where a person is signed in at it or
+partway through signing in, or where the connection it was read on has been replaced. It drops one
+too while a sign-in is under way, whatever began it, a check’s among them: from its <code>LoginNeeded</code>
+to its report, or to the refusal, the 20 seconds with no answer or the answer that does not open
+that ends it without one. Otherwise it makes a fresh key and sends one <code>LoginNeeded</code> on that
+connection, whether or not it holds a session, whatever an earlier ask on it was refused,
+whatever an earlier sign-in reported, and whatever wait a refusal or a report had set. It wakes no
+screen for it: no payment is taken, and the keystore key signs while the device sleeps (The key
+and its signature, above). It reads the answer before its next frame, opens it, signs in afresh
+at its fleet’s payment system, and reports what that system answered in one <code>LoginResponse</code>, as
+for any ask.</p>
+<p><strong>What it keeps.</strong> Where the new sign-in succeeds, it holds the new session in place of any an
+earlier answer gave. Where a person has signed in at the terminal meanwhile, it leaves theirs and
+drops the new one, and where one is partway, it holds the new one until their login succeeds,
+which ends it as it ends any session an answer gave. Where the sign-in fails, the ask is refused,
+no answer comes in 20 seconds or the answer does not open, it keeps any session it held.</p>
+<p><strong>After it.</strong> It sends no <code>Outcome</code> for a check, and does not ask again for that check, after a
+<code>FAIL</code> included. Each wait and each stop a refusal or a report sets, a check’s own among them, is
+for the terminal’s own asks, as ever, and none holds back a <code>LoginCheck</code>. An <code>Instruction</code> that
+comes meanwhile it answers once the check’s sign-in has ended, as it answers any: on the session
+it then holds, with none as the sign-in path says, and where a person is signed in or partway, as
+at any other time.</p>
 <h3 id="the-two-cases-and-the-other-refusals"><a class="header" href="#the-two-cases-and-the-other-refusals">The two cases, and the other refusals</a></h3>
-<p>Changed in v0.3.0.</p>
+<p>Changed in v1.0.0.</p>
 <p><strong>No credential at the store.</strong> The ask is refused <code>sign_in_not_available</code>, and a terminal signed
 out is normal: answer the sale <code>RJCT</code> with <code>AB11</code>, unless a person signs in at the terminal by its
-fleet’s own means, and ask no more on that connection.</p>
+fleet’s own means, and ask no more on that connection unless a <code>LoginCheck</code> comes.</p>
 <p><strong>A credential attached.</strong> The terminal is woken, signs in with what it is sent, reports what
 its fleet’s payment system answered, and takes the sale.</p>
 <p>Answer a sale the terminal cannot start for want of a session <code>RJCT</code> with <code>AB11</code> (Which
@@ -1026,6 +1151,7 @@ than 60 seconds later. Nothing is reported for it: no group was opened, so there
 <code>ERROR</code> line.</p>
 <p>None of these refusals closes the connection (Refusal, below).</p>
 <h3 id="the-worked-vector"><a class="header" href="#the-worked-vector">The worked vector</a></h3>
+<p>Changed in v1.0.0.</p>
 <p>Check an implementation against these numbers. Each is a published test value, no fleet’s: the
 sender’s seed and the recipient’s key pair are RFC 9180 § A.3.1’s, and the group is the sandbox’s
 stand-in, signed under the sandbox’s published secret. The middleware draws a fresh seed for each
@@ -1083,8 +1209,8 @@ the group’s JSON, 231 bytes of UTF-8 with no whitespace:</p>
 <p>Opened with the private key above, <code>enc</code>, this <code>info</code> and an empty <code>aad</code>, the ciphertext gives the
 plaintext above. The answer, above, shows the <code>LoginRequest</code> that carries it. This plaintext is a
 vector of the seal: an answer’s group also carries <code>LoginReference</code> after <code>Signature</code>, and then
-each of <code>AcceptorIdentification</code>, <code>UserName</code> and <code>ApplicationIdentification</code> the store holds, as
-the group the answer, above, shows does, and its ciphertext opens the same way.</p>
+each of <code>AcceptorIdentification</code>, <code>UserName</code> and <code>ApplicationIdentification</code> held for the store,
+as the group the answer, above, shows does, and its ciphertext opens the same way.</p>
 <h2 id="which-transactionstatus-to-send"><a class="header" href="#which-transactionstatus-to-send">Which <code>TransactionStatus</code> to send</a></h2>
 <div class="table-wrapper">
 <table>
@@ -1389,6 +1515,7 @@ holding one is refused whole as <code>unparseable_frame</code>, and its outcome 
 Never send them: cut a string between whole characters, never inside a surrogate pair.</li>
 </ul>
 <h2 id="refusal"><a class="header" href="#refusal">Refusal</a></h2>
+<p>Changed in v1.0.0.</p>
 <p>The middleware to the terminal: the middleware could not take a frame. A dropped field is not refused, so
 it gets no frame: read the log, in Testing below.</p>
 <pre><code class="language-json">{ "MessageType": "Refusal", "ResponseReason": "invalid_result" }
@@ -1426,13 +1553,13 @@ connection, and one still waiting when the connection closes.</p>
 <tr><td><code>binary_frame</code></td><td>A binary frame</td><td>A bug: alert someone</td></tr>
 <tr><td><code>unknown_frame_type</code></td><td><code>MessageType</code> is absent or is not <code>Outcome</code>. A <code>LoginNeeded</code> is answered instead only on a connection that declared <code>SASQ</code> in <code>Mw-Message-Functions</code>, and on any other it gets this. A <code>LoginResponse</code> too is read instead only on a connection that declared <code>SASQ</code>, and on any other it gets this</td><td>A bug: alert someone</td></tr>
 <tr><td><code>missing_field</code></td><td><code>TransactionStatus</code> or <code>TransactionReference</code> is absent, or <code>StatusReasonInformation.Reason</code> is absent with <code>RJCT</code>. In a <code>LoginResponse</code>, <code>LoginReference</code> or <code>Response</code> is absent, or <code>ResponseReason</code> is absent with <code>FAIL</code></td><td>A bug: alert someone</td></tr>
-<tr><td><code>invalid_result</code></td><td><code>TransactionStatus</code> is not <code>ACSP</code> or <code>RJCT</code>, or is not a string, or with <code>RJCT</code> <code>StatusReasonInformation.Reason</code> is not <code>AG07</code>, <code>AB11</code> or <code>DS02</code>. In a <code>LoginResponse</code>, <code>Response</code> is not <code>SUCC</code> or <code>FAIL</code>, or is not a string, or with <code>FAIL</code> <code>ResponseReason</code> is not one of <code>not_covered</code>, <code>not_accepted</code> and <code>no_answer</code>, or with <code>SUCC</code> a <code>ResponseReason</code> is sent</td><td>A bug: alert someone</td></tr>
+<tr><td><code>invalid_result</code></td><td><code>TransactionStatus</code> is not <code>ACSP</code> or <code>RJCT</code>, or is not a string, or with <code>RJCT</code> <code>StatusReasonInformation.Reason</code> is not <code>AG07</code>, <code>AB11</code> or <code>DS02</code>. In a <code>LoginResponse</code>, <code>Response</code> is not <code>SUCC</code> or <code>FAIL</code>, or is not a string, or with <code>FAIL</code> <code>ResponseReason</code> is not one of <code>not_covered</code>, <code>not_accepted</code>, <code>no_answer</code>, <code>key_unknown</code>, <code>signature_refused</code> and <code>application_unknown</code>, or with <code>SUCC</code> a <code>ResponseReason</code> is sent</td><td>A bug: alert someone</td></tr>
 <tr><td><code>invalid_reference</code></td><td><code>TransactionReference</code> is not a string. In a <code>LoginResponse</code>, <code>LoginReference</code> is not <code>lgn_</code> then 32 lowercase hex characters</td><td>A bug: alert someone</td></tr>
 <tr><td><code>not_held</code></td><td>A well-formed outcome naming no sale the middleware holds</td><td>Stop. Keep your own record. The sale passed retention, the log holds what you sent, and an operator reconciles it. An outcome already taken for a sale still held gets no <code>Refusal</code></td></tr>
 <tr><td><code>other_terminal</code></td><td>It names a sale held for another terminal</td><td>A bug: alert someone</td></tr>
 <tr><td><code>terminal_not_permitted</code></td><td>A well-formed outcome on a connection that may no longer hold its terminal: the terminal is not <code>paired</code>, or the credential it connected with is retired. The middleware did not take it, and its log keeps what the terminal said. A <code>LoginNeeded</code>, or a well-formed <code>LoginResponse</code>, on such a connection gets it too, and nothing is counted or written</td><td>Keep the outcome, close the connection, reconnect, and send it again. After a <code>LoginNeeded</code> or a <code>LoginResponse</code>, close the connection and reconnect with the backoff all the same (Reconnect, above), and after an ask, ask again once a connection is accepted</td></tr>
 <tr><td><code>recipient_key_invalid</code></td><td>A <code>LoginNeeded</code>’s <code>RecipientKey</code> cannot be used: it is absent or not an object, its <code>PublicKey</code> is not 65 bytes in base64url of a point on P-256, <code>0x04</code> first, or on a connection made with a certificate its <code>Signature</code> is absent, malformed or does not verify under the key of the certificate the connection presented. Nothing was counted (Signing in, above)</td><td>A bug: alert someone. Answer the sale <code>RJCT</code> with <code>AB11</code></td></tr>
-<tr><td><code>sign_in_not_available</code></td><td>The middleware holds no sign-in credential it can use for the terminal’s store: none is attached, the credential is removed, the store or its owner is not in a state to act, or sign-in is off on this middleware. A terminal signed out is normal. Nothing was counted</td><td>Answer the sale <code>RJCT</code> with <code>AB11</code>, unless a person signs in at the terminal by its fleet’s own means, and ask no more on this connection</td></tr>
+<tr><td><code>sign_in_not_available</code></td><td>The middleware holds no sign-in credential it can use for the terminal’s store: none is attached, the credential is removed, the store or its owner is not in a state to act, or sign-in is off on this middleware. A terminal signed out is normal. Nothing was counted</td><td>Answer the sale <code>RJCT</code> with <code>AB11</code>, unless a person signs in at the terminal by its fleet’s own means, and ask no more on this connection unless a <code>LoginCheck</code> comes</td></tr>
 <tr><td><code>sign_in_limited</code></td><td>The terminal was answered a sign-in less than <code>MW_SIGNIN_INTERVAL_SECS</code> ago, 60 seconds at the middleware’s default settings, or has been answered <code>MW_SIGNIN_PER_DAY</code> times, 24 by default, in the day counted from that day’s first answer. Nothing was counted</td><td>Answer the sale <code>RJCT</code> with <code>AB11</code>, and ask again no sooner than 60 seconds later</td></tr>
 <tr><td><code>sign_in_unavailable</code></td><td>The middleware could not answer the ask: its store did not answer or did not read as it should, the key service did not open the credential’s secret, or the answer could not be signed or sealed. Nothing was sent in clear. An ask whose secret could not be opened still counts toward the terminal’s limit. On a well-formed <code>LoginResponse</code>, its store did not answer or did not read as it should, and nothing of the report was written</td><td>Answer the sale <code>RJCT</code> with <code>AB11</code>, and ask again no sooner than 60 seconds later. After a <code>LoginResponse</code>, go on as its <code>Response</code> says, without sending it again, and ask again no sooner than 60 seconds later</td></tr>
 </tbody>
@@ -1525,6 +1652,7 @@ code that fits. On a <code>FAIL</code>, ask again as Signing in, above, says.</l
 answer the sale <code>RJCT</code> with <code>AB11</code>, and ask again as Signing in, above, says for each.</li>
 </ol>
 <h2 id="testing"><a class="header" href="#testing">Testing</a></h2>
+<p>Changed in v1.0.0.</p>
 <p>In the middleware’s sandbox, whose start page is <code>mw://start</code>, also served as
 <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, with the sandbox’s address in <code>$SANDBOX</code>:</p>
 <ol>
@@ -1571,25 +1699,34 @@ whole sale to compare against.</p>
 <code>LoginNeeded</code> with a fresh key and no <code>Signature</code>, since a sandbox key’s connection has
 none (Signing in, above). Your world’s store holds the sandbox’s stand-in credential,
 <code>sandbox_signed_value</code>, <code>KeyIdentification</code> <code>sandbox-signin-1</code>, so the answer is a
-<code>LoginRequest</code>. Open it, and check the group’s <code>Signature</code>: the HMAC-SHA256 of
-<code>Challenge</code>’s ASCII bytes, keyed with the bytes of the sandbox’s published secret, in
-lowercase hex. <code>mw://world</code> and the start page give the secret, and the worked vector, in
-Signing in, above, checks your opening. Your world’s store holds none of
+<code>LoginRequest</code>. Open it, and check the group’s <code>Signature</code>: under the sign-in profile your
+world comes with, the HMAC-SHA256 of <code>Challenge</code>’s ASCII bytes, keyed with the bytes of the
+sandbox’s published secret, in lowercase hex. <code>mw://world</code> and the start page give the secret
+and the profile, and the worked vector, in Signing in, above, checks your opening. As your
+world comes, its store, its attachment and its fleet’s sign-in profile hold none of
 <code>AcceptorIdentification</code>, <code>UserName</code> and <code>ApplicationIdentification</code>, so the group holds its
-four keys and its <code>LoginReference</code> alone. Then report it in a <code>LoginResponse</code> naming that
-<code>LoginReference</code>, as Signing in, above, says: the sandbox takes it as any middleware does.</p>
+four keys and its <code>LoginReference</code> alone, until your world’s back office sets the profile
+(<a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 5. The terminal journey).
+Then report it in a <code>LoginResponse</code> naming that <code>LoginReference</code>, as Signing in, above, says:
+the sandbox takes it as any middleware does.</p>
 </li>
 </ol>
 <p>A conformance run tests sign-in only on a terminal that declared <code>SASQ</code> when the step opened, in
 two steps: <code>sign_in</code>, with a credential attached, which starts the terminal asleep, its screen
 off and its application not in front, holding no session; and <code>sign_in_none</code>, for which the run
 ends the world’s attachment and restores it after, so the ask is refused <code>sign_in_not_available</code>.
-A terminal that did not declare <code>SASQ</code> is not tested on sign-in: each of those steps is not
-applicable, and its report row says so. A terminal that needs the middleware to sign it in must
-declare <code>SASQ</code> and run again. A run judges frames alone and sees no screen, so a green run does
-not prove that a terminal wakes.</p>
+It tests the sign-in check in a third step, <code>sign_in_check</code>, only on a terminal that declared
+<code>LoginCheck</code> beside <code>SASQ</code> when the step opened, and sends no sale in it: once the terminal’s
+sign-in limit leaves it an answer, the run sends one <code>LoginCheck</code> on the connection the terminal
+kept from <code>sign_in_none</code>, where its ask was refused, and judges what the terminal sends for it as
+The check, above, says. A terminal that did not declare <code>SASQ</code> is not tested on sign-in: each of
+the three steps is not applicable, and its report row says so. One that declared <code>SASQ</code> without
+<code>LoginCheck</code> beside it is not tested on the sign-in check: <code>sign_in_check</code> is not applicable, and
+its report row says so. A terminal that needs the middleware to sign it in must declare <code>SASQ</code> and
+run again. A run judges frames alone and sees no screen, so a green run does not prove that a
+terminal wakes.</p>
 <h2 id="sources"><a class="header" href="#sources">Sources</a></h2>
-<p>Changed in v0.3.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>The ISO 20022 texts quoted here and in <a href="fields.json"><code>docs/api/fields.json</code></a> for the outcome’s status, its
 reason and the references of <code>Bank</code>, <code>Wallet</code> and <code>NPP</code> were read on 09-Nov-2026 from
 mirrors of ISO’s published files, because iso20022.org answered every request with HTTP 403.
@@ -1603,7 +1740,9 @@ The texts of <code>RetailerMessage1Code</code>’s <code>SASQ</code>, of <code>S
 and of <code>KEKIdentifier7</code>’s <code>KeyIdentification</code>, quoted in Connect and Signing in, above, were read
 on 16-Nov-2026 from M3. The texts of <code>LoginResponse</code>, of <code>Response11Code</code>’s <code>SUCC</code> and <code>FAIL</code>, and
 of <code>AcceptorIdentification</code>, <code>UserName</code> and <code>ApplicationIdentification</code>, quoted in Signing in,
-above, were read on 17-Nov-2026 from M3. RFC 9180, R1, gives the sealing of Signing in, above, and its worked vector’s inputs.</p>
+above, were read on 17-Nov-2026 from M3. The codes of <code>RetailerMessage1Code</code>, all 17, counted in
+Connect, above, and the text of <code>SessionManagementRequest9</code>’s <code>DiagnosisRequest</code>, quoted in
+Signing in, above, were read on 25-Nov-2026 from M3. RFC 9180, R1, gives the sealing of Signing in, above, and its worked vector’s inputs.</p>
 <div class="table-wrapper">
 <table>
 <thead>

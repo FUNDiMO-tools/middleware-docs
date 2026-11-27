@@ -3496,9 +3496,11 @@
         "link_rate",
         "link_word_unknown",
         "link_expired",
+        "write_rate",
         "adapter_not_taken",
         "sign_in_not_configured",
         "signin_credential_removed",
+        "signin_profile_not_set",
         "kms_unavailable"
       ]
     },
@@ -3682,7 +3684,7 @@
     "BadExample": null,
     "Refusal": null,
     "WhenMissing": null,
-    "Note": "ISO has no element checked: this names the frame. The middleware sends it only to a terminal that declared SSMQ in Mw-Message-Functions when it connected. That header is the middleware's own, and it holds ISO 20022 codes of Header41.MessageFunction, \"Identifies the type of process related to the message.\", for the frames a terminal answers and the one it asks by: SSMQ, \"Request the status of a previous message for which the Sale system has no response.\", SSAB, \"Abort the current process or the last request.\", for an Abort, which asks the terminal to stop a sale's payment, and SASQ, \"Request the management of a session: login, logout and diagnosis services. Initiated by the Sale system.\", for a LoginNeeded, by which the terminal asks to be signed in to its fleet's payment system. From the first ping of a connection, the middleware sends one for each sale of that terminal it still holds open, made in the last 23 hours while an earlier connection held the terminal, and asks about a sale once a connection. A terminal answers with an ordinary Outcome: the outcome it holds for the reference, unless it already sent it on this connection. It sends nothing while the payment is not finished. For a reference it holds no record of, it sends RJCT with AB11 only when its store of references reaches back further than SecondsSinceInstruction, and otherwise nothing.",
+    "Note": "ISO has no element checked: this names the frame. The middleware sends it only to a terminal that declared SSMQ in Mw-Message-Functions when it connected. That header is the middleware's own, and it holds three ISO 20022 codes of Header41.MessageFunction, \"Identifies the type of process related to the message.\", for the frames a terminal answers and the one it asks by: SSMQ, \"Request the status of a previous message for which the Sale system has no response.\", SSAB, \"Abort the current process or the last request.\", for an Abort, which asks the terminal to stop a sale's payment, and SASQ, \"Request the management of a session: login, logout and diagnosis services. Initiated by the Sale system.\", for a LoginNeeded, by which the terminal asks to be signed in to its fleet's payment system, and the middleware's own LoginCheck, for a LoginCheck. From the first ping of a connection, the middleware sends one for each sale of that terminal it still holds open, made in the last 23 hours while an earlier connection held the terminal, and asks about a sale once a connection. A terminal answers with an ordinary Outcome: the outcome it holds for the reference, unless it already sent it on this connection. It sends nothing while the payment is not finished. For a reference it holds no record of, it sends RJCT with AB11 only when its store of references reaches back further than SecondsSinceInstruction, and otherwise nothing.",
     "Reference": null
   },
   {
@@ -4039,7 +4041,7 @@
     "BadExample": null,
     "Refusal": null,
     "WhenMissing": null,
-    "Note": "ISO has no element: the field is RFC 9180's ciphertext of a single-shot seal, the AEAD's 16-byte tag last, in base64url with no padding. Opened in base mode with the fresh key's private part, Sealed's info and an empty aad, it gives the JSON of the sign-in adapter's group, an object whose Adapter names the adapter: signed_value, or sandbox_signed_value in the sandbox. Its KeyIdentification is the credential's key id as its fleet set it, its Challenge the random value signed, as text, and its Signature the MAC over Challenge's ASCII bytes. After Signature the group holds its LoginReference, lgn_ then 32 lowercase hex characters, the middleware's name for this one answer, which the terminal's LoginResponse names, then each of the store's three it holds: AcceptorIdentification, which of its fleet's merchants the terminal signs in for, UserName, the merchant user, and ApplicationIdentification, the payment application. A key absent is a value the store does not hold, so the terminal sends its fleet's payment system that system's own default or none, and sends each it holds as that system needs it. A later adapter seals a group of its own, told apart by its Adapter. A terminal treats the group as input, not proof of its sender, takes it to its fleet's payment system itself in its own sign-in request, and never logs, stores or sends back Challenge or Signature. The example is a vector of the seal: it opens to a group of Adapter, KeyIdentification, Challenge and Signature alone, where an answer's group also holds its LoginReference. The middleware's log holds it as <withheld>.",
+    "Note": "ISO has no element: the field is RFC 9180's ciphertext of a single-shot seal, the AEAD's 16-byte tag last, in base64url with no padding. Opened in base mode with the fresh key's private part, Sealed's info and an empty aad, it gives the JSON of the sign-in adapter's group, an object whose Adapter names the adapter: signed_value, or sandbox_signed_value in the sandbox. Its KeyIdentification is the access key id, the public half of the key pair whose other half is its Secret, as the store's key pair holds it: what a fleet may call an access key id or an API access key. Its Challenge is the random value signed, as text, and its Signature the MAC over Challenge's ASCII bytes, each as the fleet's sign-in profile says. After Signature the group holds its LoginReference, lgn_ then 32 lowercase hex characters, the middleware's name for this one answer, which the terminal's LoginResponse names, then each of three more it holds: the store's AcceptorIdentification, which of its fleet's merchants the terminal signs in for, the store's UserName, the merchant user, and ApplicationIdentification, the fleet's application key, as the fleet's sign-in profile holds it: what a fleet may call an App key or an organisation token. A key absent is a value the store or its fleet's profile does not hold, so the terminal sends its fleet's payment system that system's own default or none, and sends each it holds as that system needs it. A later adapter seals a group of its own, told apart by its Adapter. A terminal treats the group as input, not proof of its sender, takes it to its fleet's payment system itself in its own sign-in request, and never logs, stores or sends back Challenge or Signature. The example is a vector of the seal: it opens to a group of Adapter, KeyIdentification, Challenge and Signature alone, where an answer's group also holds its LoginReference. The middleware's log holds it as <withheld>.",
     "Reference": null
   },
   {
@@ -4125,14 +4127,40 @@
       "Enum": [
         "not_covered",
         "not_accepted",
-        "no_answer"
+        "no_answer",
+        "key_unknown",
+        "signature_refused",
+        "application_unknown"
       ]
     },
     "Example": "not_covered",
     "BadExample": "busy",
     "Refusal": "invalid_result",
     "WhenMissing": null,
-    "Note": "Required with FAIL, and missing_field when absent then. With SUCC it is invalid_result. ISO has the name and not these codes: its ResponseReason, of ResponseType11, is a RetailerResultDetail1Code, and these are the middleware's own. not_covered: the fleet's system answered that the key does not cover the merchant it was sent for; not_accepted: it refused the sign-in for any other reason; no_answer: it did not answer, or could not be reached. Any other word, or a value that is not a string, is refused invalid_result. A terminal chooses the code by what its fleet's system answered, and sends nothing that system said.",
+    "Note": "Required with FAIL, and missing_field when absent then. With SUCC it is invalid_result. ISO has the name and not these codes: its ResponseReason, of ResponseType11, is a RetailerResultDetail1Code, and these are the middleware's own. not_covered: the fleet's system answered that the key does not cover the merchant it was sent for; not_accepted: it refused the sign-in for any other reason, or for one the terminal cannot tell apart; no_answer: it did not answer, or could not be reached; key_unknown: it answered that it does not know the access key id; signature_refused: it knows the access key id, and answered that the signature does not verify; application_unknown: it answered that it does not know the application key, or that no application is tied to it. Any other word, or a value that is not a string, is refused invalid_result. A terminal chooses the code by what its fleet's system answered, and sends nothing that system said. Where that answer could mean two codes, it sends not_accepted for a refusal, and no_answer for an error it cannot tell from no answer.",
+    "Reference": null
+  },
+  {
+    "Message": "LoginCheck",
+    "Path": "MessageType",
+    "SentBy": "mw",
+    "Required": true,
+    "Iso": null,
+    "Bound": {
+      "Kind": "enum",
+      "Minimum": null,
+      "Maximum": null,
+      "Pattern": null,
+      "AlsoPattern": null,
+      "Enum": [
+        "LoginCheck"
+      ]
+    },
+    "Example": "LoginCheck",
+    "BadExample": null,
+    "Refusal": null,
+    "WhenMissing": null,
+    "Note": "ISO has no element checked: this names the frame, and the name is the middleware's own. ISO 20022's nearest is DiagnosisRequest, of a session management request: \"Content of the Diagnosis Request message.\" The frame is not it and carries none of its elements. The middleware sends it only to a terminal that declared LoginCheck beside SASQ in Mw-Message-Functions when it connected, when the store's fleet or FUNDiMO checks the store's sign-in naming the terminal. A terminal free to take it makes a fresh key and answers with one LoginNeeded on that connection, whatever an earlier ask on it was refused, and reports what its fleet's payment system answered in one LoginResponse, as for any ask. It drops the frame while a payment is in progress or its result not yet known, while a person is signed in or partway through signing in, and while a sign-in is under way. It sends no Outcome for it, and does not ask again for that check. The ask it leads to counts toward the terminal's limit as any ask. A LoginCheck a terminal sends is refused unknown_frame_type.",
     "Reference": null
   }
 ]

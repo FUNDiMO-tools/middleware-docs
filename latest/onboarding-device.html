@@ -7,6 +7,7 @@
 
 
         <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
         <link rel="stylesheet" href="theme/fonts.css">
         <script>
             (function () {
@@ -58,10 +59,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-afda5709.js";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b0d6c91.js"></script>
+        <script src="toc-3d95a7df.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,10 +199,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-onboarding-a-device"><a class="header" href="#middleware-onboarding-a-device">Middleware: onboarding a device</a></h1>
-<p>Last changed in v0.6.1.</p>
+<p>Last changed in v1.0.0.</p>
 <p>This is the walk for a vendor writing an Android app for a SUNMI device: a payment terminal,
 or a register, which is a POS app on a device. It is written for that maker’s devices today;
 other makers’ devices are intended, each with a walk of its own.
@@ -224,9 +225,9 @@ reads <a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code
 counter is <a href="linking.html"><code>docs/api/linking.md</code></a>. <a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a> holds the schema of every
 route a device calls here, and <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a> holds those a register calls, with
 the two that list a register and give it a code. The three routes that register an app,
-list a terminal and give it a code are in the Operator API, which FUNDiMO gives a vendor with an
-<code>admin</code> server directly. The middleware publishes no Android library: the code here is for you
-to paste and own.</p>
+list a terminal and give it a code are in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>, a back office’s file,
+which <a href="back-office.html"><code>/docs/api/back-office.md</code></a> walks. The middleware publishes no Android library: the code
+here is for you to paste and own.</p>
 <h2 id="what-is-proven-on-a-device-and-what-is-not-yet"><a class="header" href="#what-is-proven-on-a-device-and-what-is-not-yet">What is proven on a device, and what is not yet</a></h2>
 <p>Every step here was written from documents. Two runs have since tried parts of it on one SUNMI
 P2 Lite SE, Android 11 (API 30), whose keystore is software: AOSP’s software keymaster keeps its
@@ -278,14 +279,16 @@ menu or settings opens, with the device alone, and again after the first enrolme
 enrolment screen).</li>
 </ol>
 <h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
-<p>Changed in v0.6.1.</p>
+<p>Changed in v1.0.0.</p>
 <p>The same file is served in the sandbox, where five things differ.</p>
 <ul>
-<li>The sandbox’s gate answers <code>404</code> to the operator’s routes. In their place the sandbox has
-two routes of its own, served by its own process, <code>mw-sandbox</code> (the middleware’s
-<code>003b-sandbox</code>), under your tester’s sandbox key, and a <code>live</code> middleware has neither:
-<code>POST /sandbox/v1/app-identities</code> registers the app (step 1), and <code>POST /sandbox/v1/codes</code>
-gives the code (step 2).</li>
+<li>The sandbox passes the Operator API routes of <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> to your world’s
+own <code>admin</code> server, and answers every other caller <code>404</code> at them (<a href="back-office.html"><code>/docs/api/back-office.md</code></a>,
+Trying it in the sandbox). To enrol your world’s own terminal or register you need no <code>admin</code>
+server: the sandbox has two routes of its own, served by its own process, <code>mw-sandbox</code> (the
+middleware’s <code>003b-sandbox</code>), under your tester’s sandbox key, and a <code>live</code> middleware has
+neither: <code>POST /sandbox/v1/app-identities</code> registers the app (step 1), and
+<code>POST /sandbox/v1/codes</code> gives the code (step 2).</li>
 <li>A register is tried in a world of its own kind, which <code>POST /sandbox/v1/keys</code> with
 <code>{"Register":"device"}</code> opens (<a href="sandbox.html"><code>docs/api/sandbox.md</code></a>, 1. A key and a world). Its register is
 listed with the serial <code>&lt;tester&gt;-register</code>, as every world’s own terminal is <code>-yours</code> with
@@ -411,7 +414,7 @@ fun bytesOfHex(text: String): ByteArray? {
 }
 </code></pre>
 <h2 id="1-register-the-app-identity"><a class="header" href="#1-register-the-app-identity">1. Register the app identity</a></h2>
-<p>Changed in v0.4.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>A device enrols only if the app holding its key is one its vendor registered. The middleware learns
 which app holds the key from the attestation, which states the app’s Android package and the
 SHA-256 of each certificate the app is signed with, so nothing secret is put in the app.
@@ -432,20 +435,24 @@ register on the same device: ask for it for each vendor, or for every vendor (Wh
 the middleware admits). A middleware set to mark records the model’s check rather than
 refusing.</p>
 <p>On <code>live</code>, the operator or the vendor’s own <code>admin</code> sends
-<code>POST /v1/vendors/{VendorIdentification}/app-identities</code> (in the Operator API, which FUNDiMO
-gives a vendor with an <code>admin</code> server directly), with this body:</p>
-<pre><code class="language-json">{ "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "..." }
+<code>POST /v1/vendors/{VendorIdentification}/app-identities</code> (in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>),
+with this body. Its <code>IdempotencyKey</code> is the sender’s own, which the vendor’s <code>admin</code> must send, so
+a create sent again after a lost answer finds the app identity the first made
+(<a href="back-office.html"><code>/docs/api/back-office.md</code></a>, Retrying a create):</p>
+<pre><code class="language-json">{ "IdempotencyKey": "app-0001-a", "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "..." }
 </code></pre>
-<p>In the sandbox, <code>POST /sandbox/v1/app-identities</code> takes the same body under your tester’s
-key, with <code>$SANDBOX</code> the sandbox’s address:</p>
+<p>In the sandbox, <code>POST /sandbox/v1/app-identities</code> takes the same body without <code>IdempotencyKey</code>,
+which it refuses <code>400 unknown_field</code>, under your tester’s key, with <code>$SANDBOX</code> the sandbox’s
+address:</p>
 <pre><code class="language-sh">curl -s -X POST "$SANDBOX/sandbox/v1/app-identities" \
   -H 'Authorization: Bearer sbx_...' \
   -H 'Content-Type: application/json' \
   -d '{"Role":"terminal","AppPackage":"au.com.example.terminal","SigningDigest":"..."}'
 </code></pre>
 <p>The answer is <code>201</code>:</p>
-<pre><code class="language-json">{ "AppIdentification": "app_...", "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "...", "Debug": true, "State": "active" }
+<pre><code class="language-json">{ "AppIdentification": "app_...", "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "...", "Debug": true, "State": "active", "CreatedBy": null }
 </code></pre>
+<p><code>CreatedBy</code> names who registered the app, and the sandbox’s route records no one, so it is <code>null</code>.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -481,10 +488,10 @@ every digest the attestation states must be registered, so an app signed with tw
 certificates registers each. A device whose app is not registered is refused
 <code>403 app_identity_unknown</code> at enrolment and at renewal.</p>
 <h2 id="2-the-listing-and-the-code"><a class="header" href="#2-the-listing-and-the-code">2. The listing and the code</a></h2>
-<p>Changed in v0.4.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>Every device starts with one human act. On <code>live</code>, the terminal’s fleet owner lists it at a
-store by its serial, <code>POST /v1/merchant-stores/{StoreIdentification}/terminals</code> (in the Operator
-API, which FUNDiMO gives a vendor with an <code>admin</code> server directly), and the POS vendor’s <code>admin</code>
+store by its serial, <code>POST /v1/merchant-stores/{StoreIdentification}/terminals</code> (in
+<a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>), and the POS vendor’s <code>admin</code>
 lists a register by its serial, <code>POST /v1/registers</code> (in <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a>, as
 <code>listRegister</code>, tagged <code>registers</code>). The <code>201</code> holds the
 device’s id, <code>POIIdentification</code> or <code>RegisterIdentification</code>, and its <code>PairingCode</code>:</p>

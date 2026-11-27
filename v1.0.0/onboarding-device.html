@@ -1,0 +1,1705 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Onboarding a device - FUNDiMO middleware API</title>
+
+
+        <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
+        <link rel="stylesheet" href="theme/fonts.css">
+        <script>
+            (function () {
+                var nearer = { rust: 'light', navy: 'coal', ayu: 'coal' };
+                function remap() {
+                    try {
+                        var saved = (localStorage.getItem('mdbook-theme') || '').replace(/"/g, '');
+                        if (nearer[saved]) { localStorage.setItem('mdbook-theme', nearer[saved]); }
+                    } catch (e) { }
+                }
+                remap();
+                window.addEventListener('storage', remap);
+                window.addEventListener('pageshow', remap);
+                document.addEventListener('DOMContentLoaded', function () {
+                    var dark = document.getElementById('mdbook-theme-coal');
+                    if (dark) { dark.textContent = 'Dark'; }
+                    Object.keys(nearer).forEach(function (name) {
+                        var button = document.getElementById('mdbook-theme-' + name);
+                        if (button) { button.parentNode.remove(); }
+                    });
+                });
+            })();
+        </script>
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/site-acfedb15.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "coal";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-3d95a7df.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div class="mw-brand">
+                    <a class="mw-wordmark" href="https://fundimo.com.au/"><img class="mw-on-light" src="theme/fundimo.png" alt="FUNDiMO" width="1142" height="277"><img class="mw-on-dark" src="theme/fundimo-on-dark.png" alt="FUNDiMO" width="1200" height="290"></a>
+                    <span class="mw-product">Middleware API</span>
+                </div>
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">FUNDiMO middleware API</h1>
+
+                    <div class="right-buttons">
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
+
+<h1 id="middleware-onboarding-a-device"><a class="header" href="#middleware-onboarding-a-device">Middleware: onboarding a device</a></h1>
+<p>Last changed in v1.0.0.</p>
+<p>This is the walk for a vendor writing an Android app for a SUNMI device: a payment terminal,
+or a register, which is a POS app on a device. It is written for that maker’s devices today;
+other makers’ devices are intended, each with a walk of its own.
+It goes from registering the app with the middleware
+to a certificate the app renews by itself, with Kotlin to paste at each step on the device,
+and says what the app’s enrolment screen must be and how a person reaches it (The enrolment
+screen). You can build the device’s side from this document alone. An agent reads the same bytes
+through <code>llms.txt</code>, and through the sandbox’s MCP server as <code>mw://onboarding/device</code>.</p>
+<p>A live device proves who it is with a client certificate from the middleware’s own CA. Its key is
+made in the Android keystore and never leaves it. The middleware issues the certificate once the
+device shows three things: a pairing code an installer typed or scanned, which proves an
+authorised person is at the device now; the serial its listing holds; and an Android Key
+Attestation chain, which proves the key is in hardware, on an unmodified device of an allowed
+model, held by the app its vendor registered. Nothing is given to a vendor to embed in an app. The
+certificate lasts 30 days and renews from day 15 with a new key. FUNDiMO’s staging middleware
+can be set to issue it though some checks of the attestation fail, for testing, and to mark the
+device so (step 3, Which devices the middleware admits).</p>
+<p>Read it beside <a href="terminal.html"><code>docs/api/terminal.md</code></a>, the terminal’s contract. A vendor with a server
+reads <a href="onboarding-server.html"><code>docs/api/onboarding-server.md</code></a> instead, and linking a register to a terminal at the
+counter is <a href="linking.html"><code>docs/api/linking.md</code></a>. <a href="openapi-terminal.yaml"><code>docs/api/openapi-terminal.yaml</code></a> holds the schema of every
+route a device calls here, and <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a> holds those a register calls, with
+the two that list a register and give it a code. The three routes that register an app,
+list a terminal and give it a code are in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>, a back office’s file,
+which <a href="back-office.html"><code>/docs/api/back-office.md</code></a> walks. The middleware publishes no Android library: the code
+here is for you to paste and own.</p>
+<h2 id="what-is-proven-on-a-device-and-what-is-not-yet"><a class="header" href="#what-is-proven-on-a-device-and-what-is-not-yet">What is proven on a device, and what is not yet</a></h2>
+<p>Every step here was written from documents. Two runs have since tried parts of it on one SUNMI
+P2 Lite SE, Android 11 (API 30), whose keystore is software: AOSP’s software keymaster keeps its
+keys, and no trusted environment was found behind Android’s keystore. FUNDiMO’s bench, run
+from 12-Nov-2026, ran on the device alone, with no network and no middleware. A terminal
+vendor’s trial on 13-Nov-2026 enrolled in the sandbox on its first attempt and connected on its
+certificate. The sandbox requires no attestation, so neither run proves a live enrolment. Each
+step that rests on something only a device can confirm says so, by the bench item it rests on:
+proven on a device, and on which, or not yet proven on a device. Each item not yet proven is
+checked on a SUNMI device before the first live enrolment, and this walk is not final until
+BENCH-2 is.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Item</th><th>What is assumed</th><th>The step</th><th>What the runs showed</th></tr>
+</thead>
+<tbody>
+<tr><td>BENCH-1</td><td>SUNMI’s models chain to Google’s attestation root</td><td>3, the key</td><td>Not on that unit: its chain ends at Android’s software attestation root</td></tr>
+<tr><td>BENCH-2</td><td>An app can read its device’s serial through SUNMI’s SDK</td><td>5, the serial</td><td>The serial read from SUNMI’s system property <code>ro.sunmi.serial</code>, not yet compared with a listing’s</td></tr>
+<tr><td>BENCH-3</td><td>The attestation holds <code>attestationIdModel</code> on API 31 and later, and <code>verifiedBootKey</code> names SUNMI’s firmware signer on older releases</td><td>3, the key</td><td>Not on that unit: on API 30 it attests no model, and its software keymaster attests a boot key of 32 zero bytes, which names no signer</td></tr>
+<tr><td>BENCH-4</td><td>A keystore key can drive client TLS through OkHttp and an <code>X509ExtendedKeyManager</code>, on a WebSocket as on REST</td><td>8, the key manager</td><td>Proven on that unit, by both runs</td></tr>
+<tr><td>BENCH-5</td><td>A SUNMI device’s clock is near enough to validate a public server certificate</td><td>6, enrolment</td><td>Not measured. The device’s calls over HTTPS to the sandbox in the trial succeeded</td></tr>
+<tr><td>BENCH-6</td><td>A real attestation chain parses as the middleware parses one</td><td>3, the key</td><td>That unit’s software chain parses</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="in-short"><a class="header" href="#in-short">In short</a></h2>
+<p>Changed in v0.5.0.</p>
+<ol>
+<li>The vendor registers the app’s package and signing digest for its role (step 1).</li>
+<li>The terminal’s fleet owner, or the POS vendor for a register, lists the device by its
+serial, and gives the installer the pairing code the middleware answers with (step 2).</li>
+<li>On the device, the app takes the code’s five words, as the installer types them or scans
+them from a QR code (step 2), reads the serial (step 5), makes a P-256 key in the Android
+keystore with the enrolment challenge (step 3), builds a CSR for it (step 4), and sends all
+of it to <code>POST /v1/enrol</code> (step 6).</li>
+<li>It keeps the <code>CertificateChain</code> the middleware answers with against the key’s alias (step 7), and
+presents the key and the chain at the TLS handshake of every call after, REST and
+WebSocket alike (step 8).</li>
+<li>Once a day it asks <code>GET /v1/certificates/self</code> (step 9). When <code>RenewNow</code> is <code>true</code>, it
+renews with a new key under a new alias, or sends again as it was a renewal still waiting
+for a verdict, and deletes the old key only after a call on the new one has been answered
+(step 10).</li>
+<li>After a refusal it does what the holder’s table says, and never deletes its key (What a
+holder of a dead certificate does). A device off longer than its certificate re-enrols
+with a new code (step 11).</li>
+<li>A person enrols the device on the app’s enrolment screen, which an entry of the app’s own
+menu or settings opens, with the device alone, and again after the first enrolment (The
+enrolment screen).</li>
+</ol>
+<h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
+<p>Changed in v1.0.0.</p>
+<p>The same file is served in the sandbox, where five things differ.</p>
+<ul>
+<li>The sandbox passes the Operator API routes of <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> to your world’s
+own <code>admin</code> server, and answers every other caller <code>404</code> at them (<a href="back-office.html"><code>/docs/api/back-office.md</code></a>,
+Trying it in the sandbox). To enrol your world’s own terminal or register you need no <code>admin</code>
+server: the sandbox has two routes of its own, served by its own process, <code>mw-sandbox</code> (the
+middleware’s <code>003b-sandbox</code>), under your tester’s sandbox key, and a <code>live</code> middleware has
+neither: <code>POST /sandbox/v1/app-identities</code> registers the app (step 1), and
+<code>POST /sandbox/v1/codes</code> gives the code (step 2).</li>
+<li>A register is tried in a world of its own kind, which <code>POST /sandbox/v1/keys</code> with
+<code>{"Register":"device"}</code> opens (<a href="sandbox.html"><code>docs/api/sandbox.md</code></a>, 1. A key and a world). Its register is
+listed with the serial <code>&lt;tester&gt;-register</code>, as every world’s own terminal is <code>-yours</code> with
+<code>&lt;tester&gt;-yours</code>.</li>
+<li>No attestation is required, so an emulator or a debug build can enrol. A chain sent is
+checked all the same, for its key, its challenge and its app, against app identities where
+a debug build counts, so you can prove your package and signing digest before you have a
+device. The first live enrolment is where the rest is proven. A renewal needs its challenge
+here whether or not it sends a chain (step 10): one sent with no challenge of the
+certificate’s live is <code>403 challenge_not_valid</code>.</li>
+<li>Enrolment needs a sandbox with an issuing certificate. A sandbox run without one answers
+<code>POST /v1/enrol</code> with <code>503 ca_unavailable</code>.</li>
+<li>A code can make a certificate due at once: <code>POST /sandbox/v1/codes</code> with <code>"Due": true</code> beside
+<code>Role</code> gives a code whose certificate is issued 16 days back, so <code>RenewNow</code> is <code>true</code> from its
+first daily check, and renewal, the overlap and their refusals can be tried the same day
+(<a href="sandbox.html"><code>docs/api/sandbox.md</code></a>, 4. The POS journey).</li>
+</ul>
+<h2 id="what-you-need"><a class="header" href="#what-you-need">What you need</a></h2>
+<ul>
+<li>An Android app on the device. <code>setAttestationChallenge</code> needs API 24, and
+<code>setDevicePropertiesAttestationIncluded</code>, which puts the device’s brand and model in the
+attestation, needs API 31.</li>
+<li>OkHttp, <code>com.squareup.okhttp3:okhttp</code>, for every call.</li>
+<li>Bouncy Castle’s PKIX library, <code>org.bouncycastle:bcpkix-jdk18on</code>, to build the CSR. Only its
+CSR classes are used, and it is not installed as a security provider. It brings
+<code>bcprov-jdk18on</code>, which holds class files for Java 9 and later. A toolchain that cannot read
+them fails with <code>Unsupported class file major version 59</code>, as Android Gradle Plugin 4.2 with
+Jetifier does: there, take <code>org.bouncycastle:bcpkix-jdk15to18</code>, the same classes built for
+Java 5 to 8.</li>
+<li>WorkManager, <code>androidx.work:work-runtime-ktx</code>, for the daily check, or any scheduler the
+app already has.</li>
+<li>Android’s own <code>org.json</code>, for bodies.</li>
+<li>The middleware’s word list, <a href="words.txt"><code>docs/api/words.txt</code></a>, in the app’s resources, to read a code
+(step 2).</li>
+<li>The middleware’s base URL, one of those <a href="environments.html"><code>/docs/api/environments.md</code></a> names, kept in a setting,
+which the helpers below read as <code>MW</code>.</li>
+</ul>
+<p>Take a current release of each library. The snippets below share these helpers. Make every
+call off the main thread.</p>
+<pre><code class="language-kotlin">import android.util.Base64
+import java.io.IOException
+import kotlin.random.Random
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+
+/**
+ * The base URL the app chose, set from its data when the app starts, in `Application.onCreate`,
+ * so every call here, the daily check's worker among them, has it. Null until one is chosen.
+ */
+var chosenBaseUrl: String? = null
+
+/**
+ * The middleware's base URL, one of those `/docs/api/environments.md` names. The app chooses it
+ * once, before its first enrolment, from a list its configuration holds, never an address an
+ * installer types, and keeps the choice in its data beside its identities (step 7), so clearing
+ * the app's data clears both.
+ */
+val MW: String
+    get() = checkNotNull(chosenBaseUrl) {
+        "No base URL chosen: choose one of those /docs/api/environments.md names before enrolling"
+    }
+
+val JSON = "application/json".toMediaType()
+
+/** A client presenting no certificate: for `POST /v1/enrol` alone. */
+val plain = OkHttpClient()
+
+/** What the middleware answered: a 2xx and its body, or a refusal and its `Error.Code`. */
+sealed interface Answer {
+    data class Ok(val status: Int, val body: JSONObject) : Answer
+    data class Refused(val status: Int, val code: String?) : Answer
+}
+
+/**
+ * Sends [request] and reads the answer. Throws `IOException` where no answer came: a close, a
+ * reset, a timeout, or a handshake that failed.
+ */
+fun call(client: OkHttpClient, request: Request): Answer =
+    client.newCall(request).execute().use { response -&gt;
+        val text = response.body?.string().orEmpty()
+        if (response.isSuccessful) {
+            Answer.Ok(response.code, JSONObject(text.ifEmpty { "{}" }))
+        } else {
+            val code = runCatching { JSONObject(text).getJSONObject("Error").getString("Code") }
+            Answer.Refused(response.code, code.getOrNull())
+        }
+    }
+
+/**
+ * Sends [request] until an answer comes, waiting 1 second, then twice as long each time up to
+ * 30 seconds, with a little randomness. Only for a body that is safe to send again: enrolment
+ * and renewal answer a repeat with what they already issued.
+ */
+fun sendUntilAnswered(client: OkHttpClient, request: Request, tries: Int = 5): Answer {
+    var wait = 1_000L
+    repeat(tries - 1) {
+        try {
+            return call(client, request)
+        } catch (noAnswer: IOException) {
+            Thread.sleep(wait + Random.nextLong(wait / 2))
+            wait = minOf(wait * 2, 30_000L)
+        }
+    }
+    return call(client, request)
+}
+
+/** DER bytes as PEM, 64 characters a line. */
+fun pem(label: String, der: ByteArray): String {
+    val body = Base64.encodeToString(der, Base64.NO_WRAP).chunked(64).joinToString("\n")
+    return "-----BEGIN $label-----\n$body\n-----END $label-----\n"
+}
+
+/** Bytes as lowercase hex. */
+fun ByteArray.hex(): String =
+    joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
+
+/** 64 lowercase hex characters as 32 bytes, or null. */
+fun bytesOfHex(text: String): ByteArray? {
+    if (text.length != 64 || !text.all { it in '0'..'9' || it in 'a'..'f' }) return null
+    return ByteArray(32) { text.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
+}
+</code></pre>
+<h2 id="1-register-the-app-identity"><a class="header" href="#1-register-the-app-identity">1. Register the app identity</a></h2>
+<p>Changed in v1.0.0.</p>
+<p>A device enrols only if the app holding its key is one its vendor registered. The middleware learns
+which app holds the key from the attestation, which states the app’s Android package and the
+SHA-256 of each certificate the app is signed with, so nothing secret is put in the app.
+Register each app once for its role: <code>terminal</code> for a payment terminal’s app, <code>register</code> for a
+POS app on a device.</p>
+<p>One app holds one role. One device may run both, a payment terminal’s app and a POS app: two
+apps, each registered for its own role, and two principals, each with its own listing, code,
+key and certificate. Both listings may carry the device’s one serial, and the middleware keeps
+their codes apart. Each app enrols with its own principal’s code. Where the app sends its
+attestation, as production requires, the other app’s attestation on a code is refused
+<code>403 app_identity_unknown</code>. An enrolment with no attestation is not checked for its app: in
+the sandbox, and on a middleware set to mark, it enrols as whichever principal the code and
+serial name, so the enrolment screen says which app a code is for. In the sandbox the two
+serials differ, <code>&lt;tester&gt;-yours</code> and <code>&lt;tester&gt;-register</code>, so a code sent with the other app’s
+serial is <code>403 code_not_valid</code>. A row of the operator’s allowed list admits a model for one
+vendor or for every vendor, so a model allowed for a fleet alone does not admit a POS vendor’s
+register on the same device: ask for it for each vendor, or for every vendor (Which devices
+the middleware admits). A middleware set to mark records the model’s check rather than
+refusing.</p>
+<p>On <code>live</code>, the operator or the vendor’s own <code>admin</code> sends
+<code>POST /v1/vendors/{VendorIdentification}/app-identities</code> (in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>),
+with this body. Its <code>IdempotencyKey</code> is the sender’s own, which the vendor’s <code>admin</code> must send, so
+a create sent again after a lost answer finds the app identity the first made
+(<a href="back-office.html"><code>/docs/api/back-office.md</code></a>, Retrying a create):</p>
+<pre><code class="language-json">{ "IdempotencyKey": "app-0001-a", "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "..." }
+</code></pre>
+<p>In the sandbox, <code>POST /sandbox/v1/app-identities</code> takes the same body without <code>IdempotencyKey</code>,
+which it refuses <code>400 unknown_field</code>, under your tester’s key, with <code>$SANDBOX</code> the sandbox’s
+address:</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/sandbox/v1/app-identities" \
+  -H 'Authorization: Bearer sbx_...' \
+  -H 'Content-Type: application/json' \
+  -d '{"Role":"terminal","AppPackage":"au.com.example.terminal","SigningDigest":"..."}'
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "AppIdentification": "app_...", "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "...", "Debug": true, "State": "active", "CreatedBy": null }
+</code></pre>
+<p><code>CreatedBy</code> names who registered the app, and the sandbox’s route records no one, so it is <code>null</code>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Rule</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Role</code></td><td><code>terminal</code> or <code>register</code></td></tr>
+<tr><td><code>AppPackage</code></td><td>The app’s Android package, as the attestation names it: two or more segments joined by <code>.</code>, each a letter then letters, digits and <code>_</code>, at most 128 characters and 8 digits</td></tr>
+<tr><td><code>SigningDigest</code></td><td>The SHA-256 of a certificate the app is signed with, 64 lowercase hex characters</td></tr>
+<tr><td><code>Debug</code></td><td><code>true</code> for a debug build, which a sandbox takes and a <code>live</code> middleware refuses, unless it is set to mark (step 3, Which devices the middleware admits). The sandbox’s route registers every app as a debug build, whatever this says</td></tr>
+</tbody>
+</table>
+</div>
+<p>The digest is of the certificate that signed the app as it is installed on the device. If a
+store re-signs your app, it is the store’s certificate, not your upload key’s. Register a
+debug build’s digest apart, as a debug build. To read the digests from the app itself:</p>
+<pre><code class="language-kotlin">import android.content.Context
+import android.content.pm.PackageManager
+import java.security.MessageDigest
+
+/** The SHA-256 of each certificate this app, as installed, is signed with. API 28 and later. */
+fun signingDigests(context: Context): List&lt;String&gt; {
+    val info = context.packageManager
+        .getPackageInfo(context.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+    val signers = info.signingInfo?.apkContentsSigners ?: return emptyList()
+    return signers.map { MessageDigest.getInstance("SHA-256").digest(it.toByteArray()).hex() }
+}
+</code></pre>
+<p>Two rules of the attestation follow from this step. The app must be the only package holding
+the key: an app sharing its user id with another package, by <code>android:sharedUserId</code>, shares
+its keys with it, the attestation then names more than one package, and that is refused. And
+every digest the attestation states must be registered, so an app signed with two
+certificates registers each. A device whose app is not registered is refused
+<code>403 app_identity_unknown</code> at enrolment and at renewal.</p>
+<h2 id="2-the-listing-and-the-code"><a class="header" href="#2-the-listing-and-the-code">2. The listing and the code</a></h2>
+<p>Changed in v1.0.0.</p>
+<p>Every device starts with one human act. On <code>live</code>, the terminal’s fleet owner lists it at a
+store by its serial, <code>POST /v1/merchant-stores/{StoreIdentification}/terminals</code> (in
+<a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>), and the POS vendor’s <code>admin</code>
+lists a register by its serial, <code>POST /v1/registers</code> (in <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a>, as
+<code>listRegister</code>, tagged <code>registers</code>). The <code>201</code> holds the
+device’s id, <code>POIIdentification</code> or <code>RegisterIdentification</code>, and its <code>PairingCode</code>:</p>
+<pre><code class="language-json">{ "POIIdentification": "poi_...", "SerialNumber": "SN-0001", "State": "listed", "PairingCode": "bronze.farm.loop.prism.tempo" }
+</code></pre>
+<p>The code is five different words of the middleware’s word list, in lower case and joined by
+dots, valid 15 minutes and for one use, and shown this once. It is a secret: the listing party
+gives it to the installer, read aloud, sent, or shown as a QR code (The QR code, below), and the
+installer types or scans it into your app’s enrolment screen at the device (The enrolment
+screen). It is kept out of every log, the app’s
+own among them. A fresh one comes from <code>POST /v1/terminals/{POIIdentification}/pairing-code</code>,
+which also re-pairs a <code>paired</code> terminal and is in the Operator API, or for a register from
+<code>POST /v1/registers/{RegisterIdentification}/pairing-code</code>, in <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a>.</p>
+<p>In the sandbox the listing is done for you: your tester’s world holds a terminal of your own,
+<code>-yours</code>, listed with the serial <code>&lt;tester&gt;-yours</code>. <code>POST /sandbox/v1/codes</code> gives its code,
+under your tester’s key:</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/sandbox/v1/codes" \
+  -H 'Authorization: Bearer sbx_...' \
+  -H 'Content-Type: application/json' \
+  -d '{"Role":"terminal"}'
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "Role": "terminal", "PairingCode": "bronze.farm.loop.prism.tempo", "SerialNumber": "sbx-...-yours", "Next": "..." }
+</code></pre>
+<p>Enrol with that code and that <code>SerialNumber</code> within 15 minutes. A new code re-pairs <code>-yours</code>,
+so its sandbox key is refused on its upgrade until it enrols. Past 6 codes an hour the route
+answers <code>429 sandbox_rate</code>.</p>
+<p>A register is tried in a world of its own kind (In the sandbox, above), where
+<code>{"Role":"register"}</code> gives your world’s register’s code and its <code>SerialNumber</code>,
+<code>&lt;tester&gt;-register</code>. It re-pairs the register, so the register takes no sale until it enrols.
+A world’s kind does not change: a world of a server’s register answers <code>{"Role":"register"}</code>
+with <code>400 invalid_field</code>.</p>
+<h3 id="the-word-list"><a class="header" href="#the-word-list">The word list</a></h3>
+<p>The list is <a href="words.txt"><code>docs/api/words.txt</code></a>: 1,024 words, one a line, each 3 to 6 letters <code>a</code> to <code>z</code>. The
+sandbox serves it as <a href="words.txt"><code>/docs/api/words.txt</code></a>, and its MCP server as <code>mw://docs/words.txt</code>. Each
+word is named by its first four letters: no two words share them, and none begins another, so
+an app can complete a word from its first letters, by the fourth at the latest, and a word of
+three letters at its third. No word is one said for a separator, as <code>dot</code> or <code>dash</code> would be,
+so a code read aloud is five words and nothing between them.</p>
+<p>Put the list in the app as <code>src/main/resources/words.txt</code>, so the app and its unit tests read
+the same bytes. The SHA-256 of the list as published is
+<code>e6104a521cec9b0224c1dfa51e6fceefcb7f5e0e4cd36adb168e15fa92686d5a</code>: check your copy against it.</p>
+<h3 id="typing-the-code"><a class="header" href="#typing-the-code">Typing the code</a></h3>
+<p>The middleware reads a device’s code one way, and the app reads it the same way before it
+sends, so a code the middleware would refuse never leaves the device. The middleware takes:</p>
+<ul>
+<li>at most 64 characters;</li>
+<li>spaces, tabs and line ends before the first word and after the last, which it drops, since a
+scanner often ends its text with a line end;</li>
+<li>one or more dots, spaces or hyphens between two words, mixed as typed;</li>
+<li>the letters <code>a</code> to <code>z</code> in either case, read as lower case, and no other letter;</li>
+<li>and then five words of the list, all different.</li>
+</ul>
+<p>Anything else is <code>400 invalid_field</code> naming <code>PairingCode</code>, before any code is looked up, so it
+costs no attempt. The middleware completes no word: <code>bron</code> is not <code>bronze</code>. Completing a word
+is the app’s, so the app sends the whole words, and computes the challenge from them.</p>
+<p>What the app does:</p>
+<ul>
+<li>Its field turns off the keyboard’s own corrections and suggestions, with
+<code>InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD</code>, so the
+keyboard does not change one word into another.</li>
+<li>Once the letters typed begin one word of the list alone, it completes the word and its dot,
+and the fifth word without its dot: a dot or a hyphen after the last word is refused.</li>
+<li>A letter that begins no word is shown at once, so a misheard word costs a retype, not an
+attempt.</li>
+<li>It lowers case with <code>lowercase(Locale.ROOT)</code>. On a device set to Turkish, the device’s own
+locale lowers <code>I</code> to a dotless <code>ı</code>, and <code>PRISM</code> would read as no word.</li>
+<li>It sends the code as the middleware shows it, <code>bronze.farm.loop.prism.tempo</code>, as <code>deviceCode</code>
+returns it, and computes the challenge from the same text (step 3).</li>
+</ul>
+<pre><code class="language-kotlin">import android.text.InputType
+import android.widget.EditText
+import java.util.Locale
+
+/** The list, the app's `src/main/resources/words.txt`, one word a line, read once. */
+val WORDS: Set&lt;String&gt; by lazy {
+    val list = checkNotNull(WordList::class.java.getResourceAsStream("/words.txt")) {
+        "words.txt is not in the app's resources"
+    }
+    list.bufferedReader(Charsets.US_ASCII).useLines { lines -&gt;
+        lines.filter { it.isNotEmpty() }.toSet()
+    }
+}
+
+private object WordList
+
+/** What may stand between two words: one or more of them, mixed. */
+private val SEPARATORS = charArrayOf('.', ' ', '-')
+
+/** What is dropped before the first word and after the last. */
+private val ENDS = charArrayOf(' ', '\t', '\r', '\n')
+
+/**
+ * The code as the installer typed it, or a scanner read it, read as the middleware reads it.
+ * Returns the code as the middleware shows it, five words in lower case joined by dots, or null
+ * for anything else. Never send a null: ask the installer to type the code again.
+ */
+fun deviceCode(typed: String, words: Set&lt;String&gt;): String? {
+    // At most 64 characters, each of them ASCII: the middleware counts 64 bytes, and reads no
+    // letter outside `a` to `z` as part of a word.
+    if (typed.length &gt; 64 || typed.any { it.code &gt; 0x7f }) return null
+    val text = typed.trim(*ENDS).lowercase(Locale.ROOT)
+    if (text.isEmpty() || text.first() in SEPARATORS || text.last() in SEPARATORS) return null
+    val tokens = text.split(*SEPARATORS).filter { it.isNotEmpty() }
+    if (tokens.size != 5 || tokens.toSet().size != 5 || !words.containsAll(tokens)) return null
+    return tokens.joinToString(".")
+}
+
+/** What the letters of the word being typed begin, on the list. */
+sealed interface Begun {
+    /** One word alone: complete it, and its dot, unless it is the fifth word. */
+    data class Word(val word: String) : Begun
+
+    /** More than one: wait for the next letter. By the fourth there is one or none. */
+    object Several : Begun
+
+    /** None: show it at once, so the installer retypes the word and spends no attempt. */
+    object NoWord : Begun
+}
+
+/** What [letters], the letters typed of one word, begin in [words]. */
+fun begun(letters: String, words: Set&lt;String&gt;): Begun {
+    val typed = letters.lowercase(Locale.ROOT)
+    val begins = words.filter { it.startsWith(typed) }
+    return when (begins.size) {
+        0 -&gt; Begun.NoWord
+        1 -&gt; Begun.Word(begins.single())
+        else -&gt; Begun.Several
+    }
+}
+
+/** The code's field: none of the keyboard's own corrections or suggestions. */
+fun EditText.forDeviceCode() {
+    inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+}
+</code></pre>
+<p>Check your build against these examples, which the middleware reads as <code>deviceCode</code> does. The
+test runs as a device set to Turkish would:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Typed, as Kotlin writes it</th><th><code>deviceCode</code> gives</th><th>Why</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Bronze Farm-loop PRISM tempo</code></td><td><code>bronze.farm.loop.prism.tempo</code></td><td>Either case, and one or more separators, mixed</td></tr>
+<tr><td><code>bronze.farm.loop.prism.tempo\r\n</code></td><td><code>bronze.farm.loop.prism.tempo</code></td><td>A scanner’s line end, dropped</td></tr>
+<tr><td><code>BRONZE FARM LOOP PRISM TEMPO</code></td><td><code>bronze.farm.loop.prism.tempo</code></td><td>A capital <code>I</code>, which a Turkish locale lowers to a dotless <code>ı</code> and <code>Locale.ROOT</code> to <code>i</code></td></tr>
+<tr><td><code>BRONZE FARM LOOP PRİSM TEMPO</code></td><td>null</td><td>A dotted capital <code>İ</code>, not a letter <code>A</code> to <code>Z</code></td></tr>
+<tr><td><code>bronze.farm.loop.prism.temp</code></td><td>null</td><td>A word begun and not finished: completing it is the app’s</td></tr>
+<tr><td><code>bronze.farm.loop.prison.tempo</code></td><td>null</td><td>A word not on the list</td></tr>
+<tr><td><code>bronze.farm.loop.prism.bronze</code></td><td>null</td><td>A word twice</td></tr>
+<tr><td><code>bronze.farm.loop.prism.tempo.kite</code></td><td>null</td><td>Six words</td></tr>
+<tr><td><code>.bronze.farm.loop.prism.tempo</code></td><td>null</td><td>A separator before the first word</td></tr>
+<tr><td><code>bronze.farm.loop.prism.tempo.</code></td><td>null</td><td>A dot after the last word: completion adds none after the fifth</td></tr>
+<tr><td><code>bronze\tfarm.loop.prism.tempo</code></td><td>null</td><td>A tab between two words</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-kotlin">import java.util.Locale
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class DeviceCodeTest {
+    @Test
+    fun readsACodeAsTheMiddlewareDoes() {
+        val before = Locale.getDefault()
+        // A device set to Turkish, whose own locale lowers `I` to a dotless `ı`.
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"))
+        try {
+            val examples = listOf(
+                "Bronze Farm-loop PRISM tempo" to "bronze.farm.loop.prism.tempo",
+                "bronze.farm.loop.prism.tempo\r\n" to "bronze.farm.loop.prism.tempo",
+                "BRONZE FARM LOOP PRISM TEMPO" to "bronze.farm.loop.prism.tempo",
+                "BRONZE FARM LOOP PRİSM TEMPO" to null,
+                "bronze.farm.loop.prism.temp" to null,
+                "bronze.farm.loop.prison.tempo" to null,
+                "bronze.farm.loop.prism.bronze" to null,
+                "bronze.farm.loop.prism.tempo.kite" to null,
+                ".bronze.farm.loop.prism.tempo" to null,
+                "bronze.farm.loop.prism.tempo." to null,
+                "bronze\tfarm.loop.prism.tempo" to null,
+            )
+            for ((typed, shown) in examples) {
+                assertEquals(typed, shown, deviceCode(typed, WORDS))
+            }
+        } finally {
+            Locale.setDefault(before)
+        }
+    }
+
+    @Test
+    fun completesAWordByItsFourthLetter() {
+        assertEquals(Begun.Several, begun("pri", WORDS))
+        assertEquals(Begun.Word("prism"), begun("PRIS", WORDS))
+        assertEquals(Begun.NoWord, begun("priso", WORDS))
+    }
+}
+</code></pre>
+<h3 id="the-qr-code"><a class="header" href="#the-qr-code">The QR code</a></h3>
+<p>Whoever shows the code may show a QR code of it beside the words, for the app to scan. A QR
+code of a device’s code holds the code as the middleware shows it and nothing else,
+<code>bronze.farm.loop.prism.tempo</code>, in byte mode at error correction <code>M</code>. A code is at most 34
+bytes, five words of six letters and four dots, so every code fits a version 3 symbol, 29
+modules a side, which holds 42 bytes at <code>M</code>. The middleware answers the code as text and draws
+no image: whoever shows the code draws the QR from the <code>PairingCode</code> it was given. A server’s
+code has no QR.</p>
+<p>The app reads the symbol’s text with its camera or the device’s scanner, by the rule a typed
+code is read by, <code>deviceCode</code>, so the line end a scanner leaves is dropped; shows the five
+words; and enrols when the installer taps to. It never follows the text as a link, and never
+reads a host from it: the middleware’s address is the app’s own. A text that is not a code is
+refused, as a typed one is. A photograph of the QR is a photograph of the words: good for 15
+minutes, once, and of no use without the listed serial and, on <code>live</code>, a device that passes
+attestation.</p>
+<h2 id="3-the-key-in-the-android-keystore"><a class="header" href="#3-the-key-in-the-android-keystore">3. The key, in the Android keystore</a></h2>
+<p>The device’s key is P-256, made in the Android keystore under an alias of your choosing, and
+it never leaves the keystore. It is made with an attestation challenge, so the attestation
+the keystore writes for it carries that challenge, and the middleware can tell the key was made for
+this enrolment and no other. Ask for the device’s brand and model in the attestation with
+<code>setDevicePropertiesAttestationIncluded</code> where the API has it, API 31 and later: the
+operator’s allowed list admits a device by them.</p>
+<p>The challenge is fixed before the key exists. At enrolment it is the SHA-256 of
+<code>mw-enrol-v1</code>, the code as the middleware shows it, its five words in lower case joined by
+dots as <code>deviceCode</code> returns them (step 2), and the device’s serial as step 5 reads it, so read
+the serial before you make the key. At renewal it is the <code>Challenge</code> the middleware answers
+(step 10).</p>
+<pre><code class="language-kotlin">import android.os.Build
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import java.security.KeyPairGenerator
+import java.security.KeyStore
+import java.security.ProviderException
+import java.security.spec.ECGenParameterSpec
+
+/**
+ * Makes a P-256 key in the Android keystore under [alias], attested with [challenge], with the
+ * device's brand and model in the attestation where the platform can put them there. Returns
+ * whether it did.
+ */
+fun makeKey(alias: String, challenge: ByteArray): Boolean {
+    fun spec(deviceProperties: Boolean): KeyGenParameterSpec {
+        val builder = KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN)
+            .setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
+            .setDigests(
+                KeyProperties.DIGEST_NONE,
+                KeyProperties.DIGEST_SHA256,
+                KeyProperties.DIGEST_SHA384,
+                KeyProperties.DIGEST_SHA512,
+            )
+            .setAttestationChallenge(challenge)
+        if (deviceProperties &amp;&amp; Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.S) {
+            builder.setDevicePropertiesAttestationIncluded(true)
+        }
+        return builder.build()
+    }
+    val generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore")
+    if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.S) {
+        try {
+            generator.initialize(spec(deviceProperties = true))
+            generator.generateKeyPair()
+            return true
+        } catch (unsupported: ProviderException) {
+            // This device cannot attest its brand and model: made again without them.
+        }
+    }
+    generator.initialize(spec(deviceProperties = false))
+    generator.generateKeyPair()
+    return false
+}
+
+/** What `KeyStore.getCertificateChain` gives for [alias], leaf first, as one PEM text. */
+fun attestationChainOf(alias: String): String {
+    val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+    val chain = checkNotNull(keyStore.getCertificateChain(alias)) { "no key under $alias" }
+    return chain.joinToString("") { pem("CERTIFICATE", it.encoded) }
+}
+</code></pre>
+<p><code>KeyStore.getCertificateChain</code> gives the attestation: the key’s own certificate first, then
+the certificates the keystore’s attestation key chains through, to Google’s root. Send all of
+it, as it comes, in <code>AttestationChain</code>. Do not check it on the device: the middleware checks it, on
+the server, as Google’s guidance says. The key allows signing with no digest of its own,
+<code>DIGEST_NONE</code>, beside SHA-256 to SHA-512, for the handshake of step 8: Google’s reference for
+<code>setDigests</code>, read on 10-Nov-2026, says a key used for TLS client authentication usually needs
+it, “because TLS/SSL stacks typically generate the necessary digest(s) themselves”.</p>
+<p>Where <code>setDevicePropertiesAttestationIncluded</code> is not supported, key generation throws
+<code>ProviderException</code>, and <code>makeKey</code> makes the key without them. Such a key’s attestation names
+no brand and no model, so only an allowed-list row naming the firmware’s <code>VerifiedBootKey</code>
+alone can admit the device: tell the operator which of your devices this is.</p>
+<h3 id="which-devices-the-middleware-admits"><a class="header" href="#which-devices-the-middleware-admits">Which devices the middleware admits</a></h3>
+<p>Changed in v0.6.1.</p>
+<p>On <code>live</code> every enrolment and renewal of a device is attested, and the middleware refuses a chain
+unless: it chains to one of Google’s two attestation roots, and no certificate in it is
+revoked or suspended; the key is the CSR’s, P-256, made in the keystore’s trusted environment
+or StrongBox, for signing; the challenge is this call’s; the bootloader is locked and the boot
+verified; the app is the one registered (step 1); and the device is on the operator’s allowed
+list, by its attested brand and model, its firmware’s boot key, or both. The allowed list
+starts empty, so ask the operator to allow your models before the first live enrolment. A
+middleware set to mark is the one exception, below.</p>
+<ul>
+<li><strong>BENCH-1, not yet proven on a device.</strong> That SUNMI’s models chain to Google’s attestation
+root. A device certified for Google’s apps should. A device that is not may use its maker’s
+own root, which the middleware does not take, and such a model is refused at enrolment until the
+operator decides what a device of it may do. On the unit of the runs above, the chain ended at
+Android’s software attestation root, which a live middleware refuses.</li>
+<li><strong>BENCH-3, not yet proven on a device.</strong> That the attestation holds <code>attestationIdModel</code> on
+API 31 and later, and that <code>verifiedBootKey</code> names SUNMI’s firmware signer on older
+releases. The allowed list cannot tell a model with neither from any other, and treats it
+as a model with no attestation. On the unit of the runs above, on API 30, the attestation
+named no model, and its root of trust was the software keymaster’s: a boot key of 32 zero
+bytes, <code>Unverified</code> and unlocked, which AOSP’s software keymaster on Android 11 attests
+whatever the boot properties say, though the device’s own properties read verified boot
+<code>green</code> and a locked bootloader. A live middleware refuses a root of trust the keystore’s secure hardware did not
+attest.</li>
+<li><strong>BENCH-6, not yet proven on a device.</strong> That a real attestation chain parses as the middleware
+parses one, on each firmware. The software chain of the unit of the runs above did; no
+device run has yet tried a chain from secure hardware, a trusted environment or StrongBox.</li>
+</ul>
+<p>FUNDiMO’s staging middleware alone can be set to mark a device whose attestation fails rather
+than refuse it, so that everything but the attestation can be tried on a device that cannot pass
+it. Set so, at enrolment and at renewal, it admits a device whose chain fails only the checks
+that are the device’s and its maker’s: a chain not ending at one of Google’s roots or not one
+the middleware can follow, a certificate in it out of its dates or on Google’s status list, a
+key not in the trusted environment or StrongBox, a bootloader not locked or a boot not verified,
+and a device the allowed list does not hold. It also admits one whose app is registered as a
+debug build alone, and one that sends no chain, whose renewal still needs the challenge it
+asked (step 10). It issues the certificate and records on it
+which checks failed, which the device’s listings show, and the device then works as any other.
+It refuses as written above everything else: a chain that does not parse, an attestation
+extension not on the key’s own certificate alone, a key not the CSR’s, a challenge not the
+call’s, a serial attested in secure hardware that is not the listed one, and an app its vendor
+has not registered. A SUNMI terminal as FUNDiMO’s bench measured one, its attestation at
+software level under AOSP’s software attestation root, not Google’s, every tag in
+<code>softwareEnforced</code>, a boot key of 32 zero bytes and its boot <code>Unverified</code>, is admitted there,
+marked as failing the root, the hardware, the boot and the model. Production refuses as
+written, and the sandbox requires no attestation, so it marks nothing. Build the app for the
+rules above: a device staging marks, a middleware that does not mark refuses.</p>
+<h3 id="the-challenge-worked"><a class="header" href="#the-challenge-worked">The challenge, worked</a></h3>
+<p>Changed in v0.3.0.</p>
+<p>With the code the installer typed as <code>Bronze Farm-loop PRISM tempo</code>, and the serial <code>S-1</code>:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>The code, as typed</td><td><code>Bronze Farm-loop PRISM tempo</code></td></tr>
+<tr><td>The code, as the middleware shows it</td><td><code>bronze.farm.loop.prism.tempo</code></td></tr>
+<tr><td>The serial</td><td><code>S-1</code></td></tr>
+<tr><td>The input, 42 bytes of ASCII</td><td><code>mw-enrol-v1bronze.farm.loop.prism.tempoS-1</code></td></tr>
+<tr><td>The input, in hex</td><td><code>6d772d656e726f6c2d7631</code> <code>62726f6e7a652e6661726d2e6c6f6f702e707269736d2e74656d706f</code> <code>532d31</code></td></tr>
+<tr><td>The challenge, the SHA-256 of the input</td><td><code>a41058ea920e1fd50a28a67617444d4b99a1ca8f0a0b21b81832247fc6580b76</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>The prefix, <code>mw-enrol-v1</code>, the code and the serial are joined with nothing between. The code is
+its five words as the middleware shows them, never as the installer typed them: a challenge over
+<code>Bronze Farm-loop PRISM tempo</code> is another, and is refused. The serial is the one
+the device sends in <code>SerialNumber</code>, exactly as its listing holds it, case and all. The
+challenge is the 32 bytes of the digest, not its hex: pass the bytes to
+<code>setAttestationChallenge</code>. A challenge one byte different from the middleware’s is refused
+<code>attestation_failed</code>. Check your build against these values:</p>
+<pre><code class="language-kotlin">import java.security.MessageDigest
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+/** The attestation challenge of an enrolment: the SHA-256 of the prefix, the code and the serial. */
+fun enrolmentChallenge(code: String, serial: String): ByteArray =
+    MessageDigest.getInstance("SHA-256")
+        .digest("mw-enrol-v1$code$serial".toByteArray(Charsets.US_ASCII))
+
+class WorkedChallengeTest {
+    @Test
+    fun theWorkedChallenge() {
+        val code = requireNotNull(deviceCode("Bronze Farm-loop PRISM tempo", WORDS))
+        assertEquals("bronze.farm.loop.prism.tempo", code)
+        assertEquals(
+            "a41058ea920e1fd50a28a67617444d4b99a1ca8f0a0b21b81832247fc6580b76",
+            enrolmentChallenge(code, "S-1").hex(),
+        )
+    }
+}
+</code></pre>
+<h2 id="4-the-csr"><a class="header" href="#4-the-csr">4. The CSR</a></h2>
+<p>The middleware reads one thing from the CSR: its public key. It checks the CSR’s own signature and
+that the key is P-256, and writes every name in the certificate itself, so the subject says
+nothing, and holds nothing about the device. The CSR is signed by the keystore key, through a
+Bouncy Castle <code>ContentSigner</code> that hands the bytes to the keystore, so the key never leaves
+it.</p>
+<pre><code class="language-kotlin">import java.io.ByteArrayOutputStream
+import java.io.OutputStream
+import java.security.KeyStore
+import java.security.PrivateKey
+import java.security.Signature
+import org.bouncycastle.asn1.x500.X500Name
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers
+import org.bouncycastle.operator.ContentSigner
+import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder
+
+/** Signs with a keystore key, which signs inside the keystore. */
+class KeystoreSigner(key: PrivateKey) : ContentSigner {
+    private val signature = Signature.getInstance("SHA256withECDSA").apply { initSign(key) }
+    private val written = ByteArrayOutputStream()
+
+    override fun getAlgorithmIdentifier() = AlgorithmIdentifier(X9ObjectIdentifiers.ecdsa_with_SHA256)
+
+    override fun getOutputStream(): OutputStream = written
+
+    override fun getSignature(): ByteArray {
+        signature.update(written.toByteArray())
+        return signature.sign()
+    }
+}
+
+/** A CSR for the key under [alias], PEM. The middleware reads its key alone. */
+fun csrFor(alias: String): String {
+    val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+    val key = keyStore.getKey(alias, null) as PrivateKey
+    val publicKey = keyStore.getCertificate(alias).publicKey
+    val csr = JcaPKCS10CertificationRequestBuilder(X500Name("CN=device"), publicKey)
+        .build(KeystoreSigner(key))
+    return pem("CERTIFICATE REQUEST", csr.encoded)
+}
+</code></pre>
+<p>A CSR whose signature does not verify, or whose key is not P-256, is refused
+<code>400 invalid_field</code>, with <code>Fields</code> naming <code>CertificateSigningRequest</code>.</p>
+<h2 id="5-the-serial-through-sunmis-sdk"><a class="header" href="#5-the-serial-through-sunmis-sdk">5. The serial, through SUNMI’s SDK</a></h2>
+<p>The middleware compares the serial the device sends with the one its listing holds, and the
+enrolment challenge is computed over it, so the app needs the serial as printed on the
+device. On Android 10 and later the platform’s own <code>Build.getSerial()</code> needs
+<code>READ_PRIVILEGED_PHONE_STATE</code>, which a third-party app cannot hold, so the serial comes from
+SUNMI’s SDK.</p>
+<ul>
+<li><strong>BENCH-2, not yet proven on a device.</strong> That an app can read its serial through SUNMI’s
+SDK. SUNMI’s pages read on 07-Nov-2026 name no such call, and a third party’s wrapper
+suggests a system parameter named <code>SN</code>. On the unit of the runs above, an app holding
+<code>READ_PHONE_STATE</code> read the serial from SUNMI’s system property <code>ro.sunmi.serial</code> on FUNDiMO’s
+bench, not yet compared with the serial a listing holds. The code below is the
+shape: put that read, or the SDK’s own call, in it once the bench confirms one.</li>
+</ul>
+<pre><code class="language-kotlin">/** A serial as the middleware holds one: `^[A-Za-z0-9._-]{1,64}$`. */
+val SERIAL = Regex("^[A-Za-z0-9._-]{1,64}$")
+
+/**
+ * The device's serial, read through SUNMI's SDK by [readSunmiSerial], the SDK's call, or null
+ * where it gives none, or gives something no listing could hold.
+ */
+fun serialOf(readSunmiSerial: () -&gt; String?): String? =
+    readSunmiSerial()?.trim()?.takeIf { SERIAL.matches(it) }
+</code></pre>
+<p>If the SDK gives no serial, ask the installer to type the serial printed on the device,
+beside the code: the middleware takes a string either way, and compares it with the listing’s. Send
+it exactly as the listing holds it. One that differs is refused with the same
+<code>403 code_not_valid</code> as a wrong code. In the sandbox, send the <code>SerialNumber</code> that
+<code>POST /sandbox/v1/codes</code> answered. The enrolment screen says how the serial is shown, and when
+it is typed (SCREEN-10 and SCREEN-11).</p>
+<h2 id="6-enrol-post-v1enrol"><a class="header" href="#6-enrol-post-v1enrol">6. Enrol: <code>POST /v1/enrol</code></a></h2>
+<p>Changed in v0.5.0.</p>
+<p>With the code, the serial, the key and its CSR, the app enrols. The call carries no
+credential, because the code is the credential, so the client presents no certificate.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Holds</th></tr>
+</thead>
+<tbody>
+<tr><td><code>PairingCode</code></td><td>The code as the middleware shows it, five words joined by dots, as <code>deviceCode</code> returns it (step 2)</td></tr>
+<tr><td><code>CertificateSigningRequest</code></td><td>The CSR, PEM (step 4)</td></tr>
+<tr><td><code>SerialNumber</code></td><td>The serial (step 5)</td></tr>
+<tr><td><code>AttestationChain</code></td><td>What <code>KeyStore.getCertificateChain</code> gave, PEM, leaf first (step 3)</td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-kotlin">import java.util.UUID
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+
+/**
+ * An enrolment built and not yet answered: the keystore alias of its key, and its request. Keep
+ * it while the code's screen is open, and send this same one again after no answer, a `429` or
+ * a `5xx`: it may have spent the code, and a spent code refuses any key but the one it was
+ * spent with, which inside the code's 15 minutes it answers `200`.
+ */
+class Enrolment(val alias: String, val request: Request)
+
+/**
+ * Builds the enrolment of this device with the code the installer typed and its serial: a new
+ * keystore key under a new alias, its CSR and its attestation. Build a new one for a new code,
+ * or after a `400` or a `403` of the table below, a verdict on this very enrolment. Never after
+ * no answer, a `429` or a `5xx`, which may follow an enrolment that spent the code.
+ */
+fun enrolment(typedCode: String, serial: String): Enrolment {
+    val code = requireNotNull(deviceCode(typedCode, WORDS)) { "not five words of the list: type it again" }
+    require(SERIAL.matches(serial)) { "not a serial a listing holds" }
+    val alias = "mw-" + UUID.randomUUID()
+    makeKey(alias, enrolmentChallenge(code, serial))
+    val body = JSONObject()
+        .put("PairingCode", code)
+        .put("CertificateSigningRequest", csrFor(alias))
+        .put("SerialNumber", serial)
+        .put("AttestationChain", attestationChainOf(alias))
+        .toString()
+        .toRequestBody(JSON)
+    // No certificate yet: the code is the credential.
+    return Enrolment(alias, Request.Builder().url("$MW/v1/enrol").post(body).build())
+}
+
+/**
+ * Sends [enrolment] until an answer comes. Throws `IOException` where none came, and
+ * `JSONException` where a `2xx`'s body was not JSON: send the same [enrolment] again on the
+ * person's next tap, never a new one.
+ */
+fun enrolDevice(enrolment: Enrolment): Answer = sendUntilAnswered(plain, enrolment.request)
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "CertificateChain": "-----BEGIN CERTIFICATE-----\n...", "POIIdentification": "poi_...", "SpiffeId": "spiffe://.../live/terminal/poi_...", "NotAfter": "...", "RenewFrom": "..." }
+</code></pre>
+<p><code>SpiffeId</code> is the certificate’s URI. Its host is the trust domain of the deployment that issued
+it, which need not be the address you call, and its first segment is the environment, <code>live</code> or
+<code>sandbox</code>. In the hosted sandbox its host is staging’s trust domain, the host of staging’s base
+URL (<a href="environments.html"><code>/docs/api/environments.md</code></a>), and its first segment <code>sandbox</code>.</p>
+<p>A register’s answer names <code>RegisterIdentification</code> where a terminal’s names
+<code>POIIdentification</code>. <code>NotAfter</code> is when the certificate ends, 30 days on, and <code>RenewFrom</code> is
+day 15. If an answer is lost, send the same body again inside the code’s 15 minutes, as
+<code>sendUntilAnswered</code> does: the same code and the same key answer <code>200</code> with the certificate
+already issued. The same code with another key is <code>403 code_not_valid</code>, so never make a new
+key to repeat a call that got no answer: keep the <code>Enrolment</code> until it is answered, and send it
+again.</p>
+<ul>
+<li><strong>BENCH-5, not yet proven on a device.</strong> That a SUNMI device’s clock is near enough to
+validate the middleware’s public server certificate. Enrolment is the device’s first call over
+HTTPS. A clock far enough out fails the handshake on the server’s certificate before the middleware
+sees the call, as it would for any HTTPS client: set the device’s date and time, and try
+again. Nothing the middleware decides rests on the device’s clock.</li>
+</ul>
+<h3 id="when-enrolment-is-refused"><a class="header" href="#when-enrolment-is-refused">When enrolment is refused</a></h3>
+<p>Changed in v0.3.0.</p>
+<p>Each refusal from the middleware has the body
+<code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>. The edge’s <code>429</code> is the one
+that differs: the edge in front of a hosted middleware sends it, and its body is the edge’s own.
+A refusal once the code is found counts an attempt against it, unless the code is already spent
+or burned, and five attempts burn it, so fix what a refusal names before you try again. A <code>503</code>
+counts nothing and leaves the code unspent, and the edge’s <code>429</code> never reaches the middleware, so
+it counts nothing either.</p>
+<p>Of <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> and <code>invalid_field</code>, the first class that
+fails answers alone, with <code>Fields</code> naming every field of it, sorted.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status</th><th><code>Error.Code</code></th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>400</code></td><td><code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code></td><td>The body is not a JSON object, holds a field the route does not name, or lacks one, and <code>Fields</code> names each</td><td>A bug in the app: fix it. Retrying will not help</td></tr>
+<tr><td><code>400</code></td><td><code>invalid_field</code></td><td>A field breaks its rule, and <code>Fields</code> names it. For <code>CertificateSigningRequest</code>: its signature does not verify, or its key is not P-256</td><td>Fix the field. For the CSR, make a new P-256 key under a new alias, with the same challenge, and a CSR from it</td></tr>
+<tr><td><code>403</code></td><td><code>code_not_valid</code></td><td>The code is wrong, unknown, expired, spent or burned, the serial is not the listing’s, the device is not <code>listed</code>, or its vendor is suspended. One answer for every reason, so the route tells a stranger nothing</td><td>Check the serial against the listing, then ask the listing party for a new code</td></tr>
+<tr><td><code>403</code></td><td><code>attestation_failed</code></td><td>The chain fails a check of Which devices the middleware admits (step 3), other than the app’s and the model’s, or does not parse</td><td>Fix the cause and try again: the code stays live for its 15 minutes. Check the challenge against the worked one, and that the key was made in the keystore with it. A device rooted, unlocked or revoked does not pass</td></tr>
+<tr><td><code>403</code></td><td><code>app_identity_unknown</code></td><td>The attestation names a package or a signing digest not registered for this vendor and role, or more than one package</td><td>Register the app’s package and signing digest (step 1), then try again inside the 15 minutes</td></tr>
+<tr><td><code>403</code></td><td><code>model_not_allowed</code></td><td>No row of the allowed list admits what the device attested</td><td>Ask the operator to allow the model, then try again inside the 15 minutes, or later with a new code</td></tr>
+<tr><td><code>429</code></td><td>None: the body is the edge’s own, not an <code>Error</code></td><td>Sent by the edge in front of a hosted middleware, never by the middleware itself: more enrolments came from this address in a minute than the edge allows. The code was not read, and no attempt is counted against it</td><td>Wait a minute, then try again with the same body. Do not read the body as an <code>Error</code></td></tr>
+<tr><td><code>503</code></td><td><code>ca_unavailable</code>, <code>attestation_status_unavailable</code></td><td>The middleware could not sign, or holds no fresh copy of Google’s attestation status list</td><td>Back off and try again with the same body. The code is not spent</td></tr>
+<tr><td><code>503</code></td><td><code>store_unavailable</code></td><td>The middleware’s store did not answer</td><td>Back off and try again with the same body</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="7-store-the-chain-against-the-alias"><a class="header" href="#7-store-the-chain-against-the-alias">7. Store the chain against the alias</a></h2>
+<p>Changed in v0.5.0.</p>
+<p>The <code>201</code>’s <code>CertificateChain</code> is two certificates, PEM: the device’s own, then the issuing
+certificate. The device presents both at the handshake of every call from now on (step 8). A
+certificate is public, so the chain needs no protecting, but it belongs to the key under one
+alias, and is kept against that alias.
+The app keeps the alias of the key it connects with, <code>current</code>; while a new certificate waits
+for its first use, that one’s, <code>next</code>; and while a renewal it sent waits for a verdict, that
+renewal’s alias and body, <code>renewal</code> (step 10).</p>
+<pre><code class="language-kotlin">import android.content.Context
+import java.io.File
+import java.io.IOException
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+
+/** The chains the middleware issued, each against the keystore alias of its key, and which is in use. */
+class Identities(context: Context) {
+    private val prefs = context.getSharedPreferences("mw-identity", Context.MODE_PRIVATE)
+    private val dir = File(context.noBackupFilesDir, "mw").apply { mkdirs() }
+
+    /** The alias of the key the device connects with. */
+    var current: String?
+        get() = prefs.getString("current", null)
+        set(alias) {
+            prefs.edit().putString("current", alias).commit()
+        }
+
+    /** The alias of a certificate issued and not yet used: a renewal's or a re-enrolment's. */
+    var next: String?
+        get() = prefs.getString("next", null)
+        set(alias) {
+            prefs.edit().putString("next", alias).commit()
+        }
+
+    /**
+     * A renewal sent and not yet settled: the alias of its new key and its body, kept until a
+     * `201` or a `200` of it is kept, or a refusal says no certificate is over its key (step 10).
+     */
+    var renewal: Pair&lt;String, String&gt;?
+        get() {
+            val alias = prefs.getString("renewal-alias", null) ?: return null
+            val body = prefs.getString("renewal-body", null) ?: return null
+            return alias to body
+        }
+        set(sent) {
+            prefs.edit()
+                .putString("renewal-alias", sent?.first)
+                .putString("renewal-body", sent?.second)
+                .commit()
+        }
+
+    /** Keeps a `201`'s `CertificateChain` against [alias], whole or not at all. */
+    fun storeChain(alias: String, certificateChain: String) {
+        val partial = File(dir, "$alias.pem.partial")
+        partial.writeText(certificateChain)
+        if (!partial.renameTo(File(dir, "$alias.pem"))) {
+            throw IOException("cannot keep the chain of $alias")
+        }
+    }
+
+    /** The chain kept against [alias], leaf first, or null. */
+    fun chain(alias: String): Array&lt;X509Certificate&gt;? {
+        val file = File(dir, "$alias.pem")
+        if (!file.exists()) return null
+        return file.inputStream().use { stream -&gt;
+            CertificateFactory.getInstance("X.509")
+                .generateCertificates(stream)
+                .map { it as X509Certificate }
+                .toTypedArray()
+        }
+    }
+
+    /** Forgets the chain of a key that was deleted. */
+    fun forget(alias: String) {
+        File(dir, "$alias.pem").delete()
+    }
+}
+
+/** After the first enrolment: the chain kept against the new alias, which is now current. */
+fun enrolled(identities: Identities, enrolment: Enrolment): Answer {
+    val answer = enrolDevice(enrolment)
+    if (answer is Answer.Ok) {
+        identities.storeChain(enrolment.alias, answer.body.getString("CertificateChain"))
+        identities.current = enrolment.alias
+    }
+    // A refusal: the table of step 6 says what to tell the installer.
+    return answer
+}
+</code></pre>
+<p>A <code>201</code> ends any wait a refusal set: connect at once on the new certificate. A new code re-pairs
+the device, so the credential it held, a certificate or in the sandbox its key, is refused
+<code>403 not_permitted</code>, which the holder’s table backs off an hour. That hour is for the credential
+refused, and the middleware takes the new certificate at once.</p>
+<p>The chain is kept in the app’s no-backup storage, because a backup restored to another device
+would hold a chain whose key is not there. A certificate’s key is kept nowhere but the
+keystore.</p>
+<h2 id="8-give-okhttp-the-key-an-x509extendedkeymanager"><a class="header" href="#8-give-okhttp-the-key-an-x509extendedkeymanager">8. Give OkHttp the key: an <code>X509ExtendedKeyManager</code></a></h2>
+<p>Every call after enrolment presents the certificate at the TLS handshake. The key stays in the
+keystore, so OkHttp is given a key manager that names the keystore alias, hands over the kept
+chain, and gives the TLS stack the keystore’s handle to the key, which signs inside the
+keystore. One OkHttp client built on it serves REST and the WebSocket alike: a register’s
+sales and links, a terminal’s connection (<a href="terminal.html"><code>docs/api/terminal.md</code></a>, Connect), the daily check
+and renewal.</p>
+<pre><code class="language-kotlin">import java.net.Socket
+import java.security.KeyStore
+import java.security.Principal
+import java.security.PrivateKey
+import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLEngine
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509ExtendedKeyManager
+import javax.net.ssl.X509TrustManager
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+
+/** Presents the keystore key under [alias], with the chain the middleware issued for it, and no other. */
+class KeystoreKeyManager(
+    private val alias: String,
+    private val chain: Array&lt;X509Certificate&gt;,
+) : X509ExtendedKeyManager() {
+    private val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+
+    override fun chooseClientAlias(
+        keyType: Array&lt;out String&gt;?,
+        issuers: Array&lt;out Principal&gt;?,
+        socket: Socket?,
+    ): String = alias
+
+    override fun chooseEngineClientAlias(
+        keyType: Array&lt;out String&gt;?,
+        issuers: Array&lt;out Principal&gt;?,
+        engine: SSLEngine?,
+    ): String = alias
+
+    override fun getClientAliases(keyType: String?, issuers: Array&lt;out Principal&gt;?): Array&lt;String&gt; =
+        arrayOf(alias)
+
+    override fun getCertificateChain(alias: String?): Array&lt;X509Certificate&gt;? =
+        if (alias == this.alias) chain else null
+
+    override fun getPrivateKey(alias: String?): PrivateKey? =
+        if (alias == this.alias) keyStore.getKey(this.alias, null) as? PrivateKey else null
+
+    override fun chooseServerAlias(
+        keyType: String?,
+        issuers: Array&lt;out Principal&gt;?,
+        socket: Socket?,
+    ): String? = null
+
+    override fun getServerAliases(keyType: String?, issuers: Array&lt;out Principal&gt;?): Array&lt;String&gt;? =
+        null
+}
+
+/** A client presenting the key under [alias], for REST and the WebSocket alike. */
+fun clientFor(alias: String, chain: Array&lt;X509Certificate&gt;): OkHttpClient {
+    val trustFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+    trustFactory.init(null as KeyStore?)
+    val trust = trustFactory.trustManagers.filterIsInstance&lt;X509TrustManager&gt;().first()
+    val tls = SSLContext.getInstance("TLS")
+    tls.init(arrayOf(KeystoreKeyManager(alias, chain)), arrayOf(trust), null)
+    return OkHttpClient.Builder()
+        .sslSocketFactory(tls.socketFactory, trust)
+        // OkHttp answers the middleware's Pings itself and never shows them: send its own.
+        .pingInterval(30, TimeUnit.SECONDS)
+        .build()
+}
+
+/**
+ * A terminal's connection, `docs/api/terminal.md`, Connect, on [client]. OkHttp opens a
+ * WebSocket from an https address, and presents the key at its handshake as for REST.
+ */
+fun connect(client: OkHttpClient, poiIdentification: String, listener: WebSocketListener): WebSocket {
+    val request = Request.Builder().url("$MW/v1/terminals/$poiIdentification/connect").build()
+    return client.newWebSocket(request, listener)
+}
+</code></pre>
+<p>Build the client once for each alias, and use it for every call while that alias is in use.
+Never change which key one client presents: a client’s TLS context keeps its sessions, and a
+resumed session stands on the certificate of the handshake it resumes, so a new certificate
+goes with a new client (step 10). Send no <code>Authorization</code> header on a client that presents a
+certificate: the two together are refused <code>401 certificate_invalid</code>. The client’s
+<code>pingInterval</code> is what keeps the terminal’s WebSocket to the contract’s Hold
+(<a href="terminal.html"><code>docs/api/terminal.md</code></a>, Hold), since OkHttp shows the app none of the middleware’s Pings.</p>
+<ul>
+<li><strong>BENCH-4, proven on a SUNMI P2 Lite SE</strong>, Android 11, the unit of the runs above, on its
+software keystore. A keystore key drove client TLS through OkHttp and an
+<code>X509ExtendedKeyManager</code>, TLS 1.3 and 1.2, on REST and on a WebSocket, on FUNDiMO’s bench of
+12-Nov-2026, and a terminal vendor’s app connected to the sandbox on its certificate this way
+on 13-Nov-2026. A key in secure hardware is not yet tried.</li>
+</ul>
+<h2 id="9-the-daily-check-get-v1certificatesself"><a class="header" href="#9-the-daily-check-get-v1certificatesself">9. The daily check: <code>GET /v1/certificates/self</code></a></h2>
+<p>Changed in v0.5.0.</p>
+<p>Once a day the device sends <code>GET /v1/certificates/self</code>, on its own certificate. The middleware
+answers when the certificate ends, and whether to renew:</p>
+<pre><code class="language-json">{ "NotAfter": "...", "RenewFrom": "...", "RenewNow": true }
+</code></pre>
+<p>Renew when <code>RenewNow</code> is <code>true</code>, and not before, and never while a next certificate waits for its
+first use (step 10). The middleware decides, so the device’s clock does not matter. <code>RenewNow</code>
+reads <code>true</code> only on the newest certificate in use, from <code>RenewFrom</code> on, and <code>false</code> on a
+certificate that is retired.</p>
+<pre><code class="language-kotlin">import android.content.Context
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.Worker
+import androidx.work.WorkerParameters
+import java.io.IOException
+import java.util.concurrent.TimeUnit
+import okhttp3.Request
+
+/** Once a day: a certificate waiting for its first use, then the daily check, then any renewal. */
+class DailyCheck(context: Context, params: WorkerParameters) : Worker(context, params) {
+    override fun doWork(): Result = try {
+        val identities = Identities(applicationContext)
+        firstUse(identities)
+        val alias = identities.current
+        val chain = alias?.let { identities.chain(it) }
+        if (alias != null &amp;&amp; chain != null) {
+            val client = clientFor(alias, chain)
+            val self = Request.Builder().url("$MW/v1/certificates/self").build()
+            val answer = call(client, self)
+            // Never while a next waits: a second renewal would retire it (step 10).
+            if (answer is Answer.Ok &amp;&amp; answer.body.getBoolean("RenewNow") &amp;&amp; identities.next == null) {
+                if (renew(client, identities) is Answer.Ok) firstUse(identities)
+            }
+            // A refusal: the holder's table, below.
+        }
+        Result.success()
+    } catch (noAnswer: IOException) {
+        Result.retry()
+    }
+}
+
+/** One daily check, however often this is called. */
+fun scheduleDailyCheck(context: Context) {
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        "mw-daily-check",
+        ExistingPeriodicWorkPolicy.KEEP,
+        PeriodicWorkRequestBuilder&lt;DailyCheck&gt;(1, TimeUnit.DAYS).build(),
+    )
+}
+</code></pre>
+<p>A refusal of the daily check is read by the holder’s table (What a holder of a dead
+certificate does, below). A call that gets no answer is tried again later.</p>
+<h2 id="10-renew-a-new-key-under-a-new-alias"><a class="header" href="#10-renew-a-new-key-under-a-new-alias">10. Renew: a new key under a new alias</a></h2>
+<p>Changed in v0.5.0.</p>
+<p>A certificate renews from day 15, always with a new key. So a device proves its state again
+every 15 days, and a device rooted after it enrolled loses its identity within one lifetime of
+a certificate, but on a middleware set to mark (step 3), which marks it instead. In the sandbox, a
+certificate enrolled on a code asked with <code>"Due": true</code> is due at once (In the sandbox, above).</p>
+<ol>
+<li>Send <code>POST /v1/certificates/challenge</code> on the current certificate, with no body and with
+<code>Content-Length: 0</code>: over HTTP/1.1, the edge in front of a hosted middleware refuses it
+without that header, with a <code>411</code> of its own. The <code>201</code> holds <code>Challenge</code>, 32 bytes as 64 hex
+characters, and <code>ExpiresInSeconds</code>, 600.</li>
+<li>Make a new key under a new alias with those 32 bytes as its attestation challenge
+(step 3), and a CSR for it (step 4).</li>
+<li>Send <code>POST /v1/certificates/renew</code> with <code>CertificateSigningRequest</code> and <code>AttestationChain</code>,
+on the current certificate, inside the challenge’s 10 minutes, and keep the body and the new
+key’s alias until a verdict on them. The <code>201</code> is enrolment’s. If an answer is lost, or a
+<code>2xx</code> comes that the device cannot read or keep, send the same body again, at the next daily
+check if not before, and ask no new challenge meanwhile: a CSR of the key the middleware
+issued for last answers <code>200</code> with that certificate, whatever became of its challenge, and a
+second renewal would retire it.</li>
+<li>Keep the new chain against the new alias, as the next certificate (step 7), and use it from
+the next connection, on a new client of its own (step 8).</li>
+<li>Once a call on the new certificate has been answered, it is current. Only then delete the
+old key.</li>
+</ol>
+<pre><code class="language-kotlin">import java.security.KeyStore
+import java.util.UUID
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+
+/**
+ * Renews on [client], the current certificate's. A renewal sent and not yet settled is sent again
+ * as it was, with no new challenge: a certificate may have been issued over its key, and its own
+ * body is answered `200` with that one. Otherwise a challenge, a new key under a new alias made
+ * with it, and the renewal, kept before it is sent. A certificate issued is kept as the next one.
+ */
+fun renew(client: OkHttpClient, identities: Identities): Answer {
+    val (alias, body) = identities.renewal ?: run {
+        val ask = Request.Builder()
+            .url("$MW/v1/certificates/challenge")
+            .post(ByteArray(0).toRequestBody())
+            .build()
+        val issued = call(client, ask)
+        if (issued !is Answer.Ok) return issued
+        val challenge = requireNotNull(bytesOfHex(issued.body.getString("Challenge"))) {
+            "a challenge is 64 hex characters"
+        }
+        val alias = "mw-" + UUID.randomUUID()
+        makeKey(alias, challenge)
+        val body = JSONObject()
+            .put("CertificateSigningRequest", csrFor(alias))
+            .put("AttestationChain", attestationChainOf(alias))
+            .toString()
+        (alias to body).also { identities.renewal = it }
+    }
+    val request = Request.Builder()
+        .url("$MW/v1/certificates/renew")
+        .post(body.toRequestBody(JSON))
+        .build()
+    val renewed = sendUntilAnswered(client, request)
+    if (renewed is Answer.Ok) {
+        identities.storeChain(alias, renewed.body.getString("CertificateChain"))
+        identities.next = alias
+        identities.renewal = null
+    } else if (renewed is Answer.Refused &amp;&amp; renewed.code in NONE_ISSUED) {
+        // No certificate not yet used is over the key: delete it, unless it is one it keeps.
+        if (alias != identities.current &amp;&amp; alias != identities.next) {
+            KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(alias)
+        }
+        identities.renewal = null
+    }
+    // Any other answer is no verdict on the key: the next daily check sends the same body.
+    return renewed
+}
+
+/** A renewal's refusals that say no certificate not yet used is over the key it sent. */
+val NONE_ISSUED = setOf(
+    "invalid_json", "unknown_field", "missing_field", "invalid_field", "renewal_not_due",
+    "challenge_not_valid", "attestation_failed", "app_identity_unknown", "model_not_allowed",
+    "renewal_rate",
+)
+
+/**
+ * The first use of the next certificate, on a client of its own. Once the middleware has answered on
+ * it, it is current, and only then are the old key, and any key a refused renewal or a re-pair left,
+ * deleted. An app holds one identity, of the one environment it chose before its first enrolment
+ * (`/docs/api/environments.md`), so every other `mw-` alias is one of these. Returns whether it moved.
+ */
+fun firstUse(identities: Identities): Boolean {
+    val next = identities.next ?: return false
+    val chain = identities.chain(next) ?: return false
+    val self = Request.Builder().url("$MW/v1/certificates/self").build()
+    if (call(clientFor(next, chain), self) !is Answer.Ok) return false
+    identities.current = next
+    identities.next = null
+    val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+    for (alias in keyStore.aliases().toList()) {
+        if (alias.startsWith("mw-") &amp;&amp; alias != next) {
+            keyStore.deleteEntry(alias)
+            identities.forget(alias)
+        }
+    }
+    identities.renewal = null
+    return true
+}
+</code></pre>
+<p>The old certificate stays good until the new one is first used, and for an hour after,
+<code>MW_CERT_OVERLAP_SECS</code>. Move every connection to the new client inside that hour: a
+terminal moves its WebSocket between sales. Past the hour, a call on the old certificate is
+refused <code>403 certificate_retired</code>, and a terminal’s WebSocket still open on it is closed. If
+the first call on the new certificate gets no answer, go on with the old one, which is good
+until then, and try the new one again later.</p>
+<p>Run the daily check, a renewal and a first use one at a time. A second renewal retires a
+certificate the first issued that is not yet used, and the middleware warns the operator of it, as
+the sign of an identity copied.
+So renew only while no next certificate waits for its first use, and send a renewal that waits
+for a verdict again as it was, never a new one in its place.</p>
+<h3 id="when-renewal-is-refused"><a class="header" href="#when-renewal-is-refused">When renewal is refused</a></h3>
+<p>Changed in v0.6.1.</p>
+<p>A refusal of a renewal leaves the current certificate as it was.</p>
+<p>Of <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> and <code>invalid_field</code>, the first class that
+fails answers alone, with <code>Fields</code> naming every field of it, sorted.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status</th><th><code>Error.Code</code></th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>409</code></td><td><code>renewal_not_due</code></td><td>Before <code>RenewFrom</code></td><td>Wait: renew when the daily check’s <code>RenewNow</code> is <code>true</code></td></tr>
+<tr><td><code>403</code></td><td><code>challenge_not_valid</code></td><td>No challenge of this certificate’s was live when the renewal came: none asked, one past its 10 minutes, or one spent; or the chain was made with another</td><td>Ask a new challenge, and make a new key with it under another new alias</td></tr>
+<tr><td><code>400</code></td><td><code>invalid_field</code></td><td>The CSR’s signature does not verify, its key is not P-256, or its key was used before</td><td>Make a new P-256 key under a new alias, with a new challenge</td></tr>
+<tr><td><code>403</code></td><td><code>attestation_failed</code>, <code>app_identity_unknown</code>, <code>model_not_allowed</code></td><td>The new key’s attestation fails, as at enrolment (step 6)</td><td>The current certificate is good until its <code>NotAfter</code>, and the operator is warned. Fix the cause, and try again with a new challenge at the next daily check</td></tr>
+<tr><td><code>429</code></td><td><code>renewal_rate</code></td><td>5 certificates for this identity in 24 hours</td><td>Back off, and try again tomorrow</td></tr>
+<tr><td><code>403</code></td><td><code>not_permitted</code></td><td>The device or its vendor is not in good standing: removed, suspended or re-paired</td><td>Back off to one hour. The certificate was good and the row refused it</td></tr>
+<tr><td><code>403</code></td><td><code>certificate_retired</code></td><td>The certificate presented is retired</td><td>Move to the newer certificate if the device holds one, by its first use (step 10). On its newest, stop and tell a person: something else holds a newer certificate of this identity</td></tr>
+<tr><td><code>401</code></td><td><code>certificate_expired</code></td><td>The certificate is past its <code>NotAfter</code></td><td>Re-enrol with a new code (step 11)</td></tr>
+<tr><td><code>503</code></td><td><code>ca_unavailable</code>, <code>attestation_status_unavailable</code>, <code>store_unavailable</code></td><td>The middleware could not sign, holds no fresh status list, or its store did not answer</td><td>Back off and send the same body again, at the next daily check if not before, never a new challenge in its place: a <code>store_unavailable</code> may follow a certificate issued, which the same body is answered <code>200</code> with, and where none was, the body is refused <code>403 challenge_not_valid</code> once the challenge’s 10 minutes have passed and the fault has cleared, unless a row above refuses it first</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="what-a-holder-of-a-dead-certificate-does"><a class="header" href="#what-a-holder-of-a-dead-certificate-does">What a holder of a dead certificate does</a></h2>
+<p>Changed in v0.5.0.</p>
+<p>A device holding a certificate is its holder. A refusal at the TLS handshake, or of a call, is
+read by this table, which is <a href="terminal.html"><code>docs/api/terminal.md</code></a>’s.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What the device sees</th><th>What it does next</th></tr>
+</thead>
+<tbody>
+<tr><td>A close, a reset, a timeout, or any failure with no TLS alert</td><td>The normal backoff: wait 1 second, double the wait after each failure up to 30 seconds, and add a little randomness. A terminal’s connection resets it only once it has stayed open 10 seconds (<a href="terminal.html"><code>docs/api/terminal.md</code></a>, Reconnect), and a register’s once a call is answered with anything but a <code>429</code> or a <code>5xx</code>. It says nothing about a certificate</td></tr>
+<tr><td>A TLS alert naming the certificate: <code>certificate_expired</code>, <code>bad_certificate</code>, <code>certificate_unknown</code>, <code>unknown_ca</code> or <code>decrypt_error</code>. Only where the middleware ends TLS itself</td><td>Back off an hour. After three, an hour apart, tell the installer the device needs a new code, and keep trying hourly</td></tr>
+<tr><td><code>401 certificate_expired</code> or <code>401 certificate_invalid</code></td><td>Back off an hour. After three, an hour apart, tell the installer the device needs a new code, and keep trying hourly</td></tr>
+<tr><td><code>401 certificate_required</code></td><td>A client’s own bug, or a route it has no certificate for: enrol first</td></tr>
+<tr><td><code>403 certificate_retired</code>, holding a newer certificate than the one presented</td><td>Drop that connection and retry on the newer one, with the same idempotency key where the request carried one</td></tr>
+<tr><td><code>403 certificate_retired</code> on its newest certificate</td><td>Stop, keep any outcome, and tell a person: something else holds a newer certificate of this identity</td></tr>
+<tr><td><code>403 not_permitted</code></td><td>Back off to one hour, keeping any outcome. The certificate was good and the row refused it, which is what a removal or a re-pair reads as. A register’s call on a <code>pos</code> route, a sale, read, cancel, link or its list of terminals, is refused so for causes of its own too, its <code>Mw-Register</code> among them: one naming another register, sent twice or of no register’s shape, which no wait and no new code mends (<a href="pos.html"><code>/docs/api/pos.md</code></a>, An app on a till)</td></tr>
+<tr><td><code>403 challenge_not_valid</code></td><td>Ask a new challenge, with a new key</td></tr>
+<tr><td><code>429</code>, <code>503</code>, <code>edge_not_trusted</code> among them</td><td>The normal backoff. <code>503 edge_not_trusted</code> is an edge fault, and the device’s certificate is not in question</td></tr>
+</tbody>
+</table>
+</div>
+<p>OkHttp reports a TLS alert as an <code>SSLException</code>. On the unit of the runs above, a
+<code>certificate_unknown</code> alert came as an <code>SSLProtocolException</code> whose message names
+<code>SSLV3_ALERT_CERTIFICATE_UNKNOWN</code>; how a SUNMI device words the other alerts is not yet proven
+on a device. Behind the middleware’s load balancer no handshake fails on a client certificate,
+and the refusal comes as a <code>401</code> or a <code>403</code> instead.</p>
+<p><strong>A device never deletes its key or its certificate on a refusal, any of those above.</strong> Its key
+is that of a certificate it keeps, the current or the next. A device can recover from a mistake
+of the middleware’s by a fix on the middleware’s side, and a key deleted cannot be recovered. A
+device holding a certificate makes a new key only to renew, or when a person brings a new code,
+and deletes an old key only once a call on the certificate that follows it has been answered. A
+device decides none of this by its own clock.</p>
+<p>A key made for a renewal, which no certificate the device keeps is over, is kept with the
+renewal’s body until a <code>201</code> or a <code>200</code> of it is kept, or the renewal is refused <code>400</code>
+<code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> or <code>invalid_field</code>, <code>409 renewal_not_due</code>, <code>403 challenge_not_valid</code>, <code>attestation_failed</code>, <code>app_identity_unknown</code> or <code>model_not_allowed</code>, or
+<code>429 renewal_rate</code>. Each of those says that no certificate the device could still use is over
+that key, which may be deleted then: a body the middleware cannot read was never issued for; one
+it reads is answered <code>200</code> before any rule that refuses, if its key is that of the newest
+certificate not yet used and not retired; and the gate, which refuses before a renewal is read,
+sends none of them. Any other answer says nothing of the key, <code>403 not_permitted</code>, <code>403 certificate_retired</code> and <code>401 certificate_expired</code> among them, and so do a <code>5xx</code>, a <code>429</code> with no
+<code>Error</code>, no answer and a code no table names: keep the key and the body, and send the body again
+at the next daily check (step 10). An enrolment’s key is kept until a <code>201</code> or a <code>200</code> of it is
+kept, or a new code is typed: past its code’s 15 minutes no answer can bring its certificate, and
+the new code retires any the old one issued (step 11).</p>
+<h2 id="11-re-enrol-with-a-new-code"><a class="header" href="#11-re-enrol-with-a-new-code">11. Re-enrol with a new code</a></h2>
+<p>A device off longer than its certificate, past its <code>NotAfter</code>, re-enrols with a new code. So
+does a device told after three hourly tries that it needs one, and a device its listing party
+re-paired, which is refused <code>403 not_permitted</code> until a person brings it the new code. This is
+the one case after the first enrolment in which a person is needed.</p>
+<ol>
+<li>The installer asks the listing party for a new code:
+<code>POST /v1/terminals/{POIIdentification}/pairing-code</code> for a terminal,
+<code>POST /v1/registers/{RegisterIdentification}/pairing-code</code> for a register, or in
+the sandbox <code>POST /sandbox/v1/codes</code>. A new code re-pairs the device, which retires its
+certificates.</li>
+<li>The installer opens the app’s enrolment screen from its menu or settings, on the device as
+it is, and types the new code’s words, or scans its QR code (step 2, and The enrolment
+screen).</li>
+<li>The app enrols as it did the first time (step 6), with a new key under a new alias, and the
+challenge of the new code.</li>
+<li>It keeps the chain as the next certificate, and deletes the old key once a call on the new
+one has been answered, as a renewal does (step 10).</li>
+<li>A <code>201</code> ends any wait a refusal set: it connects at once on the new certificate, though the
+old one’s <code>403 not_permitted</code> set an hour (step 7).</li>
+</ol>
+<pre><code class="language-kotlin">import java.io.IOException
+
+/**
+ * Re-enrolment with the new code the installer typed, built by `enrolment`. The new certificate
+ * is kept as the next one, and the old key stays until a call on it has been answered. A first
+ * use that gets no answer leaves it next: the screen says the device is enrolled and not yet
+ * connected, and tries `firstUse` again, which needs no code, and never the enrolment, which
+ * the code refuses once its 15 minutes end.
+ */
+fun reEnrol(identities: Identities, enrolment: Enrolment): Answer {
+    val answer = enrolDevice(enrolment)
+    if (answer is Answer.Ok) {
+        identities.storeChain(enrolment.alias, answer.body.getString("CertificateChain"))
+        identities.next = enrolment.alias
+        try {
+            firstUse(identities)
+        } catch (noAnswer: IOException) {
+            // Still next: the screen tries the first use again (SCREEN-24).
+        }
+    }
+    // A refusal: the table of step 6.
+    return answer
+}
+</code></pre>
+<p>The device keeps its id, <code>POIIdentification</code> or <code>RegisterIdentification</code>, and a register’s
+links to terminals stand: a re-pair ends none.</p>
+<h2 id="the-enrolment-screen"><a class="header" href="#the-enrolment-screen">The enrolment screen</a></h2>
+<p>Changed in v0.4.0.</p>
+<p>The enrolment screen is the screen of your app on which a person enrols the device: it takes the
+code (step 2), shows the serial (step 5), sends the enrolment (step 6) and says what came of it.
+An installer or a store’s staff uses it at the first enrolment and at each re-enrolment
+(step 11), at the device, with nothing else to hand. So each requirement here has a check a
+person can make at the device: most with the device alone, and the few that need more, a sale
+sent to the device, or the app’s own log or tests, say so. A <strong>Must</strong> is one an app is not ready
+for a store without. A <strong>Should</strong> is one an app meets unless its vendor can say why it does not.
+A register’s app tries its screen in the sandbox, in a world of a register on a device (step 2),
+as a terminal’s app does on <code>-yours</code>.</p>
+<p>A conformance run does not check this screen. It judges what a terminal sends on its connection,
+and sees no screen (<a href="sandbox.html"><code>docs/api/sandbox.md</code></a>, What a green run does not check).</p>
+<h3 id="how-a-person-reaches-it"><a class="header" href="#how-a-person-reaches-it">How a person reaches it</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Id</th><th>Requirement</th><th>Strength</th><th>How a person at the device checks it</th></tr>
+</thead>
+<tbody>
+<tr><td>SCREEN-1</td><td>An entry in the app’s own menu or settings opens the screen, and its name says what it does, such as <code>Enrol this device</code></td><td>Must</td><td>Open the app, and find the entry by its name</td></tr>
+<tr><td>SCREEN-2</td><td>The device alone reaches it: no cable, no developer option, no command, no launcher of another app, and no second device. A store or an installer has none of those, so a screen that only a developer’s command over USB opens cannot be reached at a store</td><td>Must</td><td>With USB debugging off and nothing plugged in, go from the app’s home screen to the enrolment screen</td></tr>
+<tr><td>SCREEN-3</td><td>It stays reachable after the first enrolment, and opens on a device that holds a certificate, so a person re-enrols the device with a new code without reinstalling the app or clearing its data: for a certificate replaced (step 11), at a new store, or in a new sandbox world. The device enrols as the id the <code>201</code> names, which a new store or a new world changes, so the app takes its id from the <code>201</code> and keeps no earlier one</td><td>Must</td><td>On a device already enrolled, with nothing reinstalled, open the screen again, enrol it with a new code, and read the state it shows: the id the new code’s <code>201</code> named (SCREEN-14)</td></tr>
+<tr><td>SCREEN-4</td><td>It is at most two taps from the app’s home screen, such as a menu, then the entry</td><td>Should</td><td>Count the taps from the app’s home screen to the enrolment screen</td></tr>
+<tr><td>SCREEN-5</td><td>Where the device holds no certificate, or the holder’s table has the app tell the installer the device needs a new code (What a holder of a dead certificate does), the app says so where its staff look, and leads to the screen in one tap</td><td>Should</td><td>Open the app on a device not enrolled, and see it say so and lead to the screen</td></tr>
+<tr><td>SCREEN-6</td><td>On a device that holds a certificate, the screen takes a code only after the app’s own supervisor or merchant sign-in, or its own PIN, which store staff or an installer holds, and a choice of environment before the first enrolment asks the same. Nothing else guards the screen: never a cable, a developer option, a command, a second device, a gesture with no name on the screen, or a password only the app’s developer holds</td><td>Must</td><td>On a device enrolled, open the screen, and see it ask for the sign-in or the PIN before it takes a code. On a device not yet enrolled whose app offers more than one environment, see the choice ask the same. Reach the screen with what the store’s staff hold, and nothing else</td></tr>
+</tbody>
+</table>
+</div>
+<p>The code is the credential (step 6), but a code for another listing, or a sandbox code anyone can
+take, would enrol a device in service as something else. So the screen of a device that holds a
+certificate takes a code only behind what the store’s staff hold (SCREEN-6), and never moves the
+device to another environment (SCREEN-13).</p>
+<h3 id="what-it-shows-and-takes"><a class="header" href="#what-it-shows-and-takes">What it shows and takes</a></h3>
+<p>Changed in v0.4.0.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Id</th><th>Requirement</th><th>Strength</th><th>How a person at the device checks it</th></tr>
+</thead>
+<tbody>
+<tr><td>SCREEN-7</td><td>A field for the code’s five words, which completes each word from the word list the app bundles, marks at once a letter that begins no word, and has the keyboard’s own corrections turned off (step 2, Typing the code)</td><td>Must</td><td>Type a word’s first four letters, and see the word completed. Type a letter that begins no word, and see it marked before you type another</td></tr>
+<tr><td>SCREEN-8</td><td>Where the device has a camera or a scanner, a way to scan the code’s QR code into the same field (step 2, The QR code)</td><td>Should</td><td>Scan a QR code of a code, and see its five words in the field</td></tr>
+<tr><td>SCREEN-9</td><td>The five words, as the app read them, are shown before the person taps to enrol, and the enrolment is sent on that tap alone, never on a scan or on the fifth word typed</td><td>Must</td><td>Type or scan a code, and see that nothing is sent until you tap</td></tr>
+<tr><td>SCREEN-10</td><td>Where the serial to send is the device’s own, as it is outside the sandbox, and the device reports it (step 5), the screen shows that serial, read each time the screen opens, not typed and not editable. A serial kept from an earlier enrolment is never shown in its place</td><td>Must</td><td>Outside the sandbox, compare the serial on the screen with the one printed on the device</td></tr>
+<tr><td>SCREEN-11</td><td>Where the serial to send is not one the device reports, the screen takes it typed, in a field that is empty each time the screen opens and never filled from an earlier enrolment, and says which serial it asks for. In the sandbox a world names its own, <code>&lt;tester&gt;-yours</code> for a terminal’s app, or in a world of a register on a device <code>&lt;tester&gt;-register</code> for the register’s app, the <code>SerialNumber</code> that <code>POST /sandbox/v1/codes</code> answered beside the code, and the screen asks for that one. On a device whose SDK gives no serial (step 5), it asks for the one printed on the device</td><td>Must</td><td>Enrol in the sandbox, open the screen again, and see the serial’s field empty</td></tr>
+<tr><td>SCREEN-12</td><td>The environment it will enrol into, by the name <a href="environments.html"><code>docs/api/environments.md</code></a> gives it, the sandbox or staging, and its base URL’s host, taken from the list the app holds and never from an address typed (What you need)</td><td>Must</td><td>Read the environment on the screen before you tap to enrol</td></tr>
+<tr><td>SCREEN-13</td><td>On a device that holds a certificate, the screen offers no other environment. Moving a device to another environment is clearing the app’s data, a deliberate act, as <a href="environments.html"><code>docs/api/environments.md</code></a> says, and never a choice on this screen, so no code from another environment, a sandbox code anyone can take among them, moves a device in service</td><td>Must</td><td>On a device enrolled, open the screen, and find no way to choose another environment</td></tr>
+<tr><td>SCREEN-14</td><td>The state the device is in: not enrolled; or enrolled, as which terminal by its <code>POIIdentification</code>, or which register by its <code>RegisterIdentification</code>, in which environment, and its certificate’s dates, <code>NotAfter</code> and <code>RenewFrom</code>, as the last <code>201</code> or daily check answered them</td><td>Must</td><td>Read the state on a device not enrolled, and on one enrolled</td></tr>
+<tr><td>SCREEN-15</td><td>The store the device is enrolled at, by the name its staff know, where the app has it from its fleet’s own records. The middleware’s answers name the terminal, not its store</td><td>Should</td><td>Read the store’s name on a device enrolled</td></tr>
+<tr><td>SCREEN-16</td><td>Each refusal is shown in words a person can act on, saying what to do next, as What it says to each refusal gives them: never a status number alone, nor the middleware’s <code>Message</code> alone</td><td>Must</td><td>Enrol with five words of the list that are not the code you were given, and read what the screen says</td></tr>
+<tr><td>SCREEN-17</td><td>Beside those words, the refusal’s <code>Error.Code</code>, in small type, for whoever supports the app</td><td>Should</td><td>Read the code under the words of a refusal</td></tr>
+<tr><td>SCREEN-18</td><td>One tap sends one enrolment, and while it waits the screen says so and takes no second tap. The app keeps the enrolment it built, <code>enrolment</code> (step 6), while the screen is open, and while it keeps one the words and the serial cannot be edited: the screen offers to send it again, or to start over. It sends the same enrolment again, with the same key, after no answer, a <code>429</code>, a <code>5xx</code> or an answer it cannot read, any of which may follow an enrolment that spent the code: a spent code refuses any key but the one it was spent with, and inside the code’s 15 minutes answers that one <code>200</code> (step 6). A <code>201</code> or its <code>200</code>, a <code>400</code> or a <code>403</code> of step 6’s table, starting over, or the screen closing ends it, and after a <code>400</code> or a <code>403</code>, a verdict on this very enrolment, the next tap builds a new one from the words shown</td><td>Must</td><td>Tap to enrol twice, quickly, and see one enrolment answered. That a tap after no answer sends the same key, the vendor shows with a test of its own that loses the answer</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="what-it-says-to-each-refusal"><a class="header" href="#what-it-says-to-each-refusal">What it says to each refusal</a></h3>
+<p>Changed in v0.4.0.</p>
+<p>Each refusal of step 6, in words a person at the device can act on. Put them in your own words,
+saying the same. As step 6 says, a refusal of a code the middleware found uses one of its five
+tries, unless the code was already spent or burned. The edge’s <code>429</code>, <code>503 ca_unavailable</code> and
+<code>503 attestation_status_unavailable</code> use none, and a <code>503 store_unavailable</code> whose commit landed
+may have used one, or spent the code.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What comes back</th><th>What the screen says</th></tr>
+</thead>
+<tbody>
+<tr><td><code>403 code_not_valid</code></td><td>The code or the serial was not taken. Check that the serial on the screen is the one the code was given for, then ask whoever gave you the code for a new one</td></tr>
+<tr><td><code>403 attestation_failed</code></td><td>This device did not pass the middleware’s check of its hardware and software. Tell the app’s support. The code stays good for its 15 minutes, less this try</td></tr>
+<tr><td><code>403 app_identity_unknown</code></td><td>This build of the app is not registered in this environment. Tell the app’s support. The code stays good for its 15 minutes, less this try. On a device that runs two apps, check first that the code was given for this app</td></tr>
+<tr><td><code>403 model_not_allowed</code></td><td>This model of device is not yet allowed. Ask whoever gave you the code to have it allowed, then try again within the code’s 15 minutes, or later with a new code</td></tr>
+<tr><td><code>400 invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> or <code>invalid_field</code></td><td>The app could not make its request. Tell the app’s support</td></tr>
+<tr><td><code>429</code> from the edge, whose body is not an <code>Error</code></td><td>Too many enrolments came from this network just now. Wait a minute, then tap to enrol again: the app sends the same enrolment (SCREEN-18). The code was not read</td></tr>
+<tr><td><code>503 ca_unavailable</code>, <code>attestation_status_unavailable</code> or <code>store_unavailable</code></td><td>The middleware cannot enrol a device just now. Wait, then tap to enrol again: the app sends the same enrolment, with the same key (SCREEN-18)</td></tr>
+<tr><td>No answer, or a handshake that failed</td><td>The middleware did not answer. Check the network, and the device’s date and time, then tap to enrol again: the app sends the same enrolment, with the same key (SCREEN-18)</td></tr>
+<tr><td>Any other answer, such as a <code>502</code> or a <code>504</code> from in front of the middleware</td><td>The middleware’s answer could not be read. Wait, then tap to enrol again: the app sends the same enrolment, with the same key (SCREEN-18). If it comes again, tell the app’s support</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="what-it-never-shows-or-keeps"><a class="header" href="#what-it-never-shows-or-keeps">What it never shows or keeps</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Id</th><th>Requirement</th><th>Strength</th><th>How a person at the device checks it</th></tr>
+</thead>
+<tbody>
+<tr><td>SCREEN-19</td><td>The code’s words are cleared from the screen on a <code>201</code>, or a <code>200</code> repeating it, and when the screen closes. They are held only in the enrolment the screen keeps for a resend (SCREEN-18), never written to the device’s storage or to a log, the app’s own among them, and never put back in the field when the screen next opens</td><td>Must</td><td>Enrol, leave the screen, open it again, and see the code’s field empty. The app’s own log, which its vendor reads, holds no code’s words</td></tr>
+<tr><td>SCREEN-20</td><td>No key: not the device’s key, which never leaves the keystore (step 3), not a sandbox key, and no certificate’s private part. A certificate is public, and the screen may show its dates</td><td>Must</td><td>Go through the screen and each screen it opens, and see no key</td></tr>
+<tr><td>SCREEN-21</td><td>The screen sets Android’s <code>FLAG_SECURE</code>, so the code’s words reach no screenshot and no picture in the list of recent apps</td><td>Should</td><td>With words in the field, open the list of recent apps, and see the screen blank</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="after-a-success"><a class="header" href="#after-a-success">After a success</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Id</th><th>Requirement</th><th>Strength</th><th>How a person at the device checks it</th></tr>
+</thead>
+<tbody>
+<tr><td>SCREEN-22</td><td>On a <code>201</code>, or a <code>200</code> repeating it, the screen says the device is enrolled: as which terminal or register, in which environment, and until when, as SCREEN-14 shows them, with the code’s words gone</td><td>Must</td><td>Enrol, and read the screen</td></tr>
+<tr><td>SCREEN-23</td><td>The app uses the new certificate at once, with no restart of the app or the device and nothing more for the person to do: a <code>201</code>, or a <code>200</code> repeating it, ends any wait a refusal set (step 7)</td><td>Must</td><td>Enrol, then, restarting nothing, send a sale: to a terminal from the store’s POS or the sandbox’s <code>send_sale</code>, from a register at its till. See it go through</td></tr>
+<tr><td>SCREEN-24</td><td>The screen says when the device has connected on its new certificate, so the person knows before leaving the device. While a re-enrolment’s certificate waits for its first use (step 11), the screen says the device is enrolled and not yet connected, and each tap tries the first use again, <code>firstUse</code> (step 10), which needs no code: never the enrolment, which the code refuses once its 15 minutes end</td><td>Must</td><td>Enrol, and see the screen say the device is connected</td></tr>
+</tbody>
+</table>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="onboarding-server.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="linking.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="onboarding-server.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="linking.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

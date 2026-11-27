@@ -7,6 +7,7 @@
 
 
         <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
         <link rel="stylesheet" href="theme/fonts.css">
         <script>
             (function () {
@@ -58,10 +59,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-afda5709.js";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b0d6c91.js"></script>
+        <script src="toc-3d95a7df.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,15 +199,15 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-a-poss-sales-refunds-and-codes"><a class="header" href="#middleware-a-poss-sales-refunds-and-codes">Middleware: a POS’s sales, refunds and codes</a></h1>
-<p>Last changed in v0.5.0.</p>
+<p>Last changed in v1.0.0.</p>
 <p>This page is for a POS vendor, and for whoever writes the screens a cashier sees: what the
 register shows and what the cashier does at each state of a sale or a refund, cancelling one,
-refunding, and every code a POS meets, by route. Each route’s fields and answers are in
-<a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>. Each code’s meaning, and what your code does next, are its row of
-<a href="refusals.json"><code>/docs/api/refusals.json</code></a>. An agent reads the same bytes through the sandbox’s MCP server as
+refunding, the store’s logo, and every code a POS meets, by route. Each route’s fields and answers
+are in <a href="openapi-pos.yaml"><code>/docs/api/openapi-pos.yaml</code></a>. Each code’s meaning, and what your code does next, are its row
+of <a href="refusals.json"><code>/docs/api/refusals.json</code></a>. An agent reads the same bytes through the sandbox’s MCP server as
 <code>mw://docs/pos.md</code>.</p>
 <p>The register uses its own words. The words in these tables are an example.</p>
 <p>A POS on its own server names the register each call is for in <code>Mw-Register</code>, on every sale,
@@ -370,6 +371,31 @@ neither the POS nor the middleware, so it is in neither’s records. A refund ma
 sale refundable from the POS, which does not know of it. Where a refund is made at the
 terminal or another way, after <code>409 sale_not_refundable</code> among other times, record it in your POS
 by hand, so the sale is not refunded twice.</p>
+<h2 id="the-stores-logo"><a class="header" href="#the-stores-logo">The store’s logo</a></h2>
+<p>Added in v1.0.0.</p>
+<p>A store may hold one logo, which FUNDiMO sets for the store’s registers and terminals to show. A
+register reads it with <code>GET /v1/register/logo</code>, as it reads <code>GET /v1/register/terminals</code>: an app on
+a till on its own certificate, and a POS on its own server naming the register in <code>Mw-Register</code>.
+The logo is that of the store the register sits at, the store of the terminals it is linked to: a
+register linked to none sits at no store (<a href="linking.html"><code>/docs/api/linking.md</code></a>).</p>
+<p>Read it when the register starts, and after a link binds, and never on a timer. Keep the image and
+its tag, the <code>ETag</code> of the answer that gave it, and send that tag in <code>If-None-Match</code>, so a logo that
+has not changed comes back <code>304</code> with no body:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Answer</th><th>What it means</th><th>What the register does</th></tr>
+</thead>
+<tbody>
+<tr><td><code>200</code></td><td>The logo. The body is the image, its <code>Content-Type</code> is <code>image/png</code> or <code>image/jpeg</code>, and its <code>ETag</code> is its tag</td><td>Keeps the image and its <code>ETag</code>, and shows the image. An image it cannot decode, it shows none</td></tr>
+<tr><td><code>304</code></td><td>The logo is the one whose tag the register sent. No body</td><td>Keeps what it holds, and shows it</td></tr>
+<tr><td><code>404</code> <code>not_found</code></td><td>The register sits at no store, or its store holds no logo</td><td>Shows none</td></tr>
+<tr><td>Any other answer</td><td>A <code>503</code>, a refusal or a dropped connection: no verdict on the logo</td><td>Keeps what it holds, and reads again at its next start or link</td></tr>
+</tbody>
+</table>
+</div>
+<p>The hosted sandbox answers the read <code>404</code> <code>not_found</code> for now (The codes a POS meets, by route,
+below).</p>
 <h2 id="linking-and-moving-a-till"><a class="header" href="#linking-and-moving-a-till">Linking, and moving a till</a></h2>
 <p>Added in v0.4.0.</p>
 <p>A register takes sales on the terminals it is linked to. <a href="linking.html"><code>/docs/api/linking.md</code></a> walks linking at
@@ -389,7 +415,7 @@ and a world. A device may also run a payment terminal’s app: two apps, each on
 certificate, linked as any register and terminal are, the person reading the word in the
 terminal’s app and typing it into the POS app (<a href="linking.html"><code>/docs/api/linking.md</code></a>).</p>
 <h2 id="the-codes-a-pos-meets-by-route"><a class="header" href="#the-codes-a-pos-meets-by-route">The codes a POS meets, by route</a></h2>
-<p>Added in v0.4.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>A refusal’s body is <code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>; in the
 sandbox, its gate’s <code>404</code> and its <code>503 ca_unavailable</code> add <code>Next</code> beside <code>Error</code>. Ignore a key
 you do not know. Each code’s meaning, and what your code does next, are its row of
@@ -415,15 +441,16 @@ it. The five body codes are <code>400</code> <code>invalid_json</code>, <code>un
 <tr><td><code>POST /v1/links/{LinkIdentification}/word</code></td><td>the five body codes; <code>403</code> <code>link_word_unknown</code>; <code>404</code> <code>not_found</code>; <code>409</code> <code>register_in_other_store</code>; <code>410</code> <code>link_expired</code>; <code>413</code> <code>body_too_large</code></td></tr>
 <tr><td><code>DELETE /v1/links/{Identification}</code></td><td><code>404</code> <code>not_found</code></td></tr>
 <tr><td><code>GET /v1/register/terminals</code></td><td>none</td></tr>
+<tr><td><code>GET /v1/register/logo</code></td><td><code>404</code> <code>not_found</code></td></tr>
 <tr><td><code>POST /v1/enrol</code></td><td>the five body codes; <code>403</code> <code>code_not_valid</code>, <code>attestation_failed</code>, <code>app_identity_unknown</code>, <code>model_not_allowed</code>; <code>413</code> <code>body_too_large</code>; <code>429</code>, the edge’s, with no <code>Error</code>; <code>503</code> <code>ca_unavailable</code>, <code>attestation_status_unavailable</code>, <code>store_unavailable</code></td></tr>
 <tr><td><code>GET /v1/certificates/self</code></td><td>none</td></tr>
 <tr><td><code>POST /v1/certificates/challenge</code></td><td><code>411</code>, the edge’s, with no <code>Error</code></td></tr>
 <tr><td><code>POST /v1/certificates/renew</code></td><td>the five body codes; <code>403</code> <code>challenge_not_valid</code>, <code>attestation_failed</code>, <code>app_identity_unknown</code>, <code>model_not_allowed</code>; <code>409</code> <code>renewal_not_due</code>; <code>413</code> <code>body_too_large</code>; <code>429</code> <code>renewal_rate</code>; <code>503</code> <code>ca_unavailable</code>, <code>attestation_status_unavailable</code></td></tr>
 <tr><td><code>GET /v1/health</code></td><td>none: it answers <code>200</code> alone</td></tr>
-<tr><td><code>POST /v1/registers</code>, from your <code>admin</code> server</td><td>the five body codes; <code>413</code> <code>body_too_large</code></td></tr>
+<tr><td><code>POST /v1/registers</code>, from your <code>admin</code> server</td><td>the five body codes; <code>409</code> <code>idempotency_conflict</code>; <code>413</code> <code>body_too_large</code>; <code>429</code> <code>write_rate</code></td></tr>
 <tr><td><code>GET /v1/registers</code>, from your <code>admin</code> server</td><td>none</td></tr>
-<tr><td><code>DELETE /v1/registers/{RegisterIdentification}</code>, from your <code>admin</code> server</td><td><code>404</code> <code>not_found</code></td></tr>
-<tr><td><code>POST /v1/registers/{RegisterIdentification}/pairing-code</code>, from your <code>admin</code> server</td><td><code>404</code> <code>not_found</code>; <code>411</code>, the edge’s, with no <code>Error</code></td></tr>
+<tr><td><code>DELETE /v1/registers/{RegisterIdentification}</code>, from your <code>admin</code> server</td><td><code>404</code> <code>not_found</code>; <code>429</code> <code>write_rate</code></td></tr>
+<tr><td><code>POST /v1/registers/{RegisterIdentification}/pairing-code</code>, from your <code>admin</code> server</td><td><code>404</code> <code>not_found</code>; <code>411</code>, the edge’s, with no <code>Error</code>; <code>429</code> <code>write_rate</code></td></tr>
 <tr><td><code>GET /v1/registers/{RegisterIdentification}/certificates</code>, from your <code>admin</code> server</td><td><code>404</code> <code>not_found</code></td></tr>
 </tbody>
 </table>
@@ -437,7 +464,11 @@ is not a POS’s, such as one of the Operator API’s, answers a POS’s credent
 <code>not_permitted</code> on a live middleware, and <code>404</code> <code>not_found</code> in the sandbox. In the
 sandbox, a route may also answer <code>429</code> <code>sandbox_rate</code>, <code>503</code> <code>sandbox_busy</code> or <code>503</code>
 <code>sandbox_restarting</code>, as <a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 7. Codes the sandbox adds, says; and the five
-routes your <code>admin</code> server calls are not served there, so each answers <code>404</code> <code>not_found</code>.</p>
+routes your <code>admin</code> server calls answer your world’s <code>admin</code> server’s certificate there as on
+staging, and also <code>409</code> <code>sandbox_read_only</code> and <code>sandbox_object_limit</code>, and <code>429</code> <code>sandbox_rate</code>,
+and every other caller <code>404</code> <code>not_found</code> (<a href="back-office.html"><code>/docs/api/back-office.md</code></a>, Trying it in the sandbox).
+The hosted sandbox answers <code>GET /v1/register/logo</code> <code>404</code> <code>not_found</code> until a later release: read it
+as no logo.</p>
 <p>A request too malformed to be read as HTTP at all is answered by the HTTP server itself, with
 <code>400</code>, <code>414</code> or <code>431</code> and no <code>Error</code> body. A later version may add codes to these lists.</p>
 

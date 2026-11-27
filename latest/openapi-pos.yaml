@@ -1,14 +1,15 @@
 openapi: '3.1.0'
 info:
-  title: 'Middleware v0.6.1: what a POS calls'
+  title: 'Middleware v1.0.0: what a POS calls'
   version: '1.0.0'
   summary: The relay between a point of sale, a payment terminal and FUNDiMO.
   description: |-
     The routes a POS calls: a sale, its reads and its abort, and a refund, which is a sale of its
-    own; linking a register to a terminal; the five routes your own `admin` server calls on your
-    registers; enrolling for a certificate, its daily check and its renewal; and the health check.
-    Each property's `x-sent-by` names who sends it. `/docs/api/environments.md` names each
-    environment's base URL. This release publishes this document as `openapi-pos.yaml`.
+    own; linking a register to a terminal; the store's logo a register shows; the five routes your
+    own `admin` server calls on your registers; enrolling for a certificate, its daily check and its
+    renewal; and the health check. Each property's `x-sent-by` names who sends it.
+    `/docs/api/environments.md` names each environment's base URL. This release publishes this
+    document as `openapi-pos.yaml`.
 
     Every property carries `x-sent-by`: `pos` for what a POS sends to the middleware, a register's
     request to link among it, `terminal` for what a terminal sends to the middleware, `vendor` for
@@ -53,7 +54,7 @@ tags:
     description: What a POS calls.
   - name: links
     description: >-
-      Linking a register to a terminal by a word the terminal shows, and what the register is bound to.
+      Linking a register to a terminal by a word the terminal shows, what the register is bound to, and the logo of the store it sits at.
   - name: registers
     description: 'Managing your registers: the routes your own `admin` server calls on your registers, from the Operator API.'
   - name: certificates
@@ -206,7 +207,7 @@ paths:
                 $ref: '#/components/schemas/Error'
               examples:
                 idempotency_conflict:
-                  value: {"Error": {"Code": "idempotency_conflict", "Message": "The idempotency key names a different sale.", "Fields": []}}
+                  value: {"Error": {"Code": "idempotency_conflict", "Message": "The idempotency key names a different request.", "Fields": []}}
                 terminal_offline:
                   value: {"Error": {"Code": "terminal_offline", "Message": "The terminal is not connected.", "Fields": []}}
                 terminal_busy:
@@ -502,6 +503,12 @@ paths:
             schema:
               $ref: '#/components/schemas/RegisterListing'
       responses:
+        '200':
+          description: 'A replay of the same request under its `IdempotencyKey`: the register as `GET /v1/registers` shows it, with no `PairingCode`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
         '201':
           description: The register, and a device's `PairingCode`, shown this once.
           content:
@@ -509,15 +516,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegisterListed'
         '400':
-          $ref: '#/components/responses/OperatorBodyRefused'
+          $ref: '#/components/responses/OperatorCreateBodyRefused'
         '401':
           $ref: '#/components/responses/Unauthorised'
         '403':
           $ref: '#/components/responses/NotPermitted'
+        '409':
+          description: '`idempotency_conflict`: the key names a different request, and nothing was written.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                idempotency_conflict:
+                  value: {"Error": {"Code": "idempotency_conflict", "Message": "The idempotency key names a different request.", "Fields": []}}
         '413':
           $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
         '503':
-          $ref: '#/components/responses/OperatorStoreUnavailable'
+          $ref: '#/components/responses/OperatorCreateStoreUnavailable'
     get:
       tags: [registers]
       operationId: readRegisters
@@ -559,6 +576,7 @@ paths:
           $ref: '#/components/responses/NotPermitted'
         '404':
           $ref: '#/components/responses/OperatorNotFound'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
         '503':
           $ref: '#/components/responses/OperatorStoreUnavailable'
   /v1/registers/{RegisterIdentification}/pairing-code:
@@ -584,6 +602,7 @@ paths:
         '404':
           $ref: '#/components/responses/OperatorNotFound'
         '411': {$ref: '#/components/responses/EdgeLengthRequired'}
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
         '503':
           $ref: '#/components/responses/OperatorStoreUnavailable'
   /v1/registers/{RegisterIdentification}/certificates:
@@ -1137,6 +1156,28 @@ paths:
           $ref: '#/components/responses/NotPermitted'
         '503':
           $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/register/logo:
+    get:
+      tags: [links]
+      operationId: readRegisterLogo
+      summary: The logo of the store this register sits at.
+      parameters:
+        - $ref: '#/components/parameters/MwRegister'
+        - $ref: '#/components/parameters/IfNoneMatch'
+      description: 'A register, or a `pos` server naming one, reads the logo of the store it sits at, sending the tag it holds in `If-None-Match`, and on a `404`, a register at no store or a store holding none, shows none. `/docs/api/pos.md` says when a register reads it: when it starts, and after a link binds.'
+      responses:
+        '200':
+          $ref: '#/components/responses/LogoImage'
+        '304':
+          $ref: '#/components/responses/LogoNotModified'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
 components:
   securitySchemes:
     sandboxKey:
@@ -1177,6 +1218,14 @@ components:
       schema:
         type: string
         pattern: '^reg_[0-9a-f]{32}$'
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      description: 'The tag of the logo the caller holds, as the `ETag` of its last read gave it: one naming the logo''s tag, or `*` while a logo is held, is answered `304` with no body. A value that is no list of entity tags, or is over 4,096 bytes, is read as absent.'
+      schema:
+        type: string
+        maxLength: 4096
   responses:
     Unauthorised:
       description: |
@@ -1267,6 +1316,23 @@ components:
               value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["Scope"]}}
             body_unreadable:
               value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+    OperatorCreateBodyRefused:
+      description: 'The body is refused, and nothing was done, as any Operator API body is; a vendor''s `admin` that sends no `IdempotencyKey` is answered `missing_field`, which names it.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalid_json:
+              value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+            unknown_field:
+              value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["Note"]}}
+            missing_field:
+              value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["IdempotencyKey"]}}
+            invalid_field:
+              value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["IdempotencyKey"]}}
+            body_unreadable:
+              value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
     OperatorBodyTooLarge:
       description: >-
         `body_too_large`: the body is over 65,536 bytes. Nothing was done, and no part of the body is logged.
@@ -1276,6 +1342,24 @@ components:
             $ref: '#/components/schemas/Error'
     EdgeLengthRequired:
       description: 'Sent by the edge in front of a hosted middleware, never by the middleware itself, to a `POST` with no body and no `Content-Length` over HTTP/1.1: its body is the edge''s, not an `Error`, and nothing was read. Send the same request again with `Content-Length: 0`.'
+    OperatorWriteRate:
+      description: >-
+        `write_rate`: the vendor's `admin` servers, which share one count, sent `MW_ADMIN_WRITES_PER_MINUTE` writes in the last 60 seconds, 60 unless set, and reads are not counted. Nothing was done: wait the seconds `Retry-After` gives, then send the same request again.
+      headers:
+        Retry-After:
+          description: >-
+            The whole seconds until the vendor's oldest counted write is 60 seconds old, from 1 to 60.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 60
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            write_rate:
+              value: {"Error": {"Code": "write_rate", "Message": "This vendor has sent as many writes as it may in the last minute. Retry after the seconds Retry-After gives.", "Fields": []}}
     OperatorStoreUnavailable:
       description: |
         No verdict on the caller.
@@ -1295,6 +1379,42 @@ components:
               value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
             edge_not_trusted:
               value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+    OperatorCreateStoreUnavailable:
+      description: 'No verdict on the caller. `store_unavailable` means the store did not answer: a create sent under an `IdempotencyKey` is sent again under the same key, which answers `200` with the object if one was made and makes it if not, and one sent with no key, as the operator and `onboarding` may send it, may stand already, so look for it before sending it again; `edge_not_trusted` means the request did not come through a trusted edge, so retry on the normal backoff.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            store_unavailable:
+              value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+            edge_not_trusted:
+              value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+    LogoImage:
+      description: The store's logo, its bytes as FUNDiMO set them, with its media type as `Content-Type`.
+      headers:
+        ETag:
+          description: The logo's tag, 66 characters, `"` then the lowercase hex of the image's SHA-256 then `"`, which the next read sends back in `If-None-Match`.
+          schema:
+            type: string
+            pattern: '^"[0-9a-f]{64}"$'
+      content:
+        image/png:
+          schema:
+            type: string
+            contentMediaType: image/png
+        image/jpeg:
+          schema:
+            type: string
+            contentMediaType: image/jpeg
+    LogoNotModified:
+      description: The logo the caller holds is still the store's, so the answer carries its tag and no body.
+      headers:
+        ETag:
+          description: The logo's tag, the one the request named.
+          schema:
+            type: string
+            pattern: '^"[0-9a-f]{64}"$'
   schemas:
     Amount:
       type: string
@@ -1786,11 +1906,15 @@ components:
           description: The release of the middleware answering, not this document's `info.version`.
       examples:
         - {"Status": "ok", "Version": "0.0.0"}
+    IdempotencyKey:
+      type: string
+      pattern: '^[A-Za-z0-9._:/-]{8,64}$'
+      description: 'A key the sender chooses for this create, held 24 hours for the caller''s vendor and this route, so a retry after a lost answer makes no second object: a vendor''s `admin` must send it, and the operator and `onboarding` may.'
     RegisterListing:
       type: object
       additionalProperties: false
       description: >-
-        What `POST /v1/registers` takes: a device's `SerialNumber`, or `{}` for a server's register, and from the operator or `onboarding` the register's `VendorIdentification`.
+        What `POST /v1/registers` takes: a device's `SerialNumber`, or none for a server's register, and from the operator or `onboarding` the register's `VendorIdentification`.
       properties:
         SerialNumber:
           type: [string, 'null']
@@ -1803,6 +1927,29 @@ components:
           x-sent-by: vendor
           description: >-
             From the operator or `onboarding` alone: the POS vendor the register is listed for, else the caller's vendor. From a vendor's `admin` it is `400 unknown_field`, and a vendor that holds no `pos` role, or that no row holds, is `403 not_permitted`.
+        IdempotencyKey:
+          $ref: '#/components/schemas/IdempotencyKey'
+          x-sent-by: vendor
+    Actor:
+      type: object
+      required: [VendorIdentification, Scope, ServerIdentification]
+      description: Who made an object, read from the credential that made it. `ServerIdentification` is `null` for a key, and `Scope` `null` for a terminal's or a register's certificate.
+      properties:
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The vendor of the credential.
+        Scope:
+          type: [string, 'null']
+          enum: [pos, admin, operator, onboarding, null]
+          x-sent-by: mw
+          description: What the credential reaches.
+        ServerIdentification:
+          type: [string, 'null']
+          pattern: '^srv_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: Its server, `null` for a key.
     DeviceAttestation:
       type: object
       required: [State, FailedChecks, Since]
@@ -1881,7 +2028,7 @@ components:
             A device's code: five different words of `docs/api/words.txt`, joined by dots, valid 15 minutes and for one use, shown this once. Absent for a server's register.
     Register:
       type: object
-      required: [RegisterIdentification, VendorIdentification, Kind, State]
+      required: [RegisterIdentification, VendorIdentification, Kind, State, CreatedBy]
       description: A register, as its routes show it.
       properties:
         RegisterIdentification:
@@ -1925,6 +2072,12 @@ components:
           x-sent-by: mw
           description: >-
             Its attestation mark, its newest certificate's, absent unless that certificate's key attestation failed, so always absent for a server's register.
+        CreatedBy:
+          anyOf:
+            - $ref: '#/components/schemas/Actor'
+            - type: 'null'
+          x-sent-by: mw
+          description: Who made it, or `null` where the middleware holds no record of who did.
     RegisterList:
       type: object
       required: [Registers]

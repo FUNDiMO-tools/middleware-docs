@@ -7,6 +7,7 @@
 
 
         <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
         <link rel="stylesheet" href="theme/fonts.css">
         <script>
             (function () {
@@ -58,10 +59,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "coal";
-            window.path_to_searchindex_js = "searchindex-afda5709.js";
+            window.path_to_searchindex_js = "searchindex-d03570d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b0d6c91.js"></script>
+        <script src="toc-3d95a7df.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,10 +199,10 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p class="mw-release">Release v0.6.1, 24-Nov-2026 · <a href="../versions.html">all releases</a></p>
+                        <p class="mw-release">Release v1.0.0, 27-Nov-2026 · <a href="../versions.html">all releases</a></p>
 
 <h1 id="middleware-onboarding-a-server"><a class="header" href="#middleware-onboarding-a-server">Middleware: onboarding a server</a></h1>
-<p>Last changed in v0.5.0.</p>
+<p>Last changed in v1.0.0.</p>
 <p>This is the walk for a vendor whose POS, or whose back office, runs on its own server and calls
 the middleware host to host. It goes from the listing that gives the server its code to a certificate
 the server renews by itself, with code to paste at each step. You can build the server’s side
@@ -215,8 +216,8 @@ whoever spends the code first holds the identity. The certificate lasts 30 days 
 day 15 with a new key.</p>
 <p>Read it beside <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a>, which holds the schema of every route under <code>/v1/</code>
 named here but three, the routes an <code>admin</code> server calls on its registers among them. Those
-three list, read and remove a vendor’s servers, and are in the Operator API, which FUNDiMO gives
-a vendor with an <code>admin</code> server directly. A vendor writing an app
+three list, read and remove a vendor’s servers, and are in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>,
+which <a href="back-office.html"><code>/docs/api/back-office.md</code></a> walks. A vendor writing an app
 for a SUNMI device reads <a href="onboarding-device.html"><code>docs/api/onboarding-device.md</code></a> instead, and linking a register to a
 terminal at the counter is <a href="linking.html"><code>docs/api/linking.md</code></a>. Nothing here runs on a device, so none of the
 device walk’s bench items applies to a server.</p>
@@ -236,16 +237,18 @@ inside the overlap (step 9).</li>
 <li>After a refusal it does what the holder’s table says, and never deletes its key (step 10).</li>
 </ol>
 <h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
-<p>Changed in v0.5.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>The same file is served in the sandbox, where four things differ.</p>
 <ul>
-<li>The sandbox’s gate answers <code>404</code> to every route of the Operator API,
-<code>POST /v1/vendors/{VendorIdentification}/servers</code> and <code>POST /v1/registers</code> among them.
-In their place, the <code>201</code> of <code>POST /sandbox/v1/keys</code> holds <code>Enrolment</code>, a <code>pos</code> server’s code
-for your world, and <code>POST /sandbox/v1/codes</code> gives another under your tester’s key (step 1).
-The same <code>201</code> holds <code>RegisterIdentification</code>, your world’s one register (step 7). Both
-routes are served by the sandbox’s own process, <code>mw-sandbox</code>, and a <code>live</code> middleware has
-neither.</li>
+<li>You ask for a code yourself. The <code>201</code> of <code>POST /sandbox/v1/keys</code> holds <code>Enrolment</code>, a <code>pos</code>
+server’s code for your world, and <code>RegisterIdentification</code>, the register your world came with
+(step 7). <code>POST /sandbox/v1/codes</code> gives another under your tester’s key (step 1), and with
+<code>{"Role":"admin"}</code> an <code>admin</code> server’s. Both routes are served by the sandbox’s own process,
+<code>mw-sandbox</code>, and a <code>live</code> middleware has neither. An <code>admin</code> server’s certificate reaches the
+Operator API routes of <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> inside your world,
+<code>POST /v1/vendors/{VendorIdentification}/servers</code> and <code>POST /v1/registers</code> among them, and
+every other caller is answered <code>404</code> at them (<a href="back-office.html"><code>/docs/api/back-office.md</code></a>, Trying it in the
+sandbox).</li>
 <li>Nothing a sandbox signs is a record, and a sandbox certificate is refused on <code>live</code>.</li>
 <li>Enrolment needs a sandbox with an issuing certificate. A sandbox run without one answers
 <code>POST /v1/enrol</code> with <code>503 ca_unavailable</code>.</li>
@@ -274,11 +277,11 @@ an <code>Error</code> (step 4, When enrolment is refused). Where a table here sa
 normal backoff, wait 1 second, double the wait after each failure up to 30 seconds, and add a
 little randomness.</p>
 <h2 id="1-the-listing-and-the-code"><a class="header" href="#1-the-listing-and-the-code">1. The listing and the code</a></h2>
-<p>Changed in v0.4.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>Every server starts with one human act. On <code>live</code>, the operator lists a vendor’s first server,
 and the vendor’s own <code>admin</code> server may list more, with
 <code>POST /v1/vendors/{VendorIdentification}/servers</code> and the <code>Scope</code> its certificate will reach
-(in the Operator API, which FUNDiMO gives a vendor with an <code>admin</code> server directly):</p>
+(in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>):</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -294,11 +297,12 @@ and the vendor’s own <code>admin</code> server may list more, with
 <p>Each listed server is its own identity, with its own code, key and certificate, so a vendor
 that sells and lists its own registers holds a <code>pos</code> server and an <code>admin</code> server. Here the
 vendor’s <code>admin</code> server lists a <code>pos</code> one, presenting its own key and chain, <code>admin.key</code> and
-<code>admin-chain.pem</code>, made and issued as steps 2 to 4 show:</p>
+<code>admin-chain.pem</code>, made and issued as steps 2 to 4 show, and a key of its own for the listing,
+<code>IdempotencyKey</code>:</p>
 <pre><code class="language-sh">curl -s -X POST "$MW/v1/vendors/ven_.../servers" \
   --cert admin-chain.pem --key admin.key \
   -H 'Content-Type: application/json' \
-  -d '{"Scope":"pos"}'
+  -d '{"IdempotencyKey":"server-0001-a","Scope":"pos"}'
 </code></pre>
 <p>The answer is <code>201</code>:</p>
 <pre><code class="language-json">{ "ServerIdentification": "srv_...", "Scope": "pos", "State": "listed", "PairingCode": "XXXX-XXXX-XXXX-XXXX" }
@@ -311,6 +315,12 @@ it to whoever runs the server, by a path no one else reads, and it is kept out o
 server’s own among them. A code that lapses unspent is not renewed:
 remove the listed server with
 <code>DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}</code>, and list a new one.</p>
+<p>An <code>admin</code> server must send <code>IdempotencyKey</code>, 8 to 64 ASCII letters, digits, <code>.</code>, <code>_</code>, <code>:</code>, <code>/</code>
+and <code>-</code> that it chooses, one for each server it lists. A listing sent again under it after a lost
+answer is answered <code>200</code> with the server the first made, and never lists a second, which would
+hold one of its scope’s two places (below). That answer holds no <code>PairingCode</code>, which is shown
+once: remove that server, and list a new one under a new key. <a href="back-office.html"><code>/docs/api/back-office.md</code></a>,
+Retrying a create, gives the rule whole.</p>
 <p>A vendor holds at most two servers of one scope that are not removed, and a third is
 <code>409 too_many_keys</code>. So a server moves to a new identity with no gap: list the second, enrol
 it, move every call to it, then remove the first.</p>
@@ -354,7 +364,7 @@ and holds no one’s name. The CSR is never logged: the middleware’s log holds
 <p>A CSR whose signature does not verify, or whose key is not P-256, is refused
 <code>400 invalid_field</code>, with <code>Fields</code> naming <code>CertificateSigningRequest</code>.</p>
 <h2 id="4-enrol-post-v1enrol"><a class="header" href="#4-enrol-post-v1enrol">4. Enrol: <code>POST /v1/enrol</code></a></h2>
-<p>Changed in v0.5.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>With the code and the CSR, the server enrols. The call carries no credential, because the code
 is the credential, so it presents no certificate and sends no <code>Authorization</code> header.</p>
 <div class="table-wrapper">
@@ -403,15 +413,17 @@ is <code>403 code_not_valid</code>, so never make a new key to repeat a call tha
 code first holds the identity, and the real server is then refused <code>403 code_not_valid</code>. So
 treat <code>code_not_valid</code> on a fresh code, one sent as listed and inside its 15 minutes, as an
 alarm. Read the vendor’s servers, and compare each row’s <code>SpkiDigest</code> with your key’s (step 2):</p>
-<pre><code class="language-sh">curl -s "$MW/v1/vendors/ven_.../servers" --cert admin-chain.pem --key admin.key \
-  | jq '.Servers[] | {ServerIdentification, Scope, State, SpkiDigest, FirstSeen}'
+<pre><code class="language-sh">curl -s "$MW/v1/vendors/ven_.../servers?page_size=100" --cert admin-chain.pem --key admin.key \
+  | jq '.NextPage, (.Servers[] | {ServerIdentification, Scope, State, SpkiDigest, FirstSeen})'
 </code></pre>
+<p>The list is read a page at a time, so read every page: while <code>NextPage</code>, the first line printed, is
+not <code>null</code>, send it back as <code>page_after</code>.</p>
 <p>A row <code>enrolled</code> with an <code>SpkiDigest</code> that is not your key’s was spent by someone else. Remove
 it with <code>DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}</code>, which
 retires its certificate at once, list a new server, and find how the code left your hands before
 you hand over the next. A vendor with no <code>admin</code> server asks the operator to read the row.</p>
 <h3 id="when-enrolment-is-refused"><a class="header" href="#when-enrolment-is-refused">When enrolment is refused</a></h3>
-<p>Changed in v0.3.0.</p>
+<p>Changed in v1.0.0.</p>
 <p>A refusal once the code is found counts an attempt against it, unless the code is already spent
 or burned, and five attempts burn it, so fix what a refusal names before you try again. A <code>503</code>
 counts nothing and leaves the code unspent, and the edge’s <code>429</code> never reaches the middleware, so
@@ -426,7 +438,7 @@ fails answers alone, with <code>Fields</code> naming every field of it, sorted.<
 <tbody>
 <tr><td><code>400</code></td><td><code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code></td><td>The body is not a JSON object, holds a field the route does not name, or lacks one, and <code>Fields</code> names each. A server’s body holding <code>AttestationChain</code> is <code>unknown_field</code></td><td>A bug in the caller: fix it. Retrying will not help</td></tr>
 <tr><td><code>400</code></td><td><code>invalid_field</code></td><td>A field breaks its rule, and <code>Fields</code> names it. For <code>CertificateSigningRequest</code>: its signature does not verify, or its key is not P-256. For <code>PairingCode</code>: it is not 16 characters, or the body holds a <code>SerialNumber</code>, which reads the code as a device’s five words</td><td>For the CSR, make a new P-256 key and a CSR from it (steps 2 and 3), and enrol again inside the 15 minutes. For the code, send it as listed, with no <code>SerialNumber</code></td></tr>
-<tr><td><code>403</code></td><td><code>code_not_valid</code></td><td>The code is wrong, unknown, expired, spent or burned, the server is not <code>listed</code>, or its vendor is suspended. One answer for every reason, so the route tells a stranger nothing</td><td>On a fresh code, an alarm: read <code>GET /v1/vendors/{VendorIdentification}/servers</code>, where a row whose <code>SpkiDigest</code> is not your key’s was spent by someone else. Otherwise check the code as listed, then ask for a new listing</td></tr>
+<tr><td><code>403</code></td><td><code>code_not_valid</code></td><td>The code is wrong, unknown, expired, spent or burned, the server is not <code>listed</code>, or its vendor is suspended. One answer for every reason, so the route tells a stranger nothing</td><td>On a fresh code, an alarm: read every page of <code>GET /v1/vendors/{VendorIdentification}/servers</code>, where a row whose <code>SpkiDigest</code> is not your key’s was spent by someone else. Otherwise check the code as listed, then ask for a new listing</td></tr>
 <tr><td><code>429</code></td><td>None: the body is the edge’s own, not an <code>Error</code></td><td>Sent by the edge in front of a hosted middleware, never by the middleware itself: more enrolments came from this address in a minute than the edge allows. The code was not read, and no attempt is counted against it</td><td>Wait a minute, then try again with the same body. Do not read the body as an <code>Error</code></td></tr>
 <tr><td><code>503</code></td><td><code>ca_unavailable</code></td><td>The middleware could not sign</td><td>Back off and try again with the same body. The code is not spent</td></tr>
 <tr><td><code>503</code></td><td><code>store_unavailable</code></td><td>The middleware’s store did not answer</td><td>Back off and try again with the same body</td></tr>
@@ -556,13 +568,14 @@ finds only the register’s own sales. So a retry of a sale names the same regis
 send did, or it makes a second sale. Give each till its own register, and never send two tills’
 sales under one.</p>
 <h2 id="7-list-a-servers-register-post-v1registers"><a class="header" href="#7-list-a-servers-register-post-v1registers">7. List a server’s register: <code>POST /v1/registers</code></a></h2>
+<p>Changed in v1.0.0.</p>
 <p>A register is one till of the POS, and a <code>pos</code> server acts for each of its vendor’s registers. A
-POS vendor’s <code>admin</code> lists each one with <code>POST /v1/registers</code> and an empty body, here on the
-<code>admin</code> server’s certificate:</p>
+POS vendor’s <code>admin</code> lists each one with <code>POST /v1/registers</code> and a body holding its key alone,
+here on the <code>admin</code> server’s certificate:</p>
 <pre><code class="language-sh">curl -s -X POST "$MW/v1/registers" \
   --cert admin-chain.pem --key admin.key \
   -H 'Content-Type: application/json' \
-  -d '{}'
+  -d '{"IdempotencyKey":"till-0001-a"}'
 </code></pre>
 <p>The answer is <code>201</code>:</p>
 <pre><code class="language-json">{ "RegisterIdentification": "reg_...", "Kind": "server", "State": "active" }
@@ -572,12 +585,18 @@ POS vendor’s <code>admin</code> lists each one with <code>POST /v1/registers</
 own, because the <code>pos</code> server speaks for it. It sits at no store and reaches no terminal until
 it links to one at the counter (<a href="linking.html"><code>docs/api/linking.md</code></a>). A body naming a <code>SerialNumber</code> lists a
 device’s register instead, which enrols as a device does (<a href="onboarding-device.html"><code>docs/api/onboarding-device.md</code></a>).</p>
+<p>The key, <code>IdempotencyKey</code>, is the <code>admin</code> server’s own, one for each register, and it must send
+one: a listing sent again under it after a lost answer is answered <code>200</code> with the register the
+first made, and never lists a second register for one till (<a href="back-office.html"><code>/docs/api/back-office.md</code></a>, Retrying
+a create).</p>
 <p><code>GET /v1/registers</code> shows each of the vendor’s registers with its kind, its state and the
 store it sits at. <code>DELETE /v1/registers/{RegisterIdentification}</code> removes one, and ends
 each of its bindings.</p>
-<p>In the sandbox the gate answers <code>404</code> to this route. Your world’s one register is the
-<code>RegisterIdentification</code> that <code>POST /sandbox/v1/keys</code> answered, a server’s register already
-bound to your world’s terminals, and your <code>pos</code> server names it in <code>Mw-Register</code>.</p>
+<p>In the sandbox your world’s <code>admin</code> server lists a register of its own in the same way, on its
+certificate, and every other caller is answered <code>404</code> at this route. The register your world came
+with is the <code>RegisterIdentification</code> that <code>POST /sandbox/v1/keys</code> answered, a server’s register
+already bound to your world’s terminals, and your <code>pos</code> server names it in <code>Mw-Register</code>. It is
+read-only: its removal is <code>409 sandbox_read_only</code>.</p>
 <h2 id="8-the-daily-check-get-v1certificatesself"><a class="header" href="#8-the-daily-check-get-v1certificatesself">8. The daily check: <code>GET /v1/certificates/self</code></a></h2>
 <p>Once a day the server sends <code>GET /v1/certificates/self</code>, on its own certificate. The middleware answers
 when the certificate ends, and whether to renew:</p>
@@ -712,11 +731,12 @@ cannot be recovered. A server holding a certificate makes a new key only to rene
 person brings a new code, and deletes an old key only once a call on the certificate that
 follows it has been answered. A server decides none of this by its own clock.</p>
 <h2 id="a-copied-key"><a class="header" href="#a-copied-key">A copied key</a></h2>
+<p>Changed in v1.0.0.</p>
 <p>Three things say that someone else holds this identity’s key or spent its code:
 <code>403 certificate_retired</code> on a newest certificate, a <code>429 renewal_rate</code> no renewer of yours
-caused, and an <code>SpkiDigest</code> you do not know in <code>GET /v1/vendors/{VendorIdentification}/servers</code>.
-Only
-one holder can stay. The operator, or the vendor’s own <code>admin</code>, removes the server with
+caused, and an <code>SpkiDigest</code> you do not know on any page of
+<code>GET /v1/vendors/{VendorIdentification}/servers</code>. Only one holder can stay. The operator, or the
+vendor’s own <code>admin</code>, removes the server with
 <code>DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}</code>, which retires every
 certificate of it, the copy’s with yours. Then list a new server (step 1), enrol it with a new
 key, and find how the key left your custody before the new one takes its place.</p>
