@@ -1,0 +1,1458 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Your back office, in order - FUNDiMO middleware API</title>
+
+
+        <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
+        <link rel="stylesheet" href="theme/fonts.css">
+        <script>
+            (function () {
+                var nearer = { rust: 'light', navy: 'coal', ayu: 'coal' };
+                function remap() {
+                    try {
+                        var saved = (localStorage.getItem('mdbook-theme') || '').replace(/"/g, '');
+                        if (nearer[saved]) { localStorage.setItem('mdbook-theme', nearer[saved]); }
+                    } catch (e) { }
+                }
+                remap();
+                window.addEventListener('storage', remap);
+                window.addEventListener('pageshow', remap);
+                document.addEventListener('DOMContentLoaded', function () {
+                    var dark = document.getElementById('mdbook-theme-coal');
+                    if (dark) { dark.textContent = 'Dark'; }
+                    Object.keys(nearer).forEach(function (name) {
+                        var button = document.getElementById('mdbook-theme-' + name);
+                        if (button) { button.parentNode.remove(); }
+                    });
+                });
+            })();
+        </script>
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/site-acfedb15.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "coal";
+            window.path_to_searchindex_js = "searchindex-02345290.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-3d95a7df.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div class="mw-brand">
+                    <a class="mw-wordmark" href="https://fundimo.com.au/"><img class="mw-on-light" src="theme/fundimo.png" alt="FUNDiMO" width="1142" height="277"><img class="mw-on-dark" src="theme/fundimo-on-dark.png" alt="FUNDiMO" width="1200" height="290"></a>
+                    <span class="mw-product">Middleware API</span>
+                </div>
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">FUNDiMO middleware API</h1>
+
+                    <div class="right-buttons">
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <p class="mw-release">Release v1.1.0, 28-Nov-2026 · <a href="../versions.html">all releases</a></p>
+
+<h1 id="middleware-your-back-office"><a class="header" href="#middleware-your-back-office">Middleware: your back office</a></h1>
+<p>Last changed in v1.0.0.</p>
+<p>This page is for the developer of a fleet’s or a POS vendor’s own <code>admin</code> server, and for the
+coding assistant beside them: how your back office lists and manages what the middleware trusts
+for your vendor. Your vendor’s own roles and state; your servers and your apps; for a fleet, its
+stores, the terminals at them and its sign-in at its payment system; for a POS vendor, its
+registers and the aliases a fleet proposes for its stores; and how each principal you list gets
+its certificate. Each route’s fields and answers are in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>, the back
+office’s file. An agent reads the same bytes through the sandbox’s MCP server as
+<code>mw://docs/back-office.md</code>, and over HTTP as <a href="back-office.html"><code>/docs/api/back-office.md</code></a>.</p>
+<p>It walks the first steps in the sandbox, where you can try them alone, then a fleet’s back office
+and a POS vendor’s, each in order, from the first server FUNDiMO lists for you on staging. It
+leaves out FUNDiMO’s own acts: listing a vendor and reading the vendor list, moving a vendor’s
+state, writing the allowed list, sandbox keys, voiding a store’s go-live, moving a store to
+another owner, and the list of sales. Where you need to know one of them exists, this page says
+what FUNDiMO does, and that you ask FUNDiMO for it.</p>
+<p>Every path is under <code>/v1</code>. Every body is one JSON object in UTF-8, at most 65,536 bytes, and
+field names are the middleware’s own, in PascalCase. A field the route does not name is refused
+<code>400 unknown_field</code>. The middleware is not the record of a payment: FUNDiMO or the terminal’s
+acquirer is.</p>
+<h2 id="before-you-start-fundimo-lists-your-first-server"><a class="header" href="#before-you-start-fundimo-lists-your-first-server">Before you start: FUNDiMO lists your first server</a></h2>
+<p>Added in v1.0.0.</p>
+<p>On staging your back office starts with one human act, and it is FUNDiMO’s: FUNDiMO lists your
+vendor’s first server, an <code>admin</code> one, and gives you its pairing code once: 16 characters of
+Crockford base32 in four groups of 4, valid 15 minutes and for one use. Ask FUNDiMO for it. The
+code is a secret: whoever receives it gives it to whoever runs the server, by a path no one else
+reads, and it stays out of every log, the server’s own among them. In the sandbox you ask for
+that code yourself (Trying it in the sandbox, below).</p>
+<p>Your server then makes its own key, a CSR for it, and spends the code at <code>POST /v1/enrol</code> for
+its certificate (Certificates, below). <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a> walks each step with code
+to paste: step 1, the listing and the code; step 2, the key, in your own custody; step 3, the
+CSR; and step 4, enrolment. Its steps 8 and 9 keep the certificate alive, and step 10 says what
+a holder does after each refusal.</p>
+<p>The certificate of an <code>admin</code> server reaches the routes of this page inside its own vendor: the
+vendor’s own roles and state, your servers and your apps, for a fleet vendor its stores, its
+terminals and its sign-in, and for a POS vendor its registers and the aliases that name it. It
+reaches no other vendor’s, and none of FUNDiMO’s own acts. Who may do what, below, gives each
+route’s reach. Staging takes a certificate it issued, alone, and refuses a sandbox key
+<code>401 sandbox_key_on_live</code>.</p>
+<p>The examples of this page run against staging, but those of Trying it in the sandbox, below. They
+read staging’s base URL from <code>$MW</code>, as <a href="environments.html"><code>/docs/api/environments.md</code></a> names it, and present your
+<code>admin</code> server’s chain and key, <code>admin-chain.pem</code> and <code>admin.key</code>, which
+<a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a> steps 2 to 4 make and issue. Each id ending in <code>...</code> stands for one
+the middleware answered with. To see that your certificate works:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/certificates/self" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>:</p>
+<pre><code class="language-json">{ "NotAfter": "...", "RenewFrom": "...", "RenewNow": false }
+</code></pre>
+<p>Each path that names <code>{VendorIdentification}</code> takes your own vendor’s id, <code>ven_...</code>: the vendor
+FUNDiMO listed your first server under. Ask FUNDiMO for it beside the code. Your first store’s
+answer names it as <code>OwnerVendor</code>, and your first register’s as <code>VendorIdentification</code>.</p>
+<p>To read your own vendor’s roles and state:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/vendors/ven_..." --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>:</p>
+<pre><code class="language-json">{ "VendorIdentification": "ven_...", "Roles": ["fleet"], "State": "active" }
+</code></pre>
+<p><code>Roles</code> holds <code>fleet</code>, <code>pos</code> or both. <code>State</code> is <code>active</code> or <code>suspended</code>, which FUNDiMO alone
+moves. <code>suspended</code> refuses your vendor’s writes and its sales, and the sales of every store it
+owns, while its reads answer as before, this one among them.</p>
+<p>FUNDiMO may also create a store for your fleet, or list a register for your POS vendor. Each
+shows in your own listings beside your own, naming your vendor.</p>
+<h2 id="trying-it-in-the-sandbox"><a class="header" href="#trying-it-in-the-sandbox">Trying it in the sandbox</a></h2>
+<p>Added in v1.0.0.</p>
+<p>You can try your back office in the sandbox before you ask FUNDiMO for anything. The sandbox passes
+the routes of <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> to the certificate of your world’s own <code>admin</code> server,
+and the middleware answers them as on staging, inside your world. Every other caller is answered
+<code>404 not_found</code> at them: a sandbox key, alone or beside that certificate, any other certificate, and
+no credential. Only four of the file’s routes answer other callers too: enrolment, the daily check,
+renewal and the health check.</p>
+<p>The examples of this section read the sandbox’s base URL from <code>$SANDBOX</code>, as
+<a href="environments.html"><code>/docs/api/environments.md</code></a> names it. The files keep the names they have on staging, <code>admin.key</code> and
+<code>admin-chain.pem</code>, so keep the sandbox’s in a directory of their own: staging takes no certificate
+the sandbox issued.</p>
+<h3 id="1-take-a-key-which-opens-a-world"><a class="header" href="#1-take-a-key-which-opens-a-world">1. Take a key, which opens a world</a></h3>
+<p>Added in v1.0.0.</p>
+<p><code>POST /sandbox/v1/keys</code> takes no credential:</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/sandbox/v1/keys"
+</code></pre>
+<p>The answer is <code>201</code>, with your key and your world’s ids (<a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 1. A key and a
+world). The key is shown this once. Put it in the file <code>~/.mw-sandbox-auth</code>, as
+<a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 3. The MCP server, says: the next step reads it from there.</p>
+<p>A world lasts 30 days, and nothing in it is a record. It is one vendor, a fleet and a POS vendor at
+once, and it comes with one store, <code>live</code>, nine terminals at it, one register bound to all nine, and
+the sign-in stand-in the store holds. Your back office reads all of these and makes its own beside
+them.</p>
+<h3 id="2-ask-for-your-admin-servers-code"><a class="header" href="#2-ask-for-your-admin-servers-code">2. Ask for your <code>admin</code> server’s code</a></h3>
+<p>Added in v1.0.0.</p>
+<p><code>POST /sandbox/v1/codes</code>, under your key, gives the code of an <code>admin</code> server of your world’s
+vendor, as FUNDiMO does on staging:</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/sandbox/v1/codes" \
+  -H @"$HOME/.mw-sandbox-auth" \
+  -H 'Content-Type: application/json' \
+  -d '{"Role":"admin"}'
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "Role": "admin", "PairingCode": "...", "VendorIdentification": "ven_...", "StoreIdentification": "mst_...", "Next": "..." }
+</code></pre>
+<p><code>PairingCode</code> is a server’s code, 16 characters, valid 15 minutes and for one use. It is a secret.
+<code>VendorIdentification</code> is your world’s vendor, for each path that names
+<code>{VendorIdentification}</code>, and <code>StoreIdentification</code> is the store your world came with, which you
+read and do not change. Asked again before the server enrols, the route gives a fresh code. It gives
+six codes an hour, of every role together, and then <code>429 sandbox_rate</code>. To try a renewal the same
+day, send <code>"Due": true</code> beside the role (<a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 4. The POS journey).</p>
+<h3 id="3-enrol-the-server"><a class="header" href="#3-enrol-the-server">3. Enrol the server</a></h3>
+<p>Added in v1.0.0.</p>
+<p>The key, the CSR and enrolment are steps 2 to 4 of <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>. Make
+<code>admin.key</code> and <code>admin.csr</code>, then spend the code at <code>POST /v1/enrol</code> with the code block of
+Enrolling, below, at <code>$SANDBOX</code> in place of <code>$MW</code>: it writes <code>admin-chain.pem</code>. On staging FUNDiMO
+gives you the code, and the rest is the same.</p>
+<p>Present the certificate with no <code>Authorization</code> header beside it. Read your stores, which hold your
+world’s own:</p>
+<pre><code class="language-sh">curl -s "$SANDBOX/v1/merchant-stores" --cert admin-chain.pem --key admin.key
+</code></pre>
+<h3 id="4-a-fleet-a-store-and-a-terminal-of-your-own"><a class="header" href="#4-a-fleet-a-store-and-a-terminal-of-your-own">4. A fleet: a store and a terminal of your own</a></h3>
+<p>Added in v1.0.0.</p>
+<p>The steps are those of A fleet’s back office, in order, below, at <code>$SANDBOX</code>, but for what part 6
+says. <code>POST /v1/merchant-stores</code> makes a store of your own (step 1 there). Take it <code>live</code> (step 9),
+and list a terminal at it by its serial (step 3):</p>
+<pre><code class="language-sh"># The answer holds the store's `mst_...` and its `mid_...`.
+curl -s -X POST "$SANDBOX/v1/merchant-stores" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"store-0001-a"}'
+curl -s -X PUT "$SANDBOX/v1/merchant-stores/mst_.../state" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"Event":"live"}'
+# The answer holds the terminal's `poi_...` and its code, five words.
+curl -s -X POST "$SANDBOX/v1/merchant-stores/mst_.../terminals" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"term-0001-a","SerialNumber":"SN-0001"}'
+</code></pre>
+<p>The code lasts 15 minutes, and <code>POST /v1/terminals/{POIIdentification}/pairing-code</code> gives another
+(step 11). Your own app enrols with the code and that serial (<a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, In
+the sandbox, then steps 3 to 6), and connects on its certificate at
+<code>/v1/terminals/{POIIdentification}/connect</code> (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>). No attestation is required in
+the sandbox, so an emulator or a debug build can enrol.</p>
+<p>A sign-in credential of your own, a key pair (step 5), is made by <code>POST /v1/vendors/{VendorIdentification}/signin-credentials</code> with the sandbox’s adapter and no <code>Secret</code>:</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/v1/vendors/ven_.../signin-credentials" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"key-pair-0001-a","Adapter":"sandbox_signed_value","KeyIdentification":"key-example-1"}'
+</code></pre>
+<p>A <code>Secret</code> sent to the sandbox, even <code>null</code>, is <code>400 adapter_not_taken</code>. Your world’s fleet holds a
+sign-in profile from the start, so the create needs no step 4 first. Attach the key pair to your
+store as step 6 does.</p>
+<h3 id="5-a-pos-vendor-a-register-of-your-own-linked-to-that-terminal"><a class="header" href="#5-a-pos-vendor-a-register-of-your-own-linked-to-that-terminal">5. A POS vendor: a register of your own, linked to that terminal</a></h3>
+<p>Added in v1.0.0.</p>
+<p><code>POST /v1/registers</code> lists a register of your own (A POS vendor’s back office, in order, step 2,
+below):</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/v1/registers" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"till-0001-a"}'
+</code></pre>
+<p>A <code>pos</code> server calls for it, and names it in <code>Mw-Register</code> on each call. Your world’s own <code>pos</code>
+server may, enrolled on the code <code>Enrolment</code> holds in the key’s <code>201</code>, or on one from <code>POST /sandbox/v1/codes</code> with <code>{"Role":"server"}</code>. A world of a register on a device has no <code>pos</code> server,
+and takes no code for one: there, list a <code>pos</code> server first (step 1 there), with
+<code>POST /v1/vendors/{VendorIdentification}/servers</code>.</p>
+<p>To sell to the terminal of part 4, the register links to it, by the word the terminal shows: <code>POST /v1/links</code> naming your store’s <code>mid_...</code>, then the word (<a href="linking.html"><code>/docs/api/linking.md</code></a>). A sale then names
+that <code>mid_...</code> and the terminal’s <code>poi_...</code> (<a href="pos.html"><code>/docs/api/pos.md</code></a>). Your world’s own register cannot
+link there: it sits at your world’s own store until its nine terminals are unlinked, and its ask at
+another store is <code>409 register_in_other_store</code>.</p>
+<h3 id="6-what-differs-from-staging"><a class="header" href="#6-what-differs-from-staging">6. What differs from staging</a></h3>
+<p>Added in v1.0.0.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>In the sandbox</th><th>On staging</th></tr>
+</thead>
+<tbody>
+<tr><td>Your world’s vendor is a fleet and a POS vendor at once, so every route answers</td><td>A create that needs a role your vendor does not hold, such as a store for a POS vendor, is <code>403 not_permitted</code></td></tr>
+<tr><td>What your world came with, its store, nine terminals, register and sign-in stand-in, is read-only. A write to one of them, or an attach of the stand-in to a store of yours, is <code>409 sandbox_read_only</code></td><td>No such code</td></tr>
+<tr><td>Your vendor holds at most 60 of each kind of object, what your world came with and removed ones counted, and is given no code past 300 certificates not past their <code>NotAfter</code>: <code>409 sandbox_object_limit</code>. It sends at most 240 writes an hour: <code>429 sandbox_rate</code></td><td>Neither code. <code>429 write_rate</code> is the middleware’s own, in both</td></tr>
+<tr><td>Two <code>admin</code> servers. If you lose the keys of both, take a new key for a new world</td><td>Two <code>admin</code> servers. If you lose the keys of both, FUNDiMO removes one and lists another</td></tr>
+<tr><td>A vendor you name, in a store’s accepted vendors or in an alias, must be your own, and an alias must not begin with a <code>TesterIdentification</code> and a <code>-</code>: <code>403 not_permitted</code></td><td>Any onboarded vendor</td></tr>
+<tr><td>No other vendor proposes you an alias, so <code>GET /v1/aliases</code> is empty</td><td>Accept or reject what a fleet proposed</td></tr>
+<tr><td>A key pair’s <code>Adapter</code> is <code>sandbox_signed_value</code>, with no <code>Secret</code></td><td><code>signed_value</code>, with the <code>Secret</code> your payment system gave</td></tr>
+<tr><td>FUNDiMO’s acts, a suspension, a cancelled go-live and a store’s move to another owner, are not here: their routes answer your <code>admin</code> certificate <code>404 not_found</code></td><td>Their routes answer your <code>admin</code> certificate <code>403 not_permitted</code>. When FUNDiMO suspends your vendor, or cancels a go-live, below, says what your own calls are answered</td></tr>
+</tbody>
+</table>
+</div>
+<p>Nothing you make here moves to staging. There you enrol again, and every write is real, on test
+cards alone. Start with reads: <code>GET /v1/merchant-stores</code>, <code>GET /v1/registers</code> and <code>GET /v1/allowed-models</code> change nothing. Before your first writes, read What FUNDiMO alone does to a
+store, below, and know that nothing undoes a terminal <code>removed</code> (States, below).</p>
+<p>You can run your back office’s conformance scenarios here, and keep each signed report. A run is
+the sandbox’s alone. <code>conformance_start</code> with <code>Side</code> <code>fleet</code> walks
+a fleet’s five scenarios, and with <code>Side</code> <code>pos_vendor</code> a POS vendor’s four, each judged on what
+the newest live certificate of your world’s <code>admin</code> servers sends. Your world’s vendor is both,
+so run each side your vendor will hold. Each step’s <code>Instruction</code> says what to send from your
+own code, and one step of each side loses a create’s answer on purpose, to see that your back
+office sends the create again under the same <code>IdempotencyKey</code> (Retrying a create, below).
+What each step asks, and what a green run does not check, are in
+<a href="sandbox.html"><code>/docs/api/sandbox.md</code></a>, 6. Conformance.</p>
+<h2 id="who-may-do-what"><a class="header" href="#who-may-do-what">Who may do what</a></h2>
+<p>Added in v1.0.0.</p>
+<p>Each route of <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>, and what your <code>admin</code> server reaches on it. Your
+own is your vendor’s: a store your vendor owns and a terminal listed at one, a register your
+vendor listed, and your vendor’s servers, apps and sign-in credentials.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Route</th><th>Your admin server</th></tr>
+</thead>
+<tbody>
+<tr><td><code>GET /v1/vendors/{VendorIdentification}</code></td><td>Your own vendor</td></tr>
+<tr><td><code>POST /v1/vendors/{VendorIdentification}/servers</code>, <code>DELETE .../servers/{ServerIdentification}</code></td><td>Your own vendor’s servers, of a <code>Scope</code> your vendor’s roles cover: <code>pos</code> or <code>admin</code></td></tr>
+<tr><td><code>GET /v1/vendors/{VendorIdentification}/servers</code></td><td>Your own vendor’s servers</td></tr>
+<tr><td><code>POST /v1/vendors/{VendorIdentification}/app-identities</code>, <code>DELETE .../app-identities/{AppIdentification}</code></td><td>Your own vendor’s apps</td></tr>
+<tr><td><code>GET /v1/vendors/{VendorIdentification}/app-identities</code></td><td>Your own vendor’s apps, <code>active</code> and <code>retired</code></td></tr>
+<tr><td><code>GET /v1/allowed-models</code></td><td>Any <code>admin</code>: the rows that apply to your vendor’s devices, those naming no vendor and those naming yours</td></tr>
+<tr><td><code>POST</code>, <code>GET /v1/merchant-stores</code></td><td>A fleet vendor’s: your vendor is the owner of each store it creates, and you read your own stores</td></tr>
+<tr><td><code>PUT /v1/merchant-stores/{StoreIdentification}/state</code></td><td>Your own store: your vendor is the store’s owner</td></tr>
+<tr><td><code>PUT /v1/merchant-stores/{StoreIdentification}/acceptor</code></td><td>Your own store</td></tr>
+<tr><td><code>POST /v1/merchant-stores/{StoreIdentification}/aliases</code></td><td>Your own store, proposing an alias that names a POS vendor</td></tr>
+<tr><td><code>GET /v1/aliases</code>, <code>POST /v1/aliases/{AliasIdentification}/accept</code>, <code>.../reject</code></td><td>A POS vendor’s: the aliases that name your vendor</td></tr>
+<tr><td><code>POST</code>, <code>GET /v1/merchant-stores/{StoreIdentification}/terminals</code></td><td>Your own store’s terminals</td></tr>
+<tr><td><code>POST /v1/terminals/{POIIdentification}/pairing-code</code></td><td>Your own terminal: your vendor is the terminal’s owner</td></tr>
+<tr><td><code>PUT /v1/terminals/{POIIdentification}/state</code></td><td>Your own terminal</td></tr>
+<tr><td><code>POST</code>, <code>GET /v1/registers</code></td><td>A POS vendor’s, holding the <code>pos</code> role: your own registers</td></tr>
+<tr><td><code>DELETE /v1/registers/{RegisterIdentification}</code></td><td>Your own register: your vendor is the register’s vendor</td></tr>
+<tr><td><code>POST /v1/registers/{RegisterIdentification}/pairing-code</code></td><td>Your own register on a device</td></tr>
+<tr><td><code>PUT</code>, <code>GET /v1/merchant-stores/{StoreIdentification}/accepted-vendors</code></td><td>Your own store</td></tr>
+<tr><td><code>POST /v1/vendors/{VendorIdentification}/signin-credentials</code>, <code>PUT</code>, <code>DELETE .../signin-credentials/{SignInCredentialIdentification}</code></td><td>A fleet vendor’s: your own key pairs, on your own certificate</td></tr>
+<tr><td><code>GET /v1/vendors/{VendorIdentification}/signin-credentials</code></td><td>A fleet vendor’s: your own key pairs</td></tr>
+<tr><td><code>PUT /v1/vendors/{VendorIdentification}/signin-profile</code></td><td>A fleet vendor’s: your own profile, on your own certificate</td></tr>
+<tr><td><code>GET /v1/vendors/{VendorIdentification}/signin-profile</code></td><td>Your own vendor’s</td></tr>
+<tr><td><code>PUT /v1/merchant-stores/{StoreIdentification}/signin-credential</code></td><td>Your own store, attaching your own key pair</td></tr>
+<tr><td><code>GET</code>, <code>DELETE /v1/merchant-stores/{StoreIdentification}/signin-credential</code></td><td>Your own store</td></tr>
+<tr><td><code>PUT /v1/merchant-stores/{StoreIdentification}/signin-key</code></td><td>Your own store, setting its own key pair</td></tr>
+<tr><td><code>POST /v1/merchant-stores/{StoreIdentification}/signin-check</code></td><td>Your own store</td></tr>
+<tr><td><code>DELETE /v1/terminals/{POIIdentification}/binding</code></td><td>Your own terminal</td></tr>
+<tr><td><code>GET /v1/vendors/{VendorIdentification}/certificates</code></td><td>Your own vendor’s servers</td></tr>
+<tr><td><code>GET /v1/merchant-stores/{StoreIdentification}/certificates</code></td><td>Your own store’s terminals</td></tr>
+<tr><td><code>GET /v1/terminals/{POIIdentification}/certificates</code></td><td>Your own terminal</td></tr>
+<tr><td><code>GET /v1/registers/{RegisterIdentification}/certificates</code></td><td>Your own register</td></tr>
+<tr><td><code>POST /v1/enrol</code></td><td>No credential: the pairing code</td></tr>
+<tr><td><code>GET /v1/certificates/self</code>, <code>POST /v1/certificates/renew</code></td><td>Your server’s own certificate, on itself</td></tr>
+<tr><td><code>GET /v1/health</code></td><td>No credential</td></tr>
+</tbody>
+</table>
+</div>
+<p>A suspended vendor’s writes are refused <code>403 not_permitted</code>, and its reads answer as before, as
+does a replay of its create, which writes nothing (Retrying a create, below). When FUNDiMO suspends
+your vendor, or cancels a go-live, below, says what its other calls are answered. An id of another
+vendor’s answers <code>404 not_found</code>, the same as an id no row holds, so a caller learns nothing of
+another vendor’s objects. A route of the middleware’s that this table does not hold answers your
+<code>admin</code> certificate <code>403 not_permitted</code> (Refusals, below).</p>
+<h3 id="reading-a-list-a-page-at-a-time"><a class="header" href="#reading-a-list-a-page-at-a-time">Reading a list a page at a time</a></h3>
+<p>Added in v1.0.0.</p>
+<p>Five of your lists are read a page at a time: your stores, a store’s terminals, your servers, the
+aliases that name your vendor, and your key pairs. <code>page_size</code> is the most rows a page holds, from
+1 to 100, and 50 where you send none:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/merchant-stores?page_size=2" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>, a page:</p>
+<pre><code class="language-json">{ "MerchantStores": [ { "StoreIdentification": "mst_...", "MerchantIdentification": "mid_...", "OwnerVendor": "ven_...", "State": "live", "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "admin", "ServerIdentification": "srv_..." } }, { "StoreIdentification": "mst_...", "MerchantIdentification": "mid_...", "OwnerVendor": "ven_...", "State": "onboarding", "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "onboarding", "ServerIdentification": "srv_..." } } ], "NextPage": "..." }
+</code></pre>
+<p><code>NextPage</code> is on every page. While it is not <code>null</code>, send it back unchanged as <code>page_after</code>, for the
+page after this one:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/merchant-stores?page_size=2&amp;page_after=..." --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>Read until <code>NextPage</code> is <code>null</code>. Until then you hold part of the list, so never take a row missing
+from a page for one that is gone. <code>NextPage</code> is opaque: never build one or change one. A row that
+stands for the whole of your walk is on exactly one page, and one made during it may be missing:
+walk again to see it. A removed server, terminal or key pair keeps its place in its list. A
+parameter out of its range is <code>400 invalid_query</code>. Your registers, <code>GET /v1/registers</code>, and every
+other list are answered whole.</p>
+<h3 id="retrying-a-create"><a class="header" href="#retrying-a-create">Retrying a create</a></h3>
+<p>Added in v1.0.0.</p>
+<p>Six of your creates take a key of your own, <code>IdempotencyKey</code>, in the body, and your <code>admin</code> server
+must send it on each: a body without it is <code>400 missing_field</code>, <code>Error.Fields</code> naming
+<code>IdempotencyKey</code> beside any other field missing, sorted. If a create’s answer is lost, to a
+timeout, a <code>503</code> or a crash before your back office recorded it, send the same request again with
+the same key: the middleware answers with the object the first send made, and never makes a
+second.</p>
+<p>A replay of each answers:</p>
+<ul>
+<li><code>POST /v1/merchant-stores</code>: your store, as <code>GET /v1/merchant-stores</code> lists it.</li>
+<li><code>POST /v1/merchant-stores/{StoreIdentification}/terminals</code>: your terminal, as <code>GET /v1/merchant-stores/{StoreIdentification}/terminals</code> lists it.</li>
+<li><code>POST /v1/vendors/{VendorIdentification}/signin-credentials</code>: your key pair, as <code>GET /v1/vendors/{VendorIdentification}/signin-credentials</code> lists it.</li>
+<li><code>POST /v1/registers</code>: your register, as <code>GET /v1/registers</code> lists it.</li>
+<li><code>POST /v1/vendors/{VendorIdentification}/servers</code>: your server, as <code>GET /v1/vendors/{VendorIdentification}/servers</code> lists it.</li>
+<li><code>POST /v1/vendors/{VendorIdentification}/app-identities</code>: your app identity as its <code>201</code> showed
+it, as it now stands.</li>
+</ul>
+<p>Choose the key yourself: 8 to 64 ASCII letters, digits, <code>.</code>, <code>_</code>, <code>:</code>, <code>/</code> and <code>-</code>, such as a UUID
+or your own id for the object. Draw one for each object you mean to make, and keep it with the
+request until the request is answered. A key off that pattern, or <code>null</code>, is <code>400 invalid_field</code>.
+The key is your vendor’s and its route’s: both of your <code>admin</code> servers hold one set of keys, so
+either may send again a create the other sent, and the same key on two routes is two keys. The
+middleware holds a key 24 hours from the create that spent it. After that it holds none, and a
+create under it makes a new object.</p>
+<p>A replay is <code>200</code>, the object as it now stands: it makes nothing, and it is answered before your
+vendor’s state is read, so a replay while your vendor is suspended is <code>200</code> too. It never holds a
+<code>PairingCode</code>: a code is shown once. If the lost answer held one, get a fresh code with
+<code>POST /v1/terminals/{POIIdentification}/pairing-code</code> (A fleet’s back office, in order, step 11) or
+<code>POST /v1/registers/{RegisterIdentification}/pairing-code</code> (A POS vendor’s back office, in order,
+step 4). A server has no such route: remove the server the replay names, and list another under a
+new key. An object you may no longer see, such as a store FUNDiMO’s operator moved to another
+owner, is <code>404 not_found</code>.</p>
+<p>Another request under a key the middleware holds is <code>409 idempotency_conflict</code>, and nothing is
+written: send the first request again, or use a new key for a new object. The middleware compares
+the route, the id its path names where it names one, and every field of the body but
+<code>IdempotencyKey</code>, and an optional field left out is the same as one sent <code>null</code> or sent as the
+value its absence stands for. It keeps nothing of a key pair’s <code>Secret</code>, so it compares neither the
+<code>Secret</code> nor its <code>SecretEncoding</code>: sent again with another <code>Secret</code>, your key pair’s create is a
+replay, and the first <code>Secret</code> stands. To change a secret, replace the key pair (A fleet’s back
+office, in order, step 5).</p>
+<p>A create refused, <code>400</code>, <code>403</code>, <code>404</code>, <code>409</code>, or a <code>503</code> that wrote nothing, leaves its key
+unspent: send it again with the same key once you have fixed the cause. A <code>503 store_unavailable</code>
+is no verdict, so after one send the same request with the same key: it answers the object where
+the first send landed, and makes it where it did not. No other route of yours takes a key. An
+alias’s proposal holding one is <code>400 unknown_field</code>, and a proposal sent again makes a second open
+proposal of the same id, which the POS vendor sees beside the first.</p>
+<h2 id="the-ids"><a class="header" href="#the-ids">The ids</a></h2>
+<p>Added in v1.0.0.</p>
+<p>The middleware issues every id it answers with, so your back office never chooses one, but for
+the names your payment system or your POS gives: a merchant’s key pair’s <code>KeyIdentification</code>,
+the fleet’s sign-in profile’s <code>ApplicationIdentification</code>, a store’s <code>AcceptorIdentification</code>,
+the <code>UserName</code> of a store’s attachment, and an alias’s <code>MerchantIdentification</code>. This page writes
+each id the middleware issues as its prefix and <code>...</code>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Shape</th></tr>
+</thead>
+<tbody>
+<tr><td><code>VendorIdentification</code></td><td><code>ven_</code> then 32 lowercase hex characters</td></tr>
+<tr><td><code>ServerIdentification</code></td><td><code>srv_</code> then 32 lowercase hex characters</td></tr>
+<tr><td><code>StoreIdentification</code></td><td><code>mst_</code> then 32 lowercase hex characters</td></tr>
+<tr><td><code>MerchantIdentification</code>, a store’s own</td><td><code>mid_</code> then 8 Crockford base32 characters</td></tr>
+<tr><td><code>MerchantIdentification</code>, an alias’s</td><td>A POS vendor’s own id for a store: 1 to 64 letters, digits, <code>_</code> and <code>-</code>, never starting <code>mid_</code></td></tr>
+<tr><td><code>POIIdentification</code></td><td><code>poi_</code> then 32 lowercase hex characters</td></tr>
+<tr><td><code>RegisterIdentification</code></td><td><code>reg_</code> then 32 lowercase hex characters</td></tr>
+<tr><td><code>AliasIdentification</code></td><td><code>als_</code> then 32 lowercase hex characters</td></tr>
+<tr><td><code>AppIdentification</code></td><td><code>app_</code> then 32 lowercase hex characters</td></tr>
+<tr><td><code>ModelIdentification</code></td><td><code>mdl_</code> then 32 lowercase hex characters</td></tr>
+<tr><td><code>SignInCredentialIdentification</code></td><td><code>sic_</code> then 32 lowercase hex characters</td></tr>
+<tr><td><code>KeyIdentification</code>, a merchant’s key pair’s</td><td>The access key id: the public half of the merchant’s key pair at your payment system, whose other half is its <code>Secret</code>, as your payment system gives it: 1 to 140 printable ASCII characters with no space. A name, never the secret</td></tr>
+<tr><td><code>ApplicationIdentification</code>, a fleet’s sign-in profile’s</td><td>The fleet’s application key at its payment system, as it gives it: 1 to 140 printable ASCII characters with no space</td></tr>
+<tr><td><code>AcceptorIdentification</code>, a store’s</td><td>The store’s own number at its fleet’s payment system, as the fleet gives it: 1 to 140 printable ASCII characters with no space. Two stores may hold one number</td></tr>
+<tr><td><code>UserName</code>, a store’s attachment’s</td><td>The merchant user the store signs in as at its fleet’s payment system: 1 to 140 printable ASCII characters with no space. It names an account, never a person or an e-mail address</td></tr>
+<tr><td><code>CertificateIdentification</code></td><td>64 lowercase hex characters: the SHA-256 of a certificate</td></tr>
+</tbody>
+</table>
+</div>
+<p>Each server, app identity, store, alias, terminal, register and key pair the middleware answers
+with names who made it, in <code>CreatedBy</code>: the <code>VendorIdentification</code>, <code>Scope</code> and
+<code>ServerIdentification</code> of the credential that made it. It is a vendor’s own server, yours or, on
+an alias a fleet proposed, the fleet’s; or FUNDiMO, whose <code>VendorIdentification</code> is not your
+vendor’s. <code>CreatedBy</code> is <code>null</code> where no record names who made it, as for one made before the
+middleware began its record of who made each. In the sandbox, your world’s store and its key pair
+name your world’s <code>pos</code> key, and the rest of what the sandbox made for your world names no one. A
+<code>201</code> that shows a code, and a server’s register’s <code>201</code>, hold no <code>CreatedBy</code>: the list
+shows it.</p>
+<h2 id="a-fleets-back-office-in-order"><a class="header" href="#a-fleets-back-office-in-order">A fleet’s back office, in order</a></h2>
+<p>Added in v1.0.0.</p>
+<p>A fleet vendor’s <code>admin</code> server, from its first certificate to its stores’ terminals and their
+sign-in at the fleet’s payment system. Each step names the one before it that it needs. Each
+create here, a store, a terminal and a key pair, carries your own <code>IdempotencyKey</code>, so a create
+sent again after a lost answer finds the object the first send made, and never makes a second
+(Retrying a create, above).</p>
+<h3 id="1-create-a-store"><a class="header" href="#1-create-a-store">1. Create a store</a></h3>
+<p>Added in v1.0.0.</p>
+<p>The owner is your vendor, and a store holds no name. The body holds your <code>IdempotencyKey</code> for the
+store, and may give the store’s own number at your payment system, <code>AcceptorIdentification</code>,
+which a terminal at the store carries to that system when it signs in:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/merchant-stores" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"store-0001-a","AcceptorIdentification":"merchant-example-1"}'
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "StoreIdentification": "mst_...", "MerchantIdentification": "mid_...", "OwnerVendor": "ven_...", "State": "onboarding", "AcceptorIdentification": "merchant-example-1", "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "admin", "ServerIdentification": "srv_..." } }
+</code></pre>
+<p><code>MerchantIdentification</code> is the store’s own id. Give it to the merchant: a POS names the store by
+it in each sale, or by an alias its vendor accepted (step 8). <code>OwnerVendor</code> is your own
+<code>VendorIdentification</code>. A store takes no sale until it goes live (step 9).
+<code>GET /v1/merchant-stores</code> reads your stores, a page at a time (Reading a list a page at a time,
+above), each with its <code>MerchantIdentification</code>, and its number where it holds one:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/merchant-stores" --cert admin-chain.pem --key admin.key
+</code></pre>
+<h3 id="2-the-stores-number-at-your-payment-system"><a class="header" href="#2-the-stores-number-at-your-payment-system">2. The store’s number at your payment system</a></h3>
+<p>Added in v1.0.0.</p>
+<p><code>AcceptorIdentification</code> is your number for the store, not the middleware’s: 1 to 140 printable
+ASCII characters with no space, else <code>400 invalid_field</code> naming it. Absent or <code>null</code> at the
+creation, the store holds none. <code>PUT /v1/merchant-stores/{StoreIdentification}/acceptor</code> sets it
+later, changes it, or with <code>null</code> clears it:</p>
+<pre><code class="language-sh">curl -s -X PUT "$MW/v1/merchant-stores/mst_.../acceptor" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"AcceptorIdentification":"merchant-example-1"}'
+</code></pre>
+<p>The answer is <code>200</code>, the store as it now stands. The body’s one key is required, so a body
+without it is <code>400 missing_field</code>. A number the store holds already changes nothing. Two stores
+may hold one number, and nothing refuses a number typed for the wrong store, so a terminal new to
+your payment system may be registered there to the merchant that number names, which only you
+can undo there.</p>
+<h3 id="3-list-each-terminal-and-give-its-code-to-the-installer"><a class="header" href="#3-list-each-terminal-and-give-its-code-to-the-installer">3. List each terminal, and give its code to the installer</a></h3>
+<p>Added in v1.0.0.</p>
+<p>The store’s owner lists a device at the store by its serial, under a key of its own for the
+terminal:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/merchant-stores/mst_.../terminals" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"term-0001-a","SerialNumber":"SN-0001"}'
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "POIIdentification": "poi_...", "SerialNumber": "SN-0001", "State": "listed", "PairingCode": "..." }
+</code></pre>
+<p><code>POIIdentification</code> is the terminal’s id: it connects with it, and a sale names it.
+<code>PairingCode</code> is a device’s code: five different words of <a href="words.txt"><code>/docs/api/words.txt</code></a>, joined by dots,
+valid 15 minutes and for one use, and shown this once. It is a secret: give it to the installer,
+who types or scans it into the terminal’s app, and keep it out of every log. The terminal stays
+<code>listed</code> until it enrols with the code, and is then <code>paired</code>. A serial your fleet already lists
+on a terminal that is not removed is <code>409 serial_taken</code>: use the terminal listed, or remove it
+and list the device again. The terminal’s app is built from <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, and
+speaks <a href="terminal.html"><code>/docs/api/terminal.md</code></a>.</p>
+<p><code>GET /v1/merchant-stores/{StoreIdentification}/terminals</code> shows each terminal, a page at a time,
+with its state, its newest certificate’s <code>NotAfter</code> once it has held one, and the register bound to
+it, so a binding you never made is visible. A terminal whose newest certificate was issued though its key
+attestation failed also shows <code>Attestation</code>, its mark (States, below):</p>
+<pre><code class="language-sh">curl -s "$MW/v1/merchant-stores/mst_.../terminals" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>:</p>
+<pre><code class="language-json">{ "Terminals": [ { "POIIdentification": "poi_...", "SerialNumber": "SN-0001", "State": "paired", "NotAfter": "...", "Binding": { "RegisterIdentification": "reg_...", "VendorIdentification": "ven_...", "CreationDateTime": "..." }, "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "admin", "ServerIdentification": "srv_..." } } ], "NextPage": null }
+</code></pre>
+<h3 id="4-the-fleets-sign-in-profile"><a class="header" href="#4-the-fleets-sign-in-profile">4. The fleet’s sign-in profile</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A terminal at your store may need to sign in to your payment system before it takes a payment.
+The middleware holds what that sign-in needs, each value given by you, at the level that holds
+it: the fleet’s sign-in profile, held once for the fleet; a merchant’s key pair, attached to the
+merchant’s stores (steps 5 and 6); and the store’s own number (step 2) and its attachment’s
+<code>UserName</code>. When a terminal at a store that holds a key pair asks to be signed in, the middleware
+signs a fresh challenge with that key pair, under the fleet’s profile, and answers the terminal.</p>
+<p>The profile holds the fleet’s application key, <code>ApplicationIdentification</code>, where your payment
+system takes one, and <code>Profile</code>, how a signed value is made, as that system checks it. Only a
+vendor holding <code>fleet</code> holds one. Set it before your first key pair: a key pair’s create, or a set
+of a store’s own (step 6), at a fleet holding no profile is <code>409 signin_profile_not_set</code>, and
+nothing is sealed or written.
+<code>PUT /v1/vendors/{VendorIdentification}/signin-profile</code> sets it whole, on your own certificate:</p>
+<pre><code class="language-sh">curl -s -X PUT "$MW/v1/vendors/ven_.../signin-profile" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"ApplicationIdentification":"app-example-1","Profile":{"Algorithm":"HMAC-SHA256","ChallengeLength":32,"ChallengeEncoding":"hex","SignatureEncoding":"hex"}}'
+</code></pre>
+<p>The answer is <code>200</code>, the profile as the fleet now holds it:</p>
+<pre><code class="language-json">{ "VendorIdentification": "ven_...", "ApplicationIdentification": "app-example-1", "Profile": { "Algorithm": "HMAC-SHA256", "ChallengeLength": 32, "ChallengeEncoding": "hex", "SignatureEncoding": "hex" }, "SetAt": "...", "ChangedAt": null }
+</code></pre>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>The middleware’s name</th><th>What it is</th><th>What your payment system may call it</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ApplicationIdentification</code></td><td>The fleet’s application key at its payment system</td><td>An App key, an organisation token</td></tr>
+<tr><td><code>Profile.Algorithm</code></td><td>The MAC a signed value is, keyed with a key pair’s secret: <code>HMAC-SHA256</code>, <code>HMAC-SHA384</code> or <code>HMAC-SHA512</code></td><td>Its signing method</td></tr>
+<tr><td><code>Profile.ChallengeLength</code></td><td>How many random bytes the value signed holds, 16 to 64</td><td>The length of its random value, or nonce, in bytes</td></tr>
+<tr><td><code>Profile.ChallengeEncoding</code></td><td>How that random value is written: <code>hex</code> in lowercase, <code>base64url</code> with no padding, or <code>uuid</code>, the 16 bytes as a version 4 UUID’s lowercase text</td><td>Hex, base64url, or a UUID</td></tr>
+<tr><td><code>Profile.SignatureEncoding</code></td><td>How the signature is written: <code>hex</code> in lowercase, <code>base64</code> standard and padded, or <code>base64url</code> with no padding</td><td>Hex, base64 or base64url</td></tr>
+</tbody>
+</table>
+</div>
+<p>Both keys of the body are required: a body without <code>ApplicationIdentification</code> is
+<code>400 missing_field</code>, never read as clearing it. <code>ApplicationIdentification</code> is 1 to 140 printable
+ASCII characters with no space, else <code>400 invalid_field</code> naming it, or <code>null</code> where your payment
+system takes none. <code>Profile</code> holds its four members, each required: a member absent is
+<code>400 missing_field</code>, and any other key <code>400 unknown_field</code>. With <code>uuid</code>, <code>ChallengeLength</code> is 16,
+and any other is <code>400 invalid_field</code> naming it. <code>SetAt</code> is when the profile was first set, and
+<code>ChangedAt</code> when it was last set again, <code>null</code> until it is.</p>
+<p><code>GET</code> on the same path reads it. A fleet that holds none answers <code>200</code> all the same, every value
+but its <code>VendorIdentification</code> <code>null</code>. No route removes a profile: set it again to change it. A
+set reaches every store of the fleet at its next sign-in, and changes no key pair and no store’s
+attachment. A vendor holding no <code>fleet</code> holds none, and a set for it is <code>403 not_permitted</code>, as
+is a suspended fleet’s set.</p>
+<h3 id="5-a-merchants-key-pair"><a class="header" href="#5-a-merchants-key-pair">5. A merchant’s key pair</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A sign-in credential is a merchant’s key pair at your payment system: <code>KeyIdentification</code>, the
+access key id, the public half; its <code>Secret</code>, the other half; and <code>Adapter</code>, how the credential
+signs. It holds no profile and no application key: those are the fleet’s (step 4). One key pair
+may be attached to many stores of the fleet, and a store holds one at most. The middleware seals
+the <code>Secret</code> with its key service before anything is written, and keeps it only sealed. No answer
+holds it, how it was written or its length, and no line of the middleware’s log holds it: keep
+it out of every log of your own.</p>
+<p>Set a key pair here where several stores share one, then attach it to each (step 6). A store with
+a key pair of its own takes one act in place of both,
+<code>PUT /v1/merchant-stores/{StoreIdentification}/signin-key</code> (step 6).</p>
+<p>Staging is a <code>live</code> middleware, so its adapter is <code>signed_value</code>, with the <code>Secret</code> and
+<code>SecretEncoding</code>, how that <code>Secret</code> is written: <code>text</code>, its characters’ UTF-8 bytes, <code>hex</code>, pairs
+of hex digits in either case, or <code>base64</code>, standard and padded, to decode to 1 to 1,024 bytes.
+Keep the body in a file only your server’s own user reads, here <code>key-pair.json</code>, where <code>...</code>
+stands for the secret, which this page never writes:</p>
+<pre><code class="language-json">{ "IdempotencyKey": "key-pair-0001-a", "Adapter": "signed_value", "KeyIdentification": "key-example-1", "Secret": "...", "SecretEncoding": "text" }
+</code></pre>
+<p>Then send it to <code>POST /v1/vendors/{VendorIdentification}/signin-credentials</code>, so the secret
+stays out of your shell’s history:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/vendors/ven_.../signin-credentials" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d @key-pair.json
+</code></pre>
+<p>The answer is <code>201</code>, the key pair, <code>active</code> and attached to no store:</p>
+<pre><code class="language-json">{ "SignInCredentialIdentification": "sic_...", "VendorIdentification": "ven_...", "Adapter": "signed_value", "KeyIdentification": "key-example-1", "State": "active", "CreatedAt": "...", "ReplacedAt": null, "RemovedAt": null, "Stores": [], "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "admin", "ServerIdentification": "srv_..." } }
+</code></pre>
+<p><code>Secret</code> and <code>SecretEncoding</code> are both required with <code>signed_value</code>, and either absent is
+<code>400 missing_field</code>. A <code>null</code> <code>Secret</code> is <code>400 invalid_field</code>, as one that does not decode is. A
+<code>Profile</code> or an <code>ApplicationIdentification</code> in the body, which the fleet’s profile holds, is
+<code>400 unknown_field</code>. The sandbox’s own adapter, <code>sandbox_signed_value</code>, is refused on staging
+<code>400 adapter_not_taken</code>. Where sign-in is off on the middleware, a create, a replace or a set of a
+store’s own is <code>409 sign_in_not_configured</code> and writes nothing: ask FUNDiMO to turn it on. Where
+the key service does not seal the <code>Secret</code>, the answer is <code>503 kms_unavailable</code>, and nothing is
+written: send the same request again.</p>
+<p><code>GET /v1/vendors/{VendorIdentification}/signin-credentials</code> lists your key pairs, <code>active</code> and
+<code>removed</code>, a page at a time, each with the stores it is attached to now. To rotate one,
+<code>PUT /v1/vendors/{VendorIdentification}/signin-credentials/{SignInCredentialIdentification}</code>
+takes a body the create would take but for <code>IdempotencyKey</code>, which a replace does not take, and
+replaces <code>KeyIdentification</code> and <code>Secret</code> together, in one write: the answer is <code>200</code>, the
+credential with <code>ReplacedAt</code> set, and every store it is attached to holds the new key. <code>DELETE</code> on
+the same path removes it, <code>204</code>: its sealed secret is erased from the row and every store’s
+attachment of it ends. A removed key pair is never replaced or attached again,
+<code>409 signin_credential_removed</code>: set a new one and attach that.</p>
+<p>Removing or replacing a key pair here is not revoking it. Sealed copies stay in the backups of
+the middleware’s store until those age out, and the middleware cannot end a session your payment
+system issued, since it never sees one. After a leak, replace the key at your own payment system
+first, then send the new one here.</p>
+<h3 id="6-attach-the-key-pair-to-the-store"><a class="header" href="#6-attach-the-key-pair-to-the-store">6. Attach the key pair to the store</a></h3>
+<p>Added in v1.0.0.</p>
+<p>The store’s owner attaches its own key pair, here naming the merchant user the store signs in as
+at your payment system, <code>UserName</code>, where that system asks for one:</p>
+<pre><code class="language-sh">curl -s -X PUT "$MW/v1/merchant-stores/mst_.../signin-credential" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"SignInCredentialIdentification":"sic_...","UserName":"user-example-1"}'
+</code></pre>
+<p>The answer is <code>200</code>, the store’s credential as it now stands:</p>
+<pre><code class="language-json">{ "StoreIdentification": "mst_...", "SignInCredentialIdentification": "sic_...", "KeyIdentification": "key-example-1", "Adapter": "signed_value", "Since": "...", "AcceptorIdentification": "merchant-example-1", "UserName": "user-example-1", "LastResult": null }
+</code></pre>
+<p><code>UserName</code> is optional: absent, the store keeps the name its attachment holds; <code>null</code> clears it;
+a value sets it. A key pair of another vendor answers <code>404 not_found</code>, and a removed one is
+<code>409 signin_credential_removed</code>. <code>LastResult</code> is the newest report a terminal at the store made
+of a sign-in under this key pair: the terminal, <code>POIIdentification</code>; what your payment system
+did, <code>Response</code>, <code>SUCC</code> or <code>FAIL</code>; why a <code>FAIL</code>, <code>ResponseReason</code>; and <code>At</code>. It is <code>null</code> until a
+terminal reports, and after a replace until a terminal reports under the new key.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>ResponseReason</code></th><th>What your payment system did</th></tr>
+</thead>
+<tbody>
+<tr><td><code>not_covered</code></td><td>It answered that the key does not cover the merchant it was sent for. A person acts on it: the store’s terminals asking again do not change it</td></tr>
+<tr><td><code>not_accepted</code></td><td>It refused the sign-in for any other reason, or for one the terminal cannot tell apart</td></tr>
+<tr><td><code>no_answer</code></td><td>It did not answer, or could not be reached</td></tr>
+<tr><td><code>key_unknown</code></td><td>It answered that it does not know the access key id. Check the key pair’s <code>KeyIdentification</code></td></tr>
+<tr><td><code>signature_refused</code></td><td>It knows the access key id, and answered that the signature does not verify. Check the key pair’s <code>Secret</code> and <code>SecretEncoding</code>, and the sign-in profile’s <code>Profile</code></td></tr>
+<tr><td><code>application_unknown</code></td><td>It answered that it does not know the application key, or that no application is tied to it. Check the sign-in profile’s <code>ApplicationIdentification</code>, and that your payment system has it enabled with an application tied to it</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>GET</code> on the same path reads the store’s credential, and where none is attached answers <code>200</code>
+with <code>SignInCredentialIdentification</code> <code>null</code> and the store’s <code>AcceptorIdentification</code>. <code>DELETE</code>
+on the same path ends the store’s attachment, <code>204</code>, and the key pair stays attached to the
+fleet’s other stores.</p>
+<p><strong>A store with a key pair of its own</strong> takes one act, in place of step 5’s create and the attach
+above. The body is step 5’s, with an optional <code>UserName</code> read as an attach’s is, kept in a file
+only your server’s own user reads, here <code>store-key.json</code>, where <code>...</code> stands for the secret:</p>
+<pre><code class="language-json">{ "Adapter": "signed_value", "KeyIdentification": "key-example-1", "Secret": "...", "SecretEncoding": "text", "UserName": "user-example-1" }
+</code></pre>
+<p>Then send it to <code>PUT /v1/merchant-stores/{StoreIdentification}/signin-key</code>:</p>
+<pre><code class="language-sh">curl -s -X PUT "$MW/v1/merchant-stores/mst_.../signin-key" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d @store-key.json
+</code></pre>
+<p>The answer is <code>200</code>, the store’s credential as an attach answers it, with <code>LastResult</code> <code>null</code>. In
+one write, the act makes and attaches a key pair where the store holds none, and replaces the one
+it holds, under the same <code>SignInCredentialIdentification</code>, where no other store holds it. Where
+another store holds that one too, the act makes and attaches a new one at this store alone, and the
+shared one and the other stores stay as they were.</p>
+<p>It is refused as step 5’s create is, and <code>409 signin_profile_not_set</code> even where it would replace a
+key pair, which step 5’s own replace never is. A <code>503 store_unavailable</code> also answers one that
+another act on the store’s key pair or its owner overtook, of which nothing was written. After a
+<code>503 store_unavailable</code>, read the store’s credential back, or send the same body again: where the
+first landed, it replaces the store’s own key pair with the same values.</p>
+<p>A session your payment system issued before is untouched, as by a replace. A terminal refused
+<code>sign_in_not_available</code> before its store’s key pair was attached or set, or as it was, asks no more
+on that connection unless a <code>LoginCheck</code> comes, and asks again on its next one
+(<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, Signing in). A check of the store’s sign-in naming the terminal sends it
+one, where its app declared <code>LoginCheck</code> beside <code>SASQ</code> (step 9).</p>
+<h3 id="7-the-pos-vendors-the-store-accepts"><a class="header" href="#7-the-pos-vendors-the-store-accepts">7. The POS vendors the store accepts</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A store accepts the register of any onboarded vendor until its owner says otherwise. To accept
+one vendor’s registers alone:</p>
+<pre><code class="language-sh">curl -s -X PUT "$MW/v1/merchant-stores/mst_.../accepted-vendors" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"AcceptsAnyVendor":false,"Vendors":["ven_..."]}'
+</code></pre>
+<p>The answer is <code>204</code>. <code>Vendors</code>, at most 64, each once, replaces the list before it, and
+<code>{"AcceptsAnyVendor":true}</code> accepts any again. A vendor no row holds is <code>403 not_permitted</code>. A
+register of a vendor not accepted is refused <code>403 not_permitted</code> when it asks to link at the
+store, and a binding already made stands until it is ended (step 10). <code>GET</code> on the same path
+reads the list as it stands, under the keys <code>PUT</code> takes:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/merchant-stores/mst_.../accepted-vendors" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>:</p>
+<pre><code class="language-json">{ "AcceptsAnyVendor": false, "Vendors": ["ven_..."] }
+</code></pre>
+<h3 id="8-propose-an-alias-for-a-pos-vendor"><a class="header" href="#8-propose-an-alias-for-a-pos-vendor">8. Propose an alias for a POS vendor</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A POS vendor may name your store in its sales by an id of its own, an alias, rather than by the
+store’s <code>MerchantIdentification</code>. Proposing one is the store owner’s route,
+<code>POST /v1/merchant-stores/{StoreIdentification}/aliases</code>, naming the POS vendor and its id for
+the store:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/merchant-stores/mst_.../aliases" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"VendorIdentification":"ven_...","MerchantIdentification":"store-example-1"}'
+</code></pre>
+<p>The answer is <code>201</code>, the alias <code>proposed</code>, or <code>accepted</code> where the vendor named is your own:</p>
+<pre><code class="language-json">{ "AliasIdentification": "als_...", "VendorIdentification": "ven_...", "MerchantIdentification": "store-example-1", "StoreIdentification": "mst_...", "State": "proposed", "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "admin", "ServerIdentification": "srv_..." } }
+</code></pre>
+<p>The POS vendor’s own <code>admin</code> accepts or rejects it within 14 days (A POS vendor’s back office, in
+order, below). A proposal naming another vendor is never refused because that vendor already
+holds the id: it stays <code>proposed</code>, and that vendor’s accept is refused <code>409 alias_taken</code>. Where
+your vendor is also a POS vendor and names itself, the alias is accepted at once, and an id your
+vendor holds already, as an accepted alias of another store, is <code>409 alias_taken</code>: choose another
+id for this store.</p>
+<h3 id="9-take-the-store-live"><a class="header" href="#9-take-the-store-live">9. Take the store live</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A store takes sales only when it is <code>live</code>:</p>
+<pre><code class="language-sh">curl -s -X PUT "$MW/v1/merchant-stores/mst_.../state" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"Event":"live"}'
+</code></pre>
+<p>The answer is <code>200</code>, the store with <code>State</code> <code>live</code>. <code>Event</code> is <code>live</code>, from <code>onboarding</code> or
+<code>offboarded</code>; <code>suspended</code>, from <code>live</code>; <code>resumed</code>, from <code>suspended</code>; or <code>offboarded</code>, from <code>live</code>
+or <code>suspended</code>. A move to where the store already stands answers it as it stands, and any other
+move is <code>403 not_permitted</code>. No route of yours takes a store back to <code>onboarding</code>: a mistaken
+go-live is voided by FUNDiMO’s operator alone, so ask FUNDiMO if you took a store live by
+mistake.</p>
+<p>Where the store’s terminals sign in to your payment system (steps 4 to 6), check the store once a
+terminal of it is <code>paired</code> and connected. Sent with no body, the check names no terminal, so send it
+with <code>Content-Length: 0</code>: it then makes no sale, asks no terminal and changes nothing. With a body
+or without, as a <code>POST</code> it counts as one of your vendor’s writes a minute (<code>write_rate</code>, Refusals,
+below):</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/merchant-stores/mst_.../signin-check" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Length: 0'
+</code></pre>
+<p>The answer is <code>200</code>, here for a store that is ready:</p>
+<pre><code class="language-json">{ "StoreIdentification": "mst_...", "Ready": true, "Checks": [ { "Check": "sign_in_on", "Passed": true }, { "Check": "store_live", "Passed": true }, { "Check": "profile_set", "Passed": true }, { "Check": "application_key_held", "Passed": true }, { "Check": "key_attached", "Passed": true }, { "Check": "key_opens", "Passed": true }, { "Check": "merchant_number_held", "Passed": true }, { "Check": "merchant_user_held", "Passed": true }, { "Check": "terminal_connected", "Passed": true }, { "Check": "limits_allow", "Passed": true } ] }
+</code></pre>
+<p>Sent a body naming one of the store’s <code>paired</code> terminals:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/merchant-stores/mst_.../signin-check" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"POIIdentification":"poi_..."}'
+</code></pre>
+<p>The answer is <code>200</code>, here for a terminal that was asked to sign in:</p>
+<pre><code class="language-json">{ "StoreIdentification": "mst_...", "Ready": true, "Checks": [ { "Check": "sign_in_on", "Passed": true }, { "Check": "store_live", "Passed": true }, { "Check": "profile_set", "Passed": true }, { "Check": "application_key_held", "Passed": true }, { "Check": "key_attached", "Passed": true }, { "Check": "key_opens", "Passed": true }, { "Check": "merchant_number_held", "Passed": true }, { "Check": "merchant_user_held", "Passed": true }, { "Check": "terminal_connected", "Passed": true }, { "Check": "limits_allow", "Passed": true } ], "Terminal": { "POIIdentification": "poi_...", "Asked": true, "Reason": null } }
+</code></pre>
+<p><code>Checks</code> always holds these ten, each once, in this order. <code>Passed</code> is <code>true</code>, <code>false</code>, or <code>null</code>
+where it could not be decided:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>Check</code></th><th><code>true</code></th><th><code>false</code></th><th><code>null</code></th></tr>
+</thead>
+<tbody>
+<tr><td><code>sign_in_on</code></td><td>Sign-in is on, on the middleware</td><td>It is off: ask FUNDiMO to turn it on</td><td>Never</td></tr>
+<tr><td><code>store_live</code></td><td>The store is <code>live</code> and your vendor <code>active</code></td><td>Either is not</td><td>Never</td></tr>
+<tr><td><code>profile_set</code></td><td>Your fleet holds a sign-in profile (step 4)</td><td>It holds none</td><td>Never</td></tr>
+<tr><td><code>application_key_held</code></td><td>The profile holds an <code>ApplicationIdentification</code></td><td>It holds none, or there is no profile</td><td>Never</td></tr>
+<tr><td><code>key_attached</code></td><td>The store holds an attachment of an <code>active</code> key pair of yours</td><td>It holds none (steps 5 and 6)</td><td>Never</td></tr>
+<tr><td><code>key_opens</code></td><td>The middleware’s key service opened the key pair’s sealed <code>Secret</code></td><td>The key service refused to open it: tell FUNDiMO, and set the key pair again</td><td>None is attached, sign-in is off, or the key service was not reached or gave any other answer. It never means the key is wrong</td></tr>
+<tr><td><code>merchant_number_held</code></td><td>The store holds an <code>AcceptorIdentification</code> (step 2)</td><td>It holds none</td><td>Never</td></tr>
+<tr><td><code>merchant_user_held</code></td><td>The store’s attachment holds a <code>UserName</code> (step 6)</td><td>It holds none, or none is attached</td><td>Never</td></tr>
+<tr><td><code>terminal_connected</code></td><td>A <code>paired</code> terminal of the store that takes a sign-in, declaring <code>SASQ</code>, is connected to the instance of the middleware that answered</td><td>None is, or it is connected to another instance: ask again, or look at the terminal</td><td>Never</td></tr>
+<tr><td><code>limits_allow</code></td><td>One of those terminals has an answer left now, by the limits <code>sign_in_limited</code> tells in <a href="terminal.html"><code>/docs/api/terminal.md</code></a></td><td>None of them has</td><td>No such terminal is connected</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>Ready</code> is <code>true</code> only where seven of them are each <code>true</code>: <code>sign_in_on</code>, <code>store_live</code>,
+<code>profile_set</code>, <code>key_attached</code>, <code>key_opens</code>, <code>terminal_connected</code> and <code>limits_allow</code>. The other
+three say whether a value is held, and never move it: your payment system may take none of it, and
+the middleware cannot know. The middleware never asks your payment system, so a store that is
+<code>Ready</code> can still be refused there: <code>LastResult</code> (step 6) says what that system answered. To have
+it asked without a sale, name a terminal, below. While your vendor is suspended you may still ask,
+and <code>store_live</code> is <code>false</code>.</p>
+<p><strong>Naming a terminal.</strong> Send <code>{"POIIdentification":"poi_..."}</code>, one of the store’s <code>paired</code>
+terminals, and nothing else: any other field is <code>400 unknown_field</code>, <code>{}</code> is <code>400 missing_field</code>,
+and a value that is not an id of its pattern, <code>null</code> among them, is <code>400 invalid_field</code>. A terminal
+that is not one of the store’s <code>paired</code> ones is <code>404 not_found</code>, and nothing is sent. The answer
+holds <code>Terminal</code> after the store’s checks: the terminal named, <code>POIIdentification</code>; whether it was
+asked to sign in, <code>Asked</code>; and <code>Reason</code>, <code>null</code> where it was asked, and otherwise the first of these
+that holds:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>Reason</code></th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>terminal_cannot_check</code></td><td>It is connected to the instance of the middleware that answered, and its app did not declare <code>LoginCheck</code> beside <code>SASQ</code></td><td>Its app does not take the frame: a sale signs it in instead</td></tr>
+<tr><td><code>terminal_busy</code></td><td>A sale or a refund holds it</td><td>Send the check again once that ends</td></tr>
+<tr><td><code>terminal_offline</code></td><td>It is not connected to the instance that answered, or that instance has no room to queue it a frame</td><td>Look at the terminal, and send the check again</td></tr>
+<tr><td><code>not_ready</code></td><td>One of <code>sign_in_on</code>, <code>store_live</code>, <code>profile_set</code>, <code>key_attached</code> and <code>key_opens</code> is not <code>true</code></td><td>Read <code>Checks</code></td></tr>
+<tr><td><code>sign_in_limited</code></td><td>It has no answer left now, by the limits <code>sign_in_limited</code> tells in <a href="terminal.html"><code>/docs/api/terminal.md</code></a></td><td>Wait: 60 seconds at the middleware’s default settings, or the day</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>Asked</code> <code>true</code> says the middleware queued your terminal one <code>LoginCheck</code>,
+<code>{"MessageType":"LoginCheck"}</code>, and proves no more. The terminal then signs in at your payment
+system, with no sale, and reports what that system answered (<a href="terminal.html"><code>/docs/api/terminal.md</code></a>, The check).
+So read the store’s credential (step 6) before the check and a few seconds after it: where
+<code>LastResult</code> now names the terminal, with a later <code>At</code>, it is that report, unless a sale made the
+terminal ask meanwhile. Where it does not move, the terminal dropped the frame, since it held a
+payment, a person was signed in or signing in at it, or a sign-in was already under way; or its ask
+was refused; or the frame was lost with its connection. FUNDiMO can read in the middleware’s log
+whether the terminal asked, whether its ask was refused, and whether the frame’s write to the
+terminal failed. Send the check again once the cause has gone.</p>
+<p>A check counts as an ask: the ask it leads to spends one of your terminal’s answers, as any ask
+does. So a sale just after a check whose sign-in gave no session, at a terminal that held none, can
+be answered <code>RJCT</code> with <code>AB11</code>: the terminal’s own ask is refused <code>sign_in_limited</code> inside the
+interval, unless the check’s <code>FAIL</code> opened an answer.</p>
+<p>The check writes nothing at the middleware, but in one case. Where it answers <code>terminal_offline</code>,
+your terminal is not connected to the instance that answered, and nothing else stands in the way,
+the five checks <code>not_ready</code> names each <code>true</code>, an answer left and no sale holding the terminal, the
+middleware asks the instance that holds its connection to let it go, as it does for a sale. The
+terminal then reconnects: send the check again.</p>
+<p>In the sandbox, a check of your world’s own store is <code>409 sandbox_read_only</code>, as any write to what
+your world came with is (Trying it in the sandbox, part 6). A check of a store of your own is passed
+to the middleware, body and all, and may name a terminal of yours paired there.</p>
+<h3 id="10-end-a-binding"><a class="header" href="#10-end-a-binding">10. End a binding</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A register links to a terminal at the counter, by a word the terminal shows
+(<a href="linking.html"><code>/docs/api/linking.md</code></a>), and you see the binding in the store’s terminals (step 3). You end one
+you never made:</p>
+<pre><code class="language-sh">curl -s -X DELETE "$MW/v1/terminals/poi_.../binding" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>204</code>, and also where the terminal had no binding. The register’s next sale naming
+the terminal is refused, and a sale already in flight is untouched. The terminal is unbound, so a
+register linking at its store may be shown it again.</p>
+<h3 id="11-re-pair-suspend-or-remove-a-terminal"><a class="header" href="#11-re-pair-suspend-or-remove-a-terminal">11. Re-pair, suspend or remove a terminal</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A fresh code, which also re-pairs a <code>paired</code> terminal, takes no body, so send it with
+<code>Content-Length: 0</code>:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/terminals/poi_.../pairing-code" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Length: 0'
+</code></pre>
+<p>The answer is <code>201</code>, with a new <code>PairingCode</code>. A re-pair sends the terminal back to <code>listed</code>: its
+certificates are retired and its connection closes within <code>MW_WS_PING_SECS</code>, so a new key needs a
+person’s act, and its binding stands.</p>
+<p><code>PUT /v1/terminals/{POIIdentification}/state</code> suspends a terminal, <code>{"State":"suspended"}</code>,
+resumes it, <code>{"State":"paired"}</code>, or removes it, <code>{"State":"removed"}</code>:</p>
+<pre><code class="language-sh">curl -s -X PUT "$MW/v1/terminals/poi_.../state" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"State":"suspended"}'
+</code></pre>
+<p>The answer is <code>204</code>. A removal ends the terminal for good, with its binding and its
+certificates: <code>removed</code> has no exit, and a device listed afresh is a new terminal, under a new
+<code>POIIdentification</code>. Remove a terminal only when no sale is open on it (States, below).</p>
+<h3 id="what-fundimo-alone-does-to-a-store"><a class="header" href="#what-fundimo-alone-does-to-a-store">What FUNDiMO alone does to a store</a></h3>
+<p>Added in v1.0.0.</p>
+<p>Two acts on a store are FUNDiMO’s operator’s alone, and you ask FUNDiMO for each. A mistaken
+go-live is voided by the operator alone: the store goes back to the state it held before (When
+FUNDiMO suspends your vendor, or cancels a go-live, below). A store changes owner by the operator
+alone: the new owner is an <code>active</code> fleet vendor, and a store with a terminal not removed cannot
+change hands. The move clears the store’s <code>AcceptorIdentification</code> and ends its key pair’s
+attachment, with its <code>UserName</code>, so the new owner sets its own.</p>
+<h2 id="a-pos-vendors-back-office-in-order"><a class="header" href="#a-pos-vendors-back-office-in-order">A POS vendor’s back office, in order</a></h2>
+<p>Added in v1.0.0.</p>
+<p>A POS vendor’s <code>admin</code> server, from its first certificate to a register for each till and the
+aliases a fleet proposes for its stores. Then staff link each till to its terminal at the
+counter (<a href="linking.html"><code>/docs/api/linking.md</code></a>), and your POS sells through it (<a href="pos.html"><code>/docs/api/pos.md</code></a>). Each create
+here, a server and a register, carries your own <code>IdempotencyKey</code>, so a create sent again after a
+lost answer finds the object the first send made, and never makes a second (Retrying a create,
+above).</p>
+<h3 id="1-list-a-pos-server"><a class="header" href="#1-list-a-pos-server">1. List a <code>pos</code> server</a></h3>
+<p>Added in v1.0.0.</p>
+<p>Your POS calls the middleware from a <code>pos</code> server: its own identity, with its own code, key and
+certificate, apart from your <code>admin</code> server’s. Your <code>admin</code> server lists it:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/vendors/ven_.../servers" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"server-0001-a","Scope":"pos"}'
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "ServerIdentification": "srv_...", "Scope": "pos", "State": "listed", "PairingCode": "..." }
+</code></pre>
+<p>The <code>pos</code> server enrols with that code (<a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, steps 2 to 4), and
+names the register it acts for in <code>Mw-Register</code> on each call for one (step 6 there). Your servers
+and your apps, below, reads and removes your servers.</p>
+<h3 id="2-list-a-register-for-each-till"><a class="header" href="#2-list-a-register-for-each-till">2. List a register for each till</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A register is one till of your POS. For a till your <code>pos</code> server speaks for, send no
+<code>SerialNumber</code>, your key alone:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/registers" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"till-0001-a"}'
+</code></pre>
+<p>The answer is <code>201</code>. A server’s register starts <code>active</code>, and has no code:</p>
+<pre><code class="language-json">{ "RegisterIdentification": "reg_...", "VendorIdentification": "ven_...", "Kind": "server", "State": "active" }
+</code></pre>
+<p>For a register on a device, a POS app on a till of its own, send its serial:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/registers" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"till-0002-a","SerialNumber":"R-0001"}'
+</code></pre>
+<p>The answer is <code>201</code>, the register <code>listed</code> with its code:</p>
+<pre><code class="language-json">{ "RegisterIdentification": "reg_...", "VendorIdentification": "ven_...", "Kind": "device", "State": "listed", "SerialNumber": "R-0001", "PairingCode": "..." }
+</code></pre>
+<p>Its <code>PairingCode</code> is a device’s code, five words, as a terminal’s is: a secret to give the
+installer and keep out of every log, shown this once. <code>RegisterIdentification</code> is the register’s
+id, and <code>VendorIdentification</code> your vendor’s. A register sits at no store until it is bound to a
+terminal, and it reaches exactly the terminals bound to it. Only a vendor holding the <code>pos</code> role
+lists one, and a <code>VendorIdentification</code> in the body is <code>400 unknown_field</code>: the register is your
+own vendor’s.</p>
+<p>On staging a register holds a certificate, never a key. A register on a device enrols with its
+code (<a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>), and a server’s register is reached through your <code>pos</code>
+server, which names it in the header <code>Mw-Register</code> on each request
+(<a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, step 6).</p>
+<h3 id="3-read-and-remove-registers"><a class="header" href="#3-read-and-remove-registers">3. Read and remove registers</a></h3>
+<p>Added in v1.0.0.</p>
+<p><code>GET /v1/registers</code> shows each of your registers with its kind, its state, a device’s serial, the
+store it sits at and, once it has held a certificate, its newest certificate’s <code>NotAfter</code>, and
+<code>Attestation</code> where that certificate was issued though its key attestation failed (States,
+below). It never shows a code:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/registers" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>:</p>
+<pre><code class="language-json">{ "Registers": [ { "RegisterIdentification": "reg_...", "VendorIdentification": "ven_...", "Kind": "device", "State": "active", "SerialNumber": "R-0001", "NotAfter": "...", "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "admin", "ServerIdentification": "srv_..." } } ] }
+</code></pre>
+<p><code>DELETE /v1/registers/{RegisterIdentification}</code> removes one:</p>
+<pre><code class="language-sh">curl -s -X DELETE "$MW/v1/registers/reg_..." --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>, the register <code>removed</code>. Each of its bindings ends, its code is cleared and
+its certificates are retired. Its row stays, so a retry of a sale it made still reaches the
+lookup of that sale’s key. No route undoes it: <code>removed</code> has no exit.</p>
+<h3 id="4-a-registers-code"><a class="header" href="#4-a-registers-code">4. A register’s code</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A register on a device gets a fresh code, or on an <code>active</code> register a re-pair, as a terminal
+does. It takes no body, so send it with <code>Content-Length: 0</code>:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/registers/reg_.../pairing-code" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Length: 0'
+</code></pre>
+<p>The answer is <code>201</code>, with a new <code>PairingCode</code>. A re-pair retires every certificate of the
+register at once. A server’s register holds no code.</p>
+<h3 id="5-the-aliases-a-fleet-proposes"><a class="header" href="#5-the-aliases-a-fleet-proposes">5. The aliases a fleet proposes</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A fleet may propose an alias for one of its stores: your own id for that store, which your sales
+then send as <code>MerchantIdentification</code> (A fleet’s back office, in order, step 8). <code>GET /v1/aliases</code>
+reads the open proposals that name your vendor, oldest first and a page at a time. A proposal is
+open for 14 days:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/aliases" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>:</p>
+<pre><code class="language-json">{ "Aliases": [ { "AliasIdentification": "als_...", "VendorIdentification": "ven_...", "MerchantIdentification": "store-example-1", "StoreIdentification": "mst_...", "State": "proposed", "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "admin", "ServerIdentification": "srv_..." } } ], "NextPage": null }
+</code></pre>
+<p>Accept one, with no body:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/aliases/als_.../accept" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Length: 0'
+</code></pre>
+<p>The answer is <code>200</code>, the alias <code>accepted</code>. From then on a sale of your vendor’s may name the
+store by that <code>MerchantIdentification</code>. Where that id names another store already, as your
+accepted alias of it, the answer is <code>409 alias_taken</code>: reject this proposal, and the store’s
+owner proposes another id. To reject one:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/aliases/als_.../reject" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Length: 0'
+</code></pre>
+<p>The answer is <code>200</code>, the alias <code>rejected</code>, and it stays. Only an <code>accepted</code> alias names a store
+in a sale, until a newer accepted id supersedes it.</p>
+<h2 id="your-servers-and-your-apps"><a class="header" href="#your-servers-and-your-apps">Your servers and your apps</a></h2>
+<p>Added in v1.0.0.</p>
+<h3 id="your-servers"><a class="header" href="#your-servers">Your servers</a></h3>
+<p>Added in v1.0.0.</p>
+<p>Your <code>admin</code> server lists your vendor’s other servers with
+<code>POST /v1/vendors/{VendorIdentification}/servers</code>, your <code>IdempotencyKey</code> (Retrying a create,
+above) and the <code>Scope</code> each certificate will reach, <code>pos</code> or <code>admin</code>, a scope your vendor’s roles
+cover. Each listed server is its own identity, with its own code, key and certificate (A POS
+vendor’s back office, in order, step 1). A vendor holds at most two servers of one scope that are
+not removed, and a third is <code>409 too_many_keys</code>. So a server moves to a new identity with no gap:
+list the second, enrol it, move every call to it, then remove the first.</p>
+<p><code>GET /v1/vendors/{VendorIdentification}/servers</code> shows each server with its state, its newest
+certificate’s key digest, <code>SpkiDigest</code>, and when that certificate was first used, oldest first and
+a page at a time:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/vendors/ven_.../servers" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>:</p>
+<pre><code class="language-json">{ "Servers": [ { "ServerIdentification": "srv_...", "Scope": "admin", "State": "enrolled", "SpkiDigest": "...", "FirstSeen": "...", "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "operator", "ServerIdentification": "srv_..." } } ], "NextPage": null }
+</code></pre>
+<p>Compare each <code>SpkiDigest</code> with the key the server made, on every page: a code spent by someone else
+shows there. Where your first server’s <code>CreatedBy</code> names who listed it, that is FUNDiMO’s
+operator (The ids, above).
+<code>DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}</code> removes a server:</p>
+<pre><code class="language-sh">curl -s -X DELETE "$MW/v1/vendors/ven_.../servers/srv_..." --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>, the server <code>removed</code>. Its certificates are retired at once, and its row
+stays, with its history. A code that lapses unspent is not renewed: remove the listed server, and
+list a new one.</p>
+<h3 id="registering-an-app-identity"><a class="header" href="#registering-an-app-identity">Registering an app identity</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A device enrols only if the app holding its key is one its vendor registered. Your <code>admin</code> server
+registers each app by its role, <code>terminal</code> or <code>register</code>, its package, <code>AppPackage</code>, and the
+SHA-256 of its signing certificate, <code>SigningDigest</code>, 64 lowercase hex characters:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/vendors/ven_.../app-identities" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"app-0001-a","Role":"terminal","AppPackage":"au.com.example.terminal","SigningDigest":"..."}'
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "AppIdentification": "app_...", "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "...", "Debug": false, "State": "active", "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "admin", "ServerIdentification": "srv_..." } }
+</code></pre>
+<p>Send <code>"Debug":true</code> for a debug build, which a <code>live</code> middleware refuses unless it is set to
+mark: that one takes it, and marks the certificate <code>app_debug</code> (States, below).
+<code>DELETE /v1/vendors/{VendorIdentification}/app-identities/{AppIdentification}</code> retires one,
+<code>204</code>, and a device running it is then refused <code>403 app_identity_unknown</code> at its next enrolment
+or renewal. <a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, step 1, says how to read the digests from the app
+itself, and what a device running two apps registers.</p>
+<p><code>GET</code> on the same path lists your app identities, <code>active</code> and <code>retired</code>, by <code>AppIdentification</code>,
+each with who registered it in <code>CreatedBy</code>:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/vendors/ven_.../app-identities" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>, the list whole, <code>[]</code> where your vendor holds none:</p>
+<pre><code class="language-json">{ "AppIdentities": [ { "AppIdentification": "app_...", "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "...", "Debug": false, "State": "active", "CreatedBy": { "VendorIdentification": "ven_...", "Scope": "admin", "ServerIdentification": "srv_..." } }, { "AppIdentification": "app_...", "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "...", "Debug": true, "State": "retired", "CreatedBy": null } ] }
+</code></pre>
+<p>It lists every app identity of your vendor’s, those FUNDiMO registered for it among them.</p>
+<h3 id="the-allowed-list-read"><a class="header" href="#the-allowed-list-read">The allowed list, read</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A device enrols on a <code>live</code> middleware only if a row of the allowed list admits what it attests,
+unless the middleware is set to mark: that one admits it, and marks the certificate <code>model</code>. The
+list is FUNDiMO’s operator’s: it starts empty, and the operator alone writes it. Ask FUNDiMO to
+allow your device’s model, for your vendor or for every vendor. Your <code>admin</code> server reads the
+rows that apply to your vendor’s devices, those naming no vendor and those naming yours:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/allowed-models" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>, the rows under <code>AllowedModels</code>. A row names a device by its attested
+<code>Brand</code> and <code>Model</code>, by its firmware’s <code>VerifiedBootKey</code>, or both. It may set <code>MinOsPatchLevel</code>,
+the lowest OS patch level a device may attest, and <code>RequireRkp</code>, where <code>true</code> takes only a
+remotely provisioned key; it gives its <code>Attestation</code>; and a row naming a <code>VendorIdentification</code>
+applies to that one vendor’s devices. <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> gives each field, and
+<a href="onboarding-device.html"><code>/docs/api/onboarding-device.md</code></a>, Which devices the middleware admits, says what a device must
+attest.</p>
+<h2 id="certificates"><a class="header" href="#certificates">Certificates</a></h2>
+<p>Added in v1.0.0.</p>
+<h3 id="enrolling"><a class="header" href="#enrolling">Enrolling</a></h3>
+<p>Added in v1.0.0.</p>
+<p>Each principal listed with a <code>PairingCode</code>, a terminal, a register on a device or a server,
+spends it once for its first certificate. The code is the credential, so the call carries no
+other: no certificate and no <code>Authorization</code> header. It sends a CSR for a P-256 key it made and
+keeps, and a device also sends its <code>SerialNumber</code> and its key attestation chain. Your <code>admin</code>
+server enrolled so, and so does each server it lists, here with its CSR in <code>admin.csr</code>:</p>
+<pre><code class="language-sh"># The code is a secret: read it, so it stays out of the shell's history.
+read -r -s -p 'Pairing code: ' CODE; echo
+status=$(jq -n --arg code "$CODE" --rawfile csr admin.csr \
+    '{PairingCode: $code, CertificateSigningRequest: $csr}' \
+  | curl -s -X POST "$MW/v1/enrol" \
+      -H 'Content-Type: application/json' \
+      --data-binary @- \
+      -o enrolled.json -w '%{http_code}')
+case "$status" in
+  200|201) jq -r .CertificateChain enrolled.json &gt; admin-chain.pem ;;
+  *) echo "not enrolled: HTTP $status, Error.Code in enrolled.json" &gt;&amp;2 ;;
+esac
+</code></pre>
+<p>The answer is <code>201</code>, with the principal’s own id, here a server’s:</p>
+<pre><code class="language-json">{ "CertificateChain": "-----BEGIN CERTIFICATE-----\n...", "ServerIdentification": "srv_...", "SpiffeId": "spiffe://.../live/server/srv_...", "NotAfter": "...", "RenewFrom": "..." }
+</code></pre>
+<p><code>CertificateChain</code> is the certificate and the issuing certificate. Present both at the TLS
+handshake of every request from then on. The certificate lasts 30 days, and renews from
+<code>RenewFrom</code>, day 15, with a new key, at <code>POST /v1/certificates/renew</code>. A wrong, spent or expired
+code, a serial not the listing’s, or a vendor suspended all answer <code>403 code_not_valid</code>. If an
+answer is lost, send the same body again inside the code’s 15 minutes: the same code and the same
+key answer <code>200</code> with the certificate already issued. <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, step 4,
+When enrolment is refused, gives each refusal and what to do.</p>
+<h3 id="the-daily-check-and-renewal"><a class="header" href="#the-daily-check-and-renewal">The daily check and renewal</a></h3>
+<p>Added in v1.0.0.</p>
+<p>Once a day your server sends <code>GET /v1/certificates/self</code>, on its own certificate, and renews when
+<code>RenewNow</code> is <code>true</code>:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/certificates/self" --cert admin-chain.pem --key admin.key | jq -r .RenewNow
+</code></pre>
+<p>One instance renews, with a new key, at <code>POST /v1/certificates/renew</code>, and the new certificate is
+installed on every instance inside the overlap. <a href="onboarding-server.html"><code>/docs/api/onboarding-server.md</code></a>, step 9, gives
+the renewer’s code, and step 10 what a holder of a dead certificate does. A holder never deletes
+its key or its certificate on a refusal.</p>
+<h3 id="listing-certificates"><a class="header" href="#listing-certificates">Listing certificates</a></h3>
+<p>Added in v1.0.0.</p>
+<p>Four routes list the certificates a principal of yours holds that are not past their <code>NotAfter</code>,
+a retired one and one never used among them:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Route</th><th>The certificates of</th></tr>
+</thead>
+<tbody>
+<tr><td><code>GET /v1/vendors/{VendorIdentification}/certificates</code></td><td>Your vendor’s servers</td></tr>
+<tr><td><code>GET /v1/merchant-stores/{StoreIdentification}/certificates</code></td><td>Your store’s terminals: one call for a store’s page</td></tr>
+<tr><td><code>GET /v1/terminals/{POIIdentification}/certificates</code></td><td>One terminal of yours</td></tr>
+<tr><td><code>GET /v1/registers/{RegisterIdentification}/certificates</code></td><td>One register of yours</td></tr>
+</tbody>
+</table>
+</div>
+<p>An id of another vendor’s answers <code>404 not_found</code>. A terminal’s, here:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/terminals/poi_.../certificates" --cert admin-chain.pem --key admin.key
+</code></pre>
+<p>The answer is <code>200</code>, <code>[]</code> where none is unexpired:</p>
+<pre><code class="language-json">{ "Certificates": [ { "CertificateIdentification": "...", "Role": "terminal", "POIIdentification": "poi_...", "SpkiDigest": "...", "IssuedAt": "...", "NotBefore": "...", "NotAfter": "...", "RenewFrom": "...", "FirstSeen": "...", "State": "current" } ] }
+</code></pre>
+<p>Each is ordered by its principal’s id, then <code>IssuedAt</code>, then <code>CertificateIdentification</code>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Holds</th></tr>
+</thead>
+<tbody>
+<tr><td><code>CertificateIdentification</code></td><td>The SHA-256 of the certificate, the id each log line of a request that presented it records</td></tr>
+<tr><td><code>Role</code></td><td><code>terminal</code>, <code>register</code> or <code>server</code></td></tr>
+<tr><td><code>POIIdentification</code>, <code>RegisterIdentification</code> or <code>ServerIdentification</code></td><td>The principal that holds it: exactly one of the three</td></tr>
+<tr><td><code>Scope</code></td><td>A server’s certificate’s scope. Absent on a terminal’s and a register’s</td></tr>
+<tr><td><code>SpkiDigest</code></td><td>The SHA-256 of its key: compare it with the key the holder made</td></tr>
+<tr><td><code>IssuedAt</code></td><td>When the middleware signed it. <code>NotBefore</code> may be earlier</td></tr>
+<tr><td><code>NotBefore</code>, <code>NotAfter</code></td><td>Its X.509 dates</td></tr>
+<tr><td><code>RenewFrom</code></td><td>Day 15 of its life, from which <code>GET /v1/certificates/self</code> answers <code>RenewNow</code> <code>true</code> on it</td></tr>
+<tr><td><code>FirstSeen</code></td><td>When it was first presented. Absent if never</td></tr>
+<tr><td><code>RetiredAt</code></td><td>When it is retired, which may lie ahead, inside the overlap after a renewal. Absent if it is not retired</td></tr>
+<tr><td><code>State</code></td><td><code>retired</code> once its <code>RetiredAt</code> has come, else <code>unused</code> where it was never presented, else <code>current</code></td></tr>
+<tr><td><code>Attestation</code></td><td>Its mark, where it was issued though the device’s key attestation failed (States, below). Absent on every other certificate, and so always on a server’s</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>State</code> is the certificate’s own, not its principal’s: a suspended terminal’s <code>current</code>
+certificate is still refused <code>403 not_permitted</code>. A listing shows no certificate’s body, key,
+challenge or attested value. A certificate <code>unused</code> beside a <code>current</code> one that its holder did
+not ask for is the sign of a second renewer: something else holds a copy of the key.</p>
+<p><strong>No route revokes one certificate.</strong> A device holding another goes on with that one, so what
+stops a device, or a server, is an act on its principal:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Act</th><th>Route</th><th>The holder’s next request</th></tr>
+</thead>
+<tbody>
+<tr><td>Suspend a terminal</td><td><code>PUT /v1/terminals/{POIIdentification}/state</code> <code>{"State":"suspended"}</code>, undone by <code>{"State":"paired"}</code></td><td><code>403 not_permitted</code>, its connection closed within <code>MW_WS_PING_SECS</code></td></tr>
+<tr><td>Re-pair a terminal or a register on a device</td><td><code>POST .../pairing-code</code></td><td><code>403 not_permitted</code>: every certificate retired at once, and a new code issued</td></tr>
+<tr><td>Remove a terminal or a register</td><td><code>PUT /v1/terminals/{POIIdentification}/state</code> <code>{"State":"removed"}</code>, <code>DELETE /v1/registers/{RegisterIdentification}</code></td><td><code>403 not_permitted</code>, for good</td></tr>
+<tr><td>Remove a server</td><td><code>DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}</code></td><td><code>403 not_permitted</code>, for good: list a new one</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="states"><a class="header" href="#states">States</a></h2>
+<p>Added in v1.0.0.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Object</th><th>States</th></tr>
+</thead>
+<tbody>
+<tr><td>A vendor</td><td><code>active</code>, <code>suspended</code>, which FUNDiMO alone moves. A suspended vendor’s writes and sales are refused, and so are the sales of every store it owns. Its reads answer as before (When FUNDiMO suspends your vendor, or cancels a go-live, below)</td></tr>
+<tr><td>A server</td><td><code>listed</code>, <code>enrolled</code>, <code>removed</code>. A removed server’s certificates are retired, and its row stays</td></tr>
+<tr><td>An app identity</td><td><code>active</code>, <code>retired</code></td></tr>
+<tr><td>A store</td><td><code>onboarding</code>, <code>live</code>, <code>suspended</code>, <code>offboarded</code>. Only a <code>live</code> store takes sales. <code>PUT .../state</code> records an <code>Event</code>: <code>live</code>, <code>suspended</code>, <code>resumed</code> or <code>offboarded</code>. A mistaken go-live is voided by FUNDiMO’s operator alone (When FUNDiMO suspends your vendor, or cancels a go-live, below)</td></tr>
+<tr><td>A terminal</td><td><code>listed</code>, <code>paired</code>, <code>suspended</code>, <code>removed</code>. Only a <code>paired</code> terminal may connect. <code>PUT /v1/terminals/{POIIdentification}/state</code> takes <code>suspended</code>, <code>paired</code> to resume, or <code>removed</code>, which ends it for good, with its binding and its certificates</td></tr>
+<tr><td>A register</td><td><code>listed</code>, <code>active</code>, <code>removed</code>. Only an <code>active</code> register may sell</td></tr>
+<tr><td>A sign-in credential</td><td><code>active</code>, <code>removed</code>. A removed one is never replaced or attached again</td></tr>
+<tr><td>A certificate</td><td><code>unused</code>, <code>current</code>, <code>retired</code>: the certificate’s own, not its principal’s</td></tr>
+<tr><td>An attestation mark</td><td><code>failed</code>, <code>Attestation</code>’s <code>State</code>, the one value today. A later version may add a value: read one you do not know as a failed attestation</td></tr>
+<tr><td>An alias</td><td><code>proposed</code>, <code>accepted</code>, <code>rejected</code>, <code>superseded</code>. Only an <code>accepted</code> alias names a store in a sale</td></tr>
+</tbody>
+</table>
+</div>
+<p>A terminal suspended, removed or re-paired while it is connected is closed within
+<code>MW_WS_PING_SECS</code>, and an outcome it sends meanwhile is refused and kept in the middleware’s log.
+A suspended terminal keeps its outcome, and the middleware takes it once the terminal is resumed
+and connects again.</p>
+<p>A removed terminal’s outcome is never taken: <code>removed</code> has no exit, and a device listed afresh is
+a new terminal, under a new <code>POIIdentification</code>. A re-paired terminal’s is taken only once the
+device enrols with its new code, connects and sends it again while the middleware still holds
+the sale. A sale open on a removed terminal, or on a re-paired one that never enrols again, ends
+<code>UNKN</code>, and a payment may exist that no sale records. The middleware is not the record of a
+payment: FUNDiMO reconciles such a sale against the acquirer’s record.</p>
+<h3 id="an-attestation-mark"><a class="header" href="#an-attestation-mark">An attestation mark</a></h3>
+<p>Added in v1.0.0.</p>
+<p>A middleware set to mark issues a device’s certificate though the device’s key attestation
+failed, and records on it which checks failed. Only FUNDiMO’s staging middleware can be set so.
+Production refuses such a device, as every <code>live</code> middleware not set to mark does, and a sandbox
+marks nothing. A mark grants nothing and stops nothing: a marked terminal or register connects,
+links, sells and renews as any other.</p>
+<p>A terminal’s or a register’s entry holds <code>Attestation</code> when its newest certificate is marked: its
+<code>State</code>, <code>failed</code>; <code>FailedChecks</code>, the checks the attestation failed, each once; and <code>Since</code>, when
+the device’s current unbroken run of marked certificates began. A certificate’s entry holds the
+first two. The checks are <code>chain</code>, <code>root</code>, <code>dates</code>, <code>revoked</code>, <code>hardware</code>, <code>boot</code>, <code>app_debug</code> and
+<code>model</code>, or <code>chain_missing</code> alone where the device sent no chain; <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>
+says what each is. A middleware set back to refuse ends no certificate: a marked device works on
+the certificate it holds until its <code>NotAfter</code>, and its next renewal is refused unless its
+attestation passes every check. A re-pair or a removal stops it at once.</p>
+<h2 id="when-fundimo-suspends-your-vendor-or-cancels-a-go-live"><a class="header" href="#when-fundimo-suspends-your-vendor-or-cancels-a-go-live">When FUNDiMO suspends your vendor, or cancels a go-live</a></h2>
+<p>Added in v1.0.0.</p>
+<p>FUNDiMO alone suspends a vendor and makes it <code>active</code> again, and its registers then sell as before.
+While your vendor is suspended, the middleware answers:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What you send, or hold</th><th>While your vendor is suspended</th></tr>
+</thead>
+<tbody>
+<tr><td>A sale or a refund, <code>POST /v1/sales</code>, by your register, or at a store of your fleet’s by any POS vendor’s</td><td><code>403 not_permitted</code>. A sale already made, sent again under its <code>IdempotencyKey</code>, is <code>200</code> as it stands</td></tr>
+<tr><td>A read of a sale, <code>GET /v1/sales/{TransactionReference}</code></td><td>As before</td></tr>
+<tr><td>A write of your back office</td><td><code>403 not_permitted</code>, and nothing is written. A create sent again under an <code>IdempotencyKey</code> it spent is <code>200</code>, the object as it stands (Retrying a create, above)</td></tr>
+<tr><td>A read of your back office, and a check of a store’s sign-in (A fleet’s back office, in order, step 9)</td><td>As before, but the check’s <code>store_live</code> is <code>false</code>, so no terminal it names is asked</td></tr>
+<tr><td>An ask to link, <code>POST /v1/links</code>, and the word a terminal shows, <code>POST /v1/links/{LinkIdentification}/word</code>, by your register, or at a store of your fleet’s</td><td><code>403 not_permitted</code>, and nothing is linked</td></tr>
+<tr><td>An enrolment with a code of yours, <code>POST /v1/enrol</code></td><td><code>403 code_not_valid</code>. The code is not spent, but each send counts an attempt against it, and five attempts burn it</td></tr>
+<tr><td>A renewal with a new key, <code>POST /v1/certificates/renew</code></td><td><code>403 not_permitted</code>. Your certificate stands until its <code>NotAfter</code></td></tr>
+<tr><td>A terminal’s connection</td><td>Stays, and a terminal connects. An outcome it holds is taken</td></tr>
+</tbody>
+</table>
+</div>
+<p>FUNDiMO alone cancels a go-live made by mistake: it voids it, and the store goes back to the state
+it held before. Then:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What you read, or send</th><th>After FUNDiMO cancels a store’s go-live</th></tr>
+</thead>
+<tbody>
+<tr><td><code>GET /v1/merchant-stores</code></td><td>The store’s <code>State</code> is <code>onboarding</code>, or <code>offboarded</code> where it had been offboarded before</td></tr>
+<tr><td>A sale or a refund at it</td><td><code>403 not_permitted</code></td></tr>
+<tr><td><code>PUT /v1/merchant-stores/{StoreIdentification}/state</code> with <code>{"Event":"live"}</code></td><td><code>200</code>, and the store is <code>live</code> again</td></tr>
+</tbody>
+</table>
+</div>
+<p>FUNDiMO gives no notice of either through the middleware. <code>403 not_permitted</code> is one code for every
+reason, so your code cannot tell a suspension from another refusal: ask FUNDiMO.</p>
+<h2 id="refusals"><a class="header" href="#refusals">Refusals</a></h2>
+<p>Added in v1.0.0.</p>
+<p>Each refusal the middleware gives has the body
+<code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>, and nothing was done. On
+<code>POST /v1/enrol</code>, the edge in front of a hosted middleware may also refuse, with a <code>429</code> of its
+own whose body is not an <code>Error</code>, before the request reaches the middleware: wait a minute, then
+send the same request again. It also refuses a <code>POST</code> with no body sent over HTTP/1.1 with no
+<code>Content-Length</code>, with a <code>411</code> of its own whose body is not an <code>Error</code>: send the same request
+again with <code>Content-Length: 0</code>. An alias’s <code>.../accept</code> and <code>.../reject</code>, each <code>.../pairing-code</code>,
+and a store’s <code>.../signin-check</code> sent with no body, whose body is optional, are such <code>POST</code>s.</p>
+<p>A route of the middleware’s that <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> does not hold, such as one of
+FUNDiMO’s own or one of a register’s, answers your <code>admin</code> certificate <code>403 not_permitted</code>. A path
+the middleware serves nowhere answers <code>404 not_found</code>, and a path it serves, sent with a method
+the path does not take, <code>405 method_not_allowed</code>, with an <code>Allow</code> header naming the methods it
+takes. <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> says a path it does not list answers <code>404 not_found</code>: that
+holds for a path the middleware serves nowhere, not for a route of its own the file leaves out,
+which answers as this paragraph says. Its <code>405</code> for another method of a listed path holds
+likewise: <code>POST /v1/allowed-models</code>, the operator’s, answers your <code>admin</code> certificate
+<code>403 not_permitted</code>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status</th><th><code>Error.Code</code></th><th>When</th></tr>
+</thead>
+<tbody>
+<tr><td><code>400</code></td><td><code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code>, <code>invalid_field</code></td><td>The body is not a JSON object, holds a field the route does not name, lacks one, or holds one that breaks its rule. The first class of the four that fails answers alone, and <code>Error.Fields</code> names every field of it, sorted</td></tr>
+<tr><td><code>400</code></td><td><code>body_unreadable</code></td><td>The body could not be read to its end, such as a chunked body that breaks off, or one not all sent within 30 seconds</td></tr>
+<tr><td><code>400</code></td><td><code>invalid_query</code></td><td>On a list read a page at a time: <code>page_size</code> or <code>page_after</code> is malformed, out of its range, sent empty or given twice. <code>Error.Fields</code> names each, and nothing is read</td></tr>
+<tr><td><code>400</code></td><td><code>adapter_not_taken</code></td><td>On a key pair’s create or replace, or a set of a store’s own: its <code>Adapter</code> is not the one this environment takes. Decided before anything else of the body is read</td></tr>
+<tr><td><code>401</code></td><td><code>certificate_required</code>, <code>certificate_invalid</code>, <code>sandbox_key_on_live</code></td><td>No credential, one the middleware cannot accept, or a sandbox key on <code>live</code></td></tr>
+<tr><td><code>401</code></td><td><code>certificate_expired</code></td><td>A client certificate past its <code>NotAfter</code>. Renew from <code>RenewFrom</code>, and it never comes</td></tr>
+<tr><td><code>403</code></td><td><code>not_permitted</code></td><td>The credential is good, and the route, its scope or the object’s state refuses it, a suspended vendor’s write among them. One code for every reason, so a caller cannot probe what exists</td></tr>
+<tr><td><code>403</code></td><td><code>certificate_retired</code></td><td>A client certificate retired, because a newer one of the identity is in use. Retry on the newer one</td></tr>
+<tr><td><code>403</code></td><td><code>code_not_valid</code></td><td>On <code>POST /v1/enrol</code>: the code is wrong, unknown, expired or spent, the serial is not the listing’s, or the vendor is suspended</td></tr>
+<tr><td><code>403</code></td><td><code>attestation_failed</code>, <code>app_identity_unknown</code>, <code>model_not_allowed</code></td><td>On a device’s enrolment or renewal: its attestation chain fails a check, names an app not registered, or attests a device the allowed list does not admit</td></tr>
+<tr><td><code>403</code></td><td><code>challenge_not_valid</code></td><td>On a device’s renewal: no challenge of its certificate’s was live, or its chain was made with another</td></tr>
+<tr><td><code>404</code></td><td><code>not_found</code></td><td>No row holds the id, or the caller may not see it</td></tr>
+<tr><td><code>409</code></td><td><code>too_many_keys</code></td><td>A third server of one scope</td></tr>
+<tr><td><code>409</code></td><td><code>alias_taken</code></td><td>That vendor’s <code>MerchantIdentification</code> already names another store, as an accepted alias: on an accept, which takes no body, reject the proposal, and the store’s owner proposes another id; on a proposal, only where your vendor names itself: choose another id</td></tr>
+<tr><td><code>409</code></td><td><code>serial_taken</code></td><td>Your fleet already lists a device of that serial that is not removed. Use the terminal listed, or remove it and list the device again</td></tr>
+<tr><td><code>409</code></td><td><code>renewal_not_due</code></td><td>A renewal before <code>RenewFrom</code></td></tr>
+<tr><td><code>409</code></td><td><code>sign_in_not_configured</code></td><td>On a key pair’s create or replace, or a set of a store’s own: sign-in is off, so the middleware holds no key to seal a <code>Secret</code> under. Every other route of a key pair still answers, and so does a check of a store’s sign-in</td></tr>
+<tr><td><code>409</code></td><td><code>signin_credential_removed</code></td><td>A replace or an attach of a key pair that is removed. Set a new one</td></tr>
+<tr><td><code>409</code></td><td><code>signin_profile_not_set</code></td><td>On a key pair’s create, or a set of a store’s own, even where that comes to a replace: the fleet holds no sign-in profile, so nothing was sealed or written. Set the profile with <code>PUT /v1/vendors/{VendorIdentification}/signin-profile</code>, then send the same body again</td></tr>
+<tr><td><code>409</code></td><td><code>idempotency_conflict</code></td><td>On one of your six creates (Retrying a create, above): its <code>IdempotencyKey</code> is held for another request, so nothing was written. Send the first request again to read the object it made, or use a new key for a new object</td></tr>
+<tr><td><code>413</code></td><td><code>body_too_large</code></td><td>The body is over 65,536 bytes. No part of it is logged</td></tr>
+<tr><td><code>429</code></td><td><code>renewal_rate</code>, <code>write_rate</code></td><td>5 certificates for one identity in 24 hours; or your vendor’s <code>admin</code> servers sent 60 writes in the last 60 seconds between them, each a <code>POST</code>, <code>PUT</code> or <code>DELETE</code>, and reads are never counted. On <code>write_rate</code>, nothing was done: wait the seconds <code>Retry-After</code> gives, then send the same request again</td></tr>
+<tr><td><code>503</code></td><td><code>store_unavailable</code></td><td>The middleware’s store did not answer. It is no verdict: a write’s commit may have landed with its answer lost. On one of your six creates, send the same request with the same key: it answers the object where the first send landed, and makes it where it did not. After any other write, read the object back before doing it again. On a set of a store’s own key pair it also answers one that another act on the store’s key pair or its owner overtook: nothing of it was written, and the same body sent again sets the key on what the store then holds</td></tr>
+<tr><td><code>503</code></td><td><code>edge_not_trusted</code></td><td>The request did not come through a trusted edge. An edge fault, and no verdict on your certificate</td></tr>
+<tr><td><code>503</code></td><td><code>ca_unavailable</code>, <code>attestation_status_unavailable</code></td><td>On enrolment or renewal: the middleware could not sign, or holds no fresh attestation status list. The code is not spent</td></tr>
+<tr><td><code>503</code></td><td><code>kms_unavailable</code></td><td>On a key pair’s create or replace, or a set of a store’s own: the key service did not seal the <code>Secret</code>. No verdict, and nothing was written: send the same request again. If it persists, ask FUNDiMO</td></tr>
+</tbody>
+</table>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="guides/fleet.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="admin/reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="guides/fleet.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="admin/reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

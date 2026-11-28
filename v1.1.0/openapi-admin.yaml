@@ -1,0 +1,3616 @@
+openapi: '3.1.0'
+info:
+  title: 'Middleware v1.1.0: what a back office calls'
+  version: '1.0.0'
+  summary: The relay between a point of sale, a payment terminal and FUNDiMO.
+  description: |-
+    The routes a back office calls, from your own `admin` server: your vendor's own roles and state;
+    your servers and your apps' identities; for a fleet vendor, its stores, the terminals at them and
+    its sign-in at its payment system; for a POS vendor, its registers and the aliases a fleet proposes
+    for its stores; enrolling for a certificate, its daily check and its renewal; and the health check.
+    `/docs/api/back-office.md` walks a fleet's back office and a POS vendor's through them, and says
+    how to try them in the sandbox. The sandbox passes them to your world's own `admin` server, whose
+    code `POST /sandbox/v1/codes` gives for `{"Role":"admin"}`. Each property's `x-sent-by` names who
+    sends it. `/docs/api/environments.md` names each environment's base URL. This release publishes
+    this document as `openapi-admin.yaml`.
+
+    Every property carries `x-sent-by`: `pos` for what a POS sends to the middleware, a register's
+    request to link among it, `terminal` for what a terminal sends to the middleware, `vendor` for
+    what a back office sends to the Operator API and what a vendor's app or server sends to enrol or
+    renew a certificate, and `mw` for what the middleware sends to whoever is reading. A field that
+    travels on, such as `TotalAmount`, is `pos` where it enters and `mw` where it leaves.
+
+    `/docs/api/fields.json` holds a row for each field of a sale and of each frame, with its bound
+    and an example. A field's name follows ISO 20022 where `fields.json` or `terminal.md` names its
+    element; every other name is the middleware's own. A later version may add fields to anything
+    the middleware sends, and codes to any open list. An optional field sent as `null` reads as
+    absent. The normal backoff: wait 1 second, double the wait after each failure up to 30 seconds,
+    and add a little randomness; a terminal resets it once a connection has stayed open 10 seconds.
+
+    `info.version` counts this document's contract, not the middleware's release. Its major is the
+    path family every path is under, `v1` in `/v1/`, and its minor and patch stay 0. It moves only
+    when the middleware serves a new family of paths, so a field or a code a later release adds
+    leaves it as it is. The release of the middleware answering is read at `GET /v1/health`, in its
+    `Version`, and on the sandbox in its MCP server's `serverInfo.version`.
+
+    Every operation but `GET /v1/health` and `POST /v1/enrol` needs a credential, the terminal's
+    WebSocket upgrade among them, and no body or frame changes for it. A `live` middleware refuses
+    every sandbox key with `401 sandbox_key_on_live`, before any lookup.
+
+    The people who use a POS are the POS vendor's responsibility. The middleware takes it that a
+    user was authenticated to make each sale and refund, and judges nothing about that user.
+
+    A path not listed here answers `404` with `Error.Code` `not_found`. A listed path with another
+    method answers `405` with `Error.Code` `method_not_allowed` and an `Allow` header naming the
+    methods it takes. Both carry the `Error` body. A request too malformed to be read as HTTP at all
+    is answered by the HTTP server library itself, with `400`, `414` or `431` and no `Error` body.
+servers:
+  - url: https://mw.sandbox.fundimo.com.au
+    description: The sandbox
+  - url: https://mw.staging.fundimo.com.au
+    description: Staging
+security:
+  - mutualTLS: []
+  - sandboxKey: []
+tags:
+  - name: servers
+    description: 'Your vendor and its servers: read your vendor''s roles and state; list a second `admin` server or a `pos` one, read them, remove one, and list their certificates.'
+  - name: app identities
+    description: 'Your apps on a device: register one by its package and its signing certificate, read them, retire one, and read the operator''s list of the device models allowed for your vendor.'
+  - name: stores
+    description: 'A fleet''s stores: create one and read them; take one live, or suspend, resume or offboard it; set its number at your payment system and the POS vendors whose registers it accepts; and list the certificates of its terminals.'
+  - name: store terminals
+    description: 'A fleet''s terminals at its stores: list one and issue its pairing code, read a store''s terminals, issue one a fresh code or re-pair it, suspend, resume or remove one, end its binding to a register, and list its certificates.'
+  - name: sign-in
+    description: 'A fleet''s sign-in at its payment system: its profile, each merchant''s key pair, a store''s attachment to one, and a check of a store''s sign-in.'
+  - name: registers
+    description: 'Managing your registers: the routes your own `admin` server calls on your registers, from the Operator API.'
+  - name: aliases
+    description: 'A POS vendor''s own id for a fleet''s store: the fleet proposes one, and the POS vendor accepts or rejects it; each reads the aliases naming it.'
+  - name: certificates
+    description: >-
+      A principal's client certificate: enrolment with a pairing code, the daily check, and renewal with a new key.
+  - name: health
+    description: Whether the middleware is serving.
+paths:
+  /v1/health:
+    get:
+      tags: [health]
+      operationId: health
+      summary: Whether the middleware is serving.
+      security: []
+      responses:
+        '200':
+          description: The middleware is serving.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              examples:
+                ok:
+                  value: {"Status": "ok", "Version": "0.0.0"}
+  /v1/vendors/{VendorIdentification}:
+    parameters:
+      - $ref: '#/components/parameters/VendorIdentification'
+    get:
+      tags: [servers]
+      operationId: readVendor
+      summary: Show a vendor's roles and state.
+      description: The vendor's own `admin`, the operator, or `onboarding`. A suspended vendor reads itself too.
+      responses:
+        '200':
+          description: The vendor as it now stands.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendor'
+              examples:
+                fleet:
+                  summary: A fleet, active.
+                  value: {"VendorIdentification": "ven_0123456789abcdef0123456789abcdef", "Roles": ["fleet"], "State": "active"}
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/vendors/{VendorIdentification}/servers:
+    parameters:
+      - $ref: '#/components/parameters/VendorIdentification'
+    post:
+      tags: [servers]
+      operationId: listServer
+      summary: List a vendor's server, and issue its code.
+      description: >-
+        The operator, or the vendor's own `admin`. Lists a server of `Scope` `pos`, `admin`, `operator` or `onboarding`, a scope the vendor's roles cover, and answers once with its `PairingCode`, for the server to enrol with at `POST /v1/enrol`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerListing'
+      responses:
+        '200':
+          description: 'A replay of the same request under its `IdempotencyKey`: the server as its vendor''s listing shows it, with no `PairingCode`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server'
+        '201':
+          description: The server, `listed`, and its `PairingCode`, shown this once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerListed'
+        '400':
+          $ref: '#/components/responses/OperatorCreateBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: >-
+            `too_many_keys`: the vendor already holds two servers of this scope that are not removed. Remove one, then list the new one.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                too_many_keys:
+                  value: {"Error": {"Code": "too_many_keys", "Message": "The vendor already holds two servers of this scope.", "Fields": []}}
+                idempotency_conflict:
+                  value: {"Error": {"Code": "idempotency_conflict", "Message": "The idempotency key names a different request.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorCreateStoreUnavailable'
+    get:
+      tags: [servers]
+      operationId: readServers
+      summary: Show a vendor's servers.
+      description: >-
+        The operator, `onboarding`, or the vendor's own `admin`. Each server, with its state and, once it holds a certificate, its newest certificate's key digest and when it was first used, so a code spent by someone else is visible. Oldest first, a page at a time.
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageAfter'
+      responses:
+        '200':
+          description: A page of the vendor's servers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerList'
+        '400':
+          $ref: '#/components/responses/PageQueryRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}:
+    parameters:
+      - $ref: '#/components/parameters/VendorIdentification'
+      - $ref: '#/components/parameters/ServerIdentification'
+    delete:
+      tags: [servers]
+      operationId: removeServer
+      summary: Remove a vendor's server.
+      description: >-
+        The operator, or the vendor's own `admin`. The server goes `removed` and its certificates are retired. An `operator` or an `onboarding` server is removed by the operator alone.
+      responses:
+        '200':
+          description: The server, `removed`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/vendors/{VendorIdentification}/app-identities:
+    parameters:
+      - $ref: '#/components/parameters/VendorIdentification'
+    post:
+      tags: [app identities]
+      operationId: registerAppIdentity
+      summary: Register an app identity.
+      description: >-
+        The operator, or the vendor's own `admin`. Registers an app by `Role`, `AppPackage` and `SigningDigest`, the SHA-256 of its signing certificate, so a device running it can enrol.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppIdentityRegistration'
+      responses:
+        '200':
+          description: 'A replay of the same request under its `IdempotencyKey`: the app identity as it stands, `retired` if retired since.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppIdentity'
+        '201':
+          description: The app identity, `active`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppIdentity'
+        '400':
+          $ref: '#/components/responses/OperatorCreateBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: '`idempotency_conflict`: the key names a different request, and nothing was written.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                idempotency_conflict:
+                  value: {"Error": {"Code": "idempotency_conflict", "Message": "The idempotency key names a different request.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorCreateStoreUnavailable'
+    get:
+      tags: [app identities]
+      operationId: readAppIdentities
+      summary: Show a vendor's app identities.
+      description: The operator, `onboarding`, or the vendor's own `admin`. Every app identity of the vendor, `active` and `retired`, ordered by `AppIdentification`, each with who registered it.
+      responses:
+        '200':
+          description: The app identities, `[]` where the vendor holds none.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppIdentityList'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/vendors/{VendorIdentification}/app-identities/{AppIdentification}:
+    parameters:
+      - $ref: '#/components/parameters/VendorIdentification'
+      - $ref: '#/components/parameters/AppIdentification'
+    delete:
+      tags: [app identities]
+      operationId: retireAppIdentity
+      summary: Retire an app identity.
+      description: >-
+        The operator, or the vendor's own `admin`. The app identity goes `retired`, and its row stays.
+      responses:
+        '204':
+          description: Retired. No body.
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/allowed-models:
+    get:
+      tags: [app identities]
+      operationId: readAllowedModels
+      summary: Show the allowed list.
+      description: >-
+        Any `admin`, the operator, or `onboarding`. An `admin` reads each row that applies to its vendor's devices: those naming no vendor, and its own vendor's. The operator and `onboarding` read every row.
+      responses:
+        '200':
+          description: The rows.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllowedModelList'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/vendors/{VendorIdentification}/signin-credentials:
+    parameters:
+      - $ref: '#/components/parameters/VendorIdentification'
+    post:
+      tags: [sign-in]
+      operationId: createSignInCredential
+      summary: Set a fleet's sign-in credential.
+      description: >-
+        The fleet's own `admin`, or the operator. Sets a sign-in credential of a fleet vendor: a merchant's key pair at its payment system, which a terminal at a store it is attached to signs in with under the fleet's sign-in profile.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInCredentialCreation'
+            examples:
+              signed_value:
+                summary: A merchant's key pair on a `live` middleware, its secret written as text.
+                value: {"IdempotencyKey": "credential-create-01", "Adapter": "signed_value", "KeyIdentification": "key-example-1", "Secret": "…", "SecretEncoding": "text"}
+              sandbox_signed_value:
+                summary: A credential in a sandbox, which holds no secret.
+                value: {"IdempotencyKey": "credential-create-02", "Adapter": "sandbox_signed_value", "KeyIdentification": "sandbox-key-1"}
+      responses:
+        '200':
+          description: 'A replay of the same request under its `IdempotencyKey`: the credential as it stands, `removed` if removed since. It holds no `Secret`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInCredential'
+        '201':
+          description: The credential, `active` and attached to no store. It holds no `Secret`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInCredential'
+              examples:
+                created:
+                  summary: A merchant's key pair just set.
+                  value: {"SignInCredentialIdentification": "sic_0123456789abcdef0123456789abcdef", "VendorIdentification": "ven_0123456789abcdef0123456789abcdef", "Adapter": "signed_value", "KeyIdentification": "key-example-1", "State": "active", "CreatedAt": "2026-11-20T09:00:00Z", "ReplacedAt": null, "RemovedAt": null, "Stores": [], "CreatedBy": {"VendorIdentification": "ven_0123456789abcdef0123456789abcdef", "Scope": "admin", "ServerIdentification": null}}
+        '400':
+          $ref: '#/components/responses/SignInCredentialCreateBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: |
+            Nothing was sealed or written.
+
+            - `signin_profile_not_set`: the fleet holds no sign-in profile. Set it with `PUT
+              /v1/vendors/{VendorIdentification}/signin-profile`, then send the same request.
+            - `sign_in_not_configured`: sign-in is off on this `live` middleware, so it holds no
+              key to seal a `Secret` under. The same request is refused the same way until the
+              operator turns sign-in on.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                signin_profile_not_set:
+                  value: {"Error": {"Code": "signin_profile_not_set", "Message": "The fleet holds no sign-in profile: set it first.", "Fields": []}}
+                sign_in_not_configured:
+                  value: {"Error": {"Code": "sign_in_not_configured", "Message": "Sign-in is not configured on this middleware.", "Fields": []}}
+                idempotency_conflict:
+                  value: {"Error": {"Code": "idempotency_conflict", "Message": "The idempotency key names a different request.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/SignInCredentialSealUnavailable'
+    get:
+      tags: [sign-in]
+      operationId: readSignInCredentials
+      summary: Show a fleet's sign-in credentials.
+      description: >-
+        The fleet's own `admin`, the operator, or `onboarding`. Each of the vendor's sign-in credentials, `active` and `removed`, ordered by `CreatedAt`, then `SignInCredentialIdentification`, each with the stores it is attached to now, a page at a time.
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageAfter'
+      responses:
+        '200':
+          description: A page of the vendor's credentials, `[]` where it holds none.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInCredentials'
+              examples:
+                one_replaced:
+                  summary: A fleet's one credential, replaced once and attached to two stores.
+                  value: {"SignInCredentials": [{"SignInCredentialIdentification": "sic_0123456789abcdef0123456789abcdef", "VendorIdentification": "ven_0123456789abcdef0123456789abcdef", "Adapter": "signed_value", "KeyIdentification": "key-example-2", "State": "active", "CreatedAt": "2026-11-20T09:00:00Z", "ReplacedAt": "2026-11-27T09:00:00Z", "RemovedAt": null, "Stores": ["mst_0123456789abcdef0123456789abcdef", "mst_0123456789abcdef0123456789abcdf0"], "CreatedBy": {"VendorIdentification": "ven_0123456789abcdef0123456789abcdef", "Scope": "admin", "ServerIdentification": null}}], "NextPage": null}
+        '400':
+          $ref: '#/components/responses/PageQueryRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/vendors/{VendorIdentification}/signin-credentials/{SignInCredentialIdentification}:
+    parameters:
+      - $ref: '#/components/parameters/VendorIdentification'
+      - $ref: '#/components/parameters/SignInCredentialIdentification'
+    put:
+      tags: [sign-in]
+      operationId: replaceSignInCredential
+      summary: Replace a fleet's sign-in credential.
+      description: >-
+        The fleet's own `admin`, or the operator. Replaces the credential's `KeyIdentification` and `Secret` together, in one write, from a body that `POST /v1/vendors/{VendorIdentification}/signin-credentials` would take: how a fleet rotates a merchant's key pair. The body's `SecretEncoding` says how its `Secret` is written, and is read once to decode it and never kept.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInCredentialRequest'
+            examples:
+              new_key:
+                summary: The merchant's new key pair, its secret written as text.
+                value: {"Adapter": "signed_value", "KeyIdentification": "key-example-2", "Secret": "…", "SecretEncoding": "text"}
+      responses:
+        '200':
+          description: The credential, `ReplacedAt` set and every store still attached. No `Secret`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInCredential'
+        '400':
+          $ref: '#/components/responses/SignInCredentialBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: |
+            Nothing was written.
+
+            - `signin_credential_removed`: the credential is removed, and a removed credential
+              stays removed. Set a new one with
+              `POST /v1/vendors/{VendorIdentification}/signin-credentials` and attach it.
+            - `sign_in_not_configured`: sign-in is off on this `live` middleware, so it holds no
+              key to seal a `Secret` under. The same request is refused the same way until the
+              operator turns sign-in on.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                signin_credential_removed:
+                  value: {"Error": {"Code": "signin_credential_removed", "Message": "The sign-in credential is removed.", "Fields": []}}
+                sign_in_not_configured:
+                  value: {"Error": {"Code": "sign_in_not_configured", "Message": "Sign-in is not configured on this middleware.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/SignInCredentialSealUnavailable'
+    delete:
+      tags: [sign-in]
+      operationId: removeSignInCredential
+      summary: Remove a fleet's sign-in credential.
+      description: >-
+        The fleet's own `admin`, or the operator. The credential goes `removed`, its sealed `Secret` erased from its row and every store's attachment of it ended, in one transaction.
+      responses:
+        '204':
+          description: Removed, or it was already. No body.
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/vendors/{VendorIdentification}/signin-profile:
+    parameters:
+      - $ref: '#/components/parameters/VendorIdentification'
+    put:
+      tags: [sign-in]
+      operationId: setFleetSignInProfile
+      summary: Set a fleet's sign-in profile.
+      description: >-
+        The fleet's own `admin`, or the operator. Sets the fleet's sign-in profile whole, or replaces it: its application key, and how a signed value is made for each of its stores.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FleetSignInProfileRequest'
+            examples:
+              uuid_challenge:
+                summary: A fleet's application key, and a 16-byte challenge written as a UUID.
+                value: {"ApplicationIdentification": "app-example-1", "Profile": {"Algorithm": "HMAC-SHA256", "ChallengeLength": 16, "ChallengeEncoding": "uuid", "SignatureEncoding": "hex"}}
+              no_application_key:
+                summary: A fleet whose payment system takes no application key.
+                value: {"ApplicationIdentification": null, "Profile": {"Algorithm": "HMAC-SHA256", "ChallengeLength": 32, "ChallengeEncoding": "hex", "SignatureEncoding": "base64"}}
+      responses:
+        '200':
+          description: The fleet's sign-in profile, as it now holds it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FleetSignInProfile'
+              examples:
+                first_set:
+                  summary: A fleet's first sign-in profile, never changed.
+                  value: {"VendorIdentification": "ven_0123456789abcdef0123456789abcdef", "ApplicationIdentification": "app-example-1", "Profile": {"Algorithm": "HMAC-SHA256", "ChallengeLength": 16, "ChallengeEncoding": "uuid", "SignatureEncoding": "hex"}, "SetAt": "2026-11-20T09:00:00Z", "ChangedAt": null}
+        '400':
+          $ref: '#/components/responses/OperatorBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+    get:
+      tags: [sign-in]
+      operationId: readFleetSignInProfile
+      summary: Show a fleet's sign-in profile.
+      description: >-
+        The fleet's own `admin`, the operator, or `onboarding`. The fleet's sign-in profile, each value but `VendorIdentification` `null` where none is set.
+      responses:
+        '200':
+          description: The fleet's sign-in profile, set or not.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FleetSignInProfile'
+              examples:
+                changed:
+                  summary: A fleet's sign-in profile, changed once.
+                  value: {"VendorIdentification": "ven_0123456789abcdef0123456789abcdef", "ApplicationIdentification": "app-example-1", "Profile": {"Algorithm": "HMAC-SHA256", "ChallengeLength": 16, "ChallengeEncoding": "uuid", "SignatureEncoding": "hex"}, "SetAt": "2026-11-20T09:00:00Z", "ChangedAt": "2026-11-27T09:00:00Z"}
+                none_set:
+                  summary: A fleet that holds no sign-in profile.
+                  value: {"VendorIdentification": "ven_0123456789abcdef0123456789abcdef", "ApplicationIdentification": null, "Profile": null, "SetAt": null, "ChangedAt": null}
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/merchant-stores:
+    post:
+      tags: [stores]
+      operationId: createMerchantStore
+      summary: Create a merchant store.
+      description: >-
+        A fleet vendor's `admin`, the operator, or `onboarding`. The store's owner is the caller's vendor, and only the operator and `onboarding` name another, as `OwnerVendor`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantStoreCreation'
+      responses:
+        '200':
+          description: 'A replay of the same request under its `IdempotencyKey`: the store as the caller''s listing shows it.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantStore'
+        '201':
+          description: The store, `onboarding`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantStore'
+        '400':
+          $ref: '#/components/responses/OperatorCreateBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: '`idempotency_conflict`: the key names a different request, and nothing was written.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                idempotency_conflict:
+                  value: {"Error": {"Code": "idempotency_conflict", "Message": "The idempotency key names a different request.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorCreateStoreUnavailable'
+    get:
+      tags: [stores]
+      operationId: readMerchantStores
+      summary: Show the caller's merchant stores.
+      description: >-
+        A fleet vendor's `admin`, the operator, or `onboarding`. An `admin` sees its own stores, each with its `MerchantIdentification`, and the operator and `onboarding` see every store. By `StoreIdentification`, a page at a time.
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageAfter'
+      responses:
+        '200':
+          description: A page of the stores.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantStoreList'
+        '400':
+          $ref: '#/components/responses/PageQueryRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/merchant-stores/{StoreIdentification}/state:
+    parameters:
+      - $ref: '#/components/parameters/StoreIdentification'
+    put:
+      tags: [stores]
+      operationId: moveMerchantStore
+      summary: Take a store live, or suspend, resume or offboard it.
+      description: >-
+        The store's owner, the operator, or `onboarding`. `Event` names the event to record: `live` from the state `onboarding` or `offboarded`, `suspended` from `live`, `resumed` from `suspended`, and `offboarded` from `live` or `suspended`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantStoreStateChange'
+      responses:
+        '200':
+          description: The store as it now stands.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantStore'
+        '400':
+          $ref: '#/components/responses/OperatorBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/merchant-stores/{StoreIdentification}/acceptor:
+    parameters:
+      - $ref: '#/components/parameters/StoreIdentification'
+    put:
+      tags: [stores]
+      operationId: setMerchantStoreAcceptor
+      summary: Set or clear a store's number at its fleet's payment system.
+      description: >-
+        The store's owner, the operator, or `onboarding`. Sets the store's `AcceptorIdentification`, its own number at its fleet's payment system, which a terminal's sign-in carries, or with `null` clears it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantStoreAcceptor'
+      responses:
+        '200':
+          description: The store as it now stands, holding the number, or none after a clear.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantStore'
+        '400':
+          $ref: '#/components/responses/OperatorBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/merchant-stores/{StoreIdentification}/aliases:
+    parameters:
+      - $ref: '#/components/parameters/StoreIdentification'
+    post:
+      tags: [aliases]
+      operationId: proposeAlias
+      summary: Propose a POS vendor's merchant id for a store.
+      description: >-
+        The store's owner, or the operator. Proposes `MerchantIdentification` as the vendor `VendorIdentification`'s own id for this store.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AliasProposal'
+      responses:
+        '201':
+          description: The alias, `proposed`, or `accepted` where the owner named itself.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alias'
+        '400':
+          $ref: '#/components/responses/OperatorBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: >-
+            `alias_taken`, where the owner named itself: its own `MerchantIdentification` already names another store, as an accepted alias, so choose another id for this store. A proposal naming another vendor is never refused for it: that vendor's accept is.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alias_taken:
+                  value: {"Error": {"Code": "alias_taken", "Message": "The vendor's merchant id already names another store.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/aliases:
+    get:
+      tags: [aliases]
+      operationId: readAliases
+      summary: Show the aliases naming the caller.
+      description: >-
+        The named vendor's `admin`: the open proposals that name its vendor, oldest first, so it can accept or reject each. The operator sees every vendor's. A proposal is open for 14 days, and the list is read a page at a time.
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageAfter'
+      responses:
+        '200':
+          description: A page of the aliases.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AliasList'
+        '400':
+          $ref: '#/components/responses/PageQueryRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/aliases/{AliasIdentification}/accept:
+    parameters:
+      - $ref: '#/components/parameters/AliasIdentification'
+    post:
+      tags: [aliases]
+      operationId: acceptAlias
+      summary: Accept a proposed alias.
+      description: >-
+        The vendor the alias names, or the operator. From then on a sale of that vendor's may name the store by this `MerchantIdentification`. An id the vendor holds for another store is `409 alias_taken`.
+      responses:
+        '200':
+          description: The alias, `accepted`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alias'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: >-
+            `alias_taken`: that vendor's `MerchantIdentification` already names another store, as an accepted alias. Reject this proposal, and have the store's owner propose another id for this store.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alias_taken:
+                  value: {"Error": {"Code": "alias_taken", "Message": "The vendor's merchant id already names another store.", "Fields": []}}
+        '411': {$ref: '#/components/responses/EdgeLengthRequired'}
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/aliases/{AliasIdentification}/reject:
+    parameters:
+      - $ref: '#/components/parameters/AliasIdentification'
+    post:
+      tags: [aliases]
+      operationId: rejectAlias
+      summary: Reject a proposed alias.
+      description: The vendor the alias names, or the operator. The alias goes `rejected` and stays.
+      responses:
+        '200':
+          description: The alias, `rejected`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alias'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '411': {$ref: '#/components/responses/EdgeLengthRequired'}
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/merchant-stores/{StoreIdentification}/terminals:
+    parameters:
+      - $ref: '#/components/parameters/StoreIdentification'
+    post:
+      tags: [store terminals]
+      operationId: listTerminal
+      summary: List a terminal at a store, and issue its code.
+      description: The store's owner, the operator, or `onboarding`. Lists a device by its serial.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TerminalListing'
+      responses:
+        '200':
+          description: 'A replay of the same request under its `IdempotencyKey`: the terminal as its store''s listing shows it, with no `PairingCode`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terminal'
+        '201':
+          description: The terminal, `listed`, and its `PairingCode`, shown this once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TerminalListed'
+        '400':
+          $ref: '#/components/responses/OperatorCreateBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: >-
+            `serial_taken`: the fleet already lists a device of this `SerialNumber` that is not removed. Use the terminal listed, or remove it and list the device again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                serial_taken:
+                  value: {"Error": {"Code": "serial_taken", "Message": "The fleet already lists a device of this serial.", "Fields": []}}
+                idempotency_conflict:
+                  value: {"Error": {"Code": "idempotency_conflict", "Message": "The idempotency key names a different request.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorCreateStoreUnavailable'
+    get:
+      tags: [store terminals]
+      operationId: readTerminals
+      summary: Show a store's terminals.
+      description: >-
+        The store's owner, the operator, or `onboarding`. Each terminal with its state, its newest certificate's `NotAfter`, and the register and vendor bound to it, so a binding the owner never made is visible. By `POIIdentification`, in byte order, a page at a time.
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageAfter'
+      responses:
+        '200':
+          description: A page of the store's terminals.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TerminalList'
+        '400':
+          $ref: '#/components/responses/PageQueryRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/terminals/{POIIdentification}/pairing-code:
+    parameters:
+      - $ref: '#/components/parameters/TerminalId'
+    post:
+      tags: [store terminals]
+      operationId: issueTerminalPairingCode
+      summary: Issue a terminal a fresh code, or re-pair it.
+      description: >-
+        The terminal's owner, the operator, or `onboarding`. On a `listed` terminal, a fresh code in place of the old one, and on a `paired` terminal a re-pair. To `onboarding` this route gives a first code alone: a code for a terminal `listed` that has never held a certificate and holds no binding, and `403 not_permitted` for any other, with nothing written.
+      responses:
+        '201':
+          description: The terminal, `listed`, and its new `PairingCode`, shown this once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TerminalListed'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '411': {$ref: '#/components/responses/EdgeLengthRequired'}
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/terminals/{POIIdentification}/state:
+    parameters:
+      - $ref: '#/components/parameters/TerminalId'
+    put:
+      tags: [store terminals]
+      operationId: moveTerminal
+      summary: Suspend, resume or remove a terminal.
+      description: >-
+        The terminal's owner, the operator, or `onboarding`. `onboarding` may suspend and resume a terminal, and its ask for `removed` is `403 not_permitted` whatever the terminal's state, with nothing written, since `removed` has no exit.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TerminalStateChange'
+      responses:
+        '204':
+          description: Moved. No body.
+        '400':
+          $ref: '#/components/responses/OperatorBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/registers:
+    post:
+      tags: [registers]
+      operationId: listRegister
+      summary: List a register.
+      description: >-
+        A POS vendor's `admin`, the operator, or `onboarding`. With `SerialNumber` it is a device's register: it starts `listed`, and the middleware answers once with its `PairingCode`, five words. With none it is a server's register, which starts `active` and has no code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterListing'
+      responses:
+        '200':
+          description: 'A replay of the same request under its `IdempotencyKey`: the register as `GET /v1/registers` shows it, with no `PairingCode`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+        '201':
+          description: The register, and a device's `PairingCode`, shown this once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterListed'
+        '400':
+          $ref: '#/components/responses/OperatorCreateBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '409':
+          description: '`idempotency_conflict`: the key names a different request, and nothing was written.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                idempotency_conflict:
+                  value: {"Error": {"Code": "idempotency_conflict", "Message": "The idempotency key names a different request.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorCreateStoreUnavailable'
+    get:
+      tags: [registers]
+      operationId: readRegisters
+      summary: Show the caller's registers.
+      description: >-
+        A POS vendor's `admin`, the operator, or `onboarding`. An `admin` sees its own registers, and the operator and `onboarding` every vendor's, a removed one among them, each with its vendor, its kind, its state, a device's serial, the store it sits at and, once it has held a certificate, its newest certificate's `NotAfter`. Never a code.
+      responses:
+        '200':
+          description: The registers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterList'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/registers/{RegisterIdentification}:
+    parameters:
+      - $ref: '#/components/parameters/RegisterIdentification'
+    delete:
+      tags: [registers]
+      operationId: removeRegister
+      summary: Remove a register.
+      description: >-
+        Its vendor's `admin`, or the operator. The register goes `removed`, each of its bindings ends, its code is cleared and its certificates are retired. No other caller removes a register: `removed` has no exit.
+      responses:
+        '200':
+          description: The register, `removed`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/registers/{RegisterIdentification}/pairing-code:
+    parameters:
+      - $ref: '#/components/parameters/RegisterIdentification'
+    post:
+      tags: [registers]
+      operationId: issueRegisterPairingCode
+      summary: Issue a register a fresh code, or re-pair it.
+      description: >-
+        Its vendor's `admin`, the operator, or `onboarding`, for a device's register. A fresh code, or on an `active` register a re-pair, as a terminal's. To `onboarding` this route gives a first code alone: a code for a register `listed` that has never held a certificate and holds no binding, and `403 not_permitted` for any other, with nothing written.
+      responses:
+        '201':
+          description: The register and its new `PairingCode`, shown this once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterListed'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '411': {$ref: '#/components/responses/EdgeLengthRequired'}
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/merchant-stores/{StoreIdentification}/accepted-vendors:
+    parameters:
+      - $ref: '#/components/parameters/StoreIdentification'
+    put:
+      tags: [stores]
+      operationId: setAcceptedVendors
+      summary: Say which vendors' registers a store accepts.
+      description: >-
+        The store's owner, the operator, or `onboarding`. `AcceptsAnyVendor` `true` accepts the register of any onboarded vendor, an `active` vendor holding `pos` whose register holds a certificate, which is how every store starts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptedVendorsChange'
+            examples:
+              listed_vendors:
+                summary: Accept one vendor's registers alone.
+                value: {"AcceptsAnyVendor": false, "Vendors": ["ven_01970f6e7c3a7d3e8a4f2b1c9d0e1f2a"]}
+      responses:
+        '204':
+          description: Set. No body.
+        '400':
+          $ref: '#/components/responses/OperatorBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+    get:
+      tags: [stores]
+      operationId: readAcceptedVendors
+      summary: Show which vendors' registers a store accepts.
+      description: >-
+        The `admin` of the store's owner, the operator, or `onboarding`. The list as it stands, in the keys `PUT` on this path takes, so whoever changes it sees the list it would replace.
+      responses:
+        '200':
+          description: The list as it stands.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcceptedVendorsView'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/merchant-stores/{StoreIdentification}/signin-credential:
+    parameters:
+      - $ref: '#/components/parameters/StoreIdentification'
+    put:
+      tags: [sign-in]
+      operationId: setStoreSignInCredential
+      summary: Attach a fleet's sign-in credential to a store.
+      description: >-
+        The `admin` of the store's owner, or the operator. Attaches the credential `SignInCredentialIdentification` names, an `active` one of the store's owner, to the store, ending the one it held: the credential the store's terminals are signed in with, each on its `TerminalLoginNeeded` on a connection that declared `SASQ`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSignInRequest'
+            examples:
+              attach:
+                summary: Attach the fleet's credential.
+                value: {"SignInCredentialIdentification": "sic_0123456789abcdef0123456789abcdef"}
+              attach_with_user:
+                summary: Attach the fleet's credential under the store's merchant user.
+                value: {"SignInCredentialIdentification": "sic_0123456789abcdef0123456789abcdef", "UserName": "user-example-1"}
+      responses:
+        '200':
+          description: The store's credential as it now stands.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreSignIn'
+              examples:
+                attached:
+                  summary: The store and the credential attached to it.
+                  value: {"StoreIdentification": "mst_0123456789abcdef0123456789abcdef", "SignInCredentialIdentification": "sic_0123456789abcdef0123456789abcdef", "KeyIdentification": "key-example-1", "Adapter": "signed_value", "Since": "2026-11-20T09:00:00Z", "AcceptorIdentification": "merchant-example-1", "UserName": "user-example-1", "LastResult": null}
+        '400':
+          $ref: '#/components/responses/OperatorBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: >-
+            `signin_credential_removed`: the credential named is removed, and a removed credential stays removed. Set a new one with `POST /v1/vendors/{VendorIdentification}/signin-credentials` and attach that.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                signin_credential_removed:
+                  value: {"Error": {"Code": "signin_credential_removed", "Message": "The sign-in credential is removed.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+    get:
+      tags: [sign-in]
+      operationId: readStoreSignInCredential
+      summary: Show a store's sign-in credential.
+      description: >-
+        The `admin` of the store's owner, the operator, or `onboarding`. The credential attached to the store, with its `KeyIdentification`, its `Adapter`, `Since`, the attachment's `UserName` and the store's `LastResult`, or `SignInCredentialIdentification` `null` where none is, never a `404`; and on every store its `AcceptorIdentification`.
+      responses:
+        '200':
+          description: >-
+            The store's credential, or `SignInCredentialIdentification` `null` and nothing beside it but the store's `AcceptorIdentification` where it holds none.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreSignIn'
+              examples:
+                attached:
+                  summary: A store holding a credential, which a terminal at it reported signed in.
+                  value: {"StoreIdentification": "mst_0123456789abcdef0123456789abcdef", "SignInCredentialIdentification": "sic_0123456789abcdef0123456789abcdef", "KeyIdentification": "key-example-1", "Adapter": "signed_value", "Since": "2026-11-20T09:00:00Z", "AcceptorIdentification": "merchant-example-1", "UserName": "user-example-1", "LastResult": {"POIIdentification": "poi_0123456789abcdef0123456789abcdef", "Response": "SUCC", "ResponseReason": null, "At": "2026-11-20T09:00:05Z"}}
+                none:
+                  summary: A store holding none.
+                  value: {"StoreIdentification": "mst_0123456789abcdef0123456789abcdef", "SignInCredentialIdentification": null, "AcceptorIdentification": null}
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+    delete:
+      tags: [sign-in]
+      operationId: endStoreSignInCredential
+      summary: End a store's sign-in credential.
+      description: >-
+        The `admin` of the store's owner, the operator, or `onboarding`. The store's attachment ends, its row kept, and the credential stays attached to the fleet's other stores.
+      responses:
+        '204':
+          description: Ended, or there was none. No body.
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/merchant-stores/{StoreIdentification}/signin-key:
+    parameters:
+      - $ref: '#/components/parameters/StoreIdentification'
+    put:
+      tags: [sign-in]
+      operationId: setStoreSignInKey
+      summary: Set a store's own key pair.
+      description: >-
+        The `admin` of the store's owner, or the operator. Sets the store's own key pair in one act, no other store changed: its own credential is replaced, or a new one made and attached.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSignInKeyRequest'
+            examples:
+              signed_value:
+                summary: A key pair on a `live` middleware, and the merchant user the store signs in as.
+                value: {"Adapter": "signed_value", "KeyIdentification": "key-example-1", "Secret": "…", "SecretEncoding": "text", "UserName": "user-example-1"}
+              sandbox_signed_value:
+                summary: A key pair in a sandbox, which holds no secret.
+                value: {"Adapter": "sandbox_signed_value", "KeyIdentification": "sandbox-key-1"}
+      responses:
+        '200':
+          description: The store's credential as it now stands.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreSignIn'
+              examples:
+                set:
+                  summary: The store and its own key pair, just set.
+                  value: {"StoreIdentification": "mst_0123456789abcdef0123456789abcdef", "SignInCredentialIdentification": "sic_0123456789abcdef0123456789abcdef", "KeyIdentification": "key-example-1", "Adapter": "signed_value", "Since": "2026-11-20T09:00:00Z", "AcceptorIdentification": "merchant-example-1", "UserName": "user-example-1", "LastResult": null}
+        '400':
+          $ref: '#/components/responses/SignInCredentialBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '409':
+          description: |
+            - `signin_profile_not_set`: the fleet holds no sign-in profile. Set it, then send the same
+              request.
+            - `sign_in_not_configured`: sign-in is off on this `live` middleware.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                signin_profile_not_set:
+                  value: {"Error": {"Code": "signin_profile_not_set", "Message": "The fleet holds no sign-in profile: set it first.", "Fields": []}}
+                sign_in_not_configured:
+                  value: {"Error": {"Code": "sign_in_not_configured", "Message": "Sign-in is not configured on this middleware.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/SignInCredentialSealUnavailable'
+  /v1/merchant-stores/{StoreIdentification}/signin-check:
+    parameters:
+      - $ref: '#/components/parameters/StoreIdentification'
+    post:
+      tags: [sign-in]
+      operationId: checkStoreSignIn
+      summary: Check what a store's sign-in stands on.
+      description: >-
+        The `admin` of the store's owner, the operator, or `onboarding`. Tells, without a sale, what a store's sign-in stands on, and may ask a terminal named to sign in. It counts as a write.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSignInCheckRequest'
+      responses:
+        '200':
+          description: The middleware's ten checks of the store, and whether it is `Ready` by them.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreSignInCheck'
+              examples:
+                ready:
+                  summary: A store ready for a sign-in, its fleet's payment system taking no application key.
+                  value: {"StoreIdentification": "mst_0123456789abcdef0123456789abcdef", "Ready": true, "Checks": [{"Check": "sign_in_on", "Passed": true}, {"Check": "store_live", "Passed": true}, {"Check": "profile_set", "Passed": true}, {"Check": "application_key_held", "Passed": false}, {"Check": "key_attached", "Passed": true}, {"Check": "key_opens", "Passed": true}, {"Check": "merchant_number_held", "Passed": true}, {"Check": "merchant_user_held", "Passed": true}, {"Check": "terminal_connected", "Passed": true}, {"Check": "limits_allow", "Passed": true}]}
+                not_ready:
+                  summary: A store with no terminal connected, so no limit could be read.
+                  value: {"StoreIdentification": "mst_0123456789abcdef0123456789abcdef", "Ready": false, "Checks": [{"Check": "sign_in_on", "Passed": true}, {"Check": "store_live", "Passed": true}, {"Check": "profile_set", "Passed": true}, {"Check": "application_key_held", "Passed": true}, {"Check": "key_attached", "Passed": true}, {"Check": "key_opens", "Passed": true}, {"Check": "merchant_number_held", "Passed": true}, {"Check": "merchant_user_held", "Passed": true}, {"Check": "terminal_connected", "Passed": false}, {"Check": "limits_allow", "Passed": null}]}
+                asked:
+                  summary: A check naming a terminal, which was asked to sign in.
+                  value: {"StoreIdentification": "mst_0123456789abcdef0123456789abcdef", "Ready": true, "Checks": [{"Check": "sign_in_on", "Passed": true}, {"Check": "store_live", "Passed": true}, {"Check": "profile_set", "Passed": true}, {"Check": "application_key_held", "Passed": true}, {"Check": "key_attached", "Passed": true}, {"Check": "key_opens", "Passed": true}, {"Check": "merchant_number_held", "Passed": true}, {"Check": "merchant_user_held", "Passed": true}, {"Check": "terminal_connected", "Passed": true}, {"Check": "limits_allow", "Passed": true}], "Terminal": {"POIIdentification": "poi_0123456789abcdef0123456789abcdef", "Asked": true, "Reason": null}}
+        '400':
+          $ref: '#/components/responses/OperatorBodyRefused'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '411': {$ref: '#/components/responses/EdgeLengthRequired'}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/terminals/{POIIdentification}/binding:
+    parameters:
+      - $ref: '#/components/parameters/TerminalId'
+    delete:
+      tags: [store terminals]
+      operationId: endTerminalBinding
+      summary: End the binding of a terminal to its register.
+      description: >-
+        The terminal's owner, the operator, or `onboarding`. The register bound to the terminal loses it: its next sale naming the terminal is refused, and a sale in flight is untouched. The terminal is unbound, so a register linking at its store may be shown it again.
+      responses:
+        '204':
+          description: Ended, or there was none. No body.
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '429': {$ref: '#/components/responses/OperatorWriteRate'}
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/vendors/{VendorIdentification}/certificates:
+    parameters:
+      - $ref: '#/components/parameters/VendorIdentification'
+    get:
+      tags: [servers]
+      operationId: readVendorCertificates
+      summary: Show the certificates of a vendor's servers.
+      description: >-
+        The vendor's own `admin`, the operator, or `onboarding`. Each certificate of the vendor's servers not past its `NotAfter`, ordered by `ServerIdentification`, then `IssuedAt`, then `CertificateIdentification`.
+      responses:
+        '200':
+          description: The certificates, `[]` where none is unexpired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateList'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/merchant-stores/{StoreIdentification}/certificates:
+    parameters:
+      - $ref: '#/components/parameters/StoreIdentification'
+    get:
+      tags: [stores]
+      operationId: readMerchantStoreCertificates
+      summary: Show the certificates of a store's terminals.
+      description: >-
+        The `admin` of the store's owner, the operator, or `onboarding`. Each certificate of the store's terminals not past its `NotAfter`, ordered by `POIIdentification`, then `IssuedAt`, then `CertificateIdentification`: one call for a store's page.
+      responses:
+        '200':
+          description: The certificates, `[]` where none is unexpired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateList'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/terminals/{POIIdentification}/certificates:
+    parameters:
+      - $ref: '#/components/parameters/TerminalId'
+    get:
+      tags: [store terminals]
+      operationId: readTerminalCertificates
+      summary: Show a terminal's certificates.
+      description: >-
+        The `admin` of the terminal's owner, the operator, or `onboarding`. Each certificate of the terminal not past its `NotAfter`, ordered by `IssuedAt`, then `CertificateIdentification`.
+      responses:
+        '200':
+          description: The certificates, `[]` where none is unexpired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateList'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/registers/{RegisterIdentification}/certificates:
+    parameters:
+      - $ref: '#/components/parameters/RegisterIdentification'
+    get:
+      tags: [registers]
+      operationId: readRegisterCertificates
+      summary: Show a register's certificates.
+      description: >-
+        The `admin` of the register's vendor, the operator, or `onboarding`. Each certificate of the register not past its `NotAfter`, ordered by `IssuedAt`, then `CertificateIdentification`.
+      responses:
+        '200':
+          description: The certificates, `[]` where none is unexpired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateList'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '404':
+          $ref: '#/components/responses/OperatorNotFound'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/enrol:
+    post:
+      tags: [certificates]
+      operationId: enrol
+      summary: Spend a pairing code for a first certificate.
+      security: []
+      description: >-
+        No credential: the code is the credential, spent here by a terminal, a register's device or a vendor's server listed with a `PairingCode` for its first client certificate. `/docs/api/onboarding-device.md` § 6 walks a device's enrolment, and § The challenge, worked says how to compute the challenge its key is made with.
+      requestBody:
+        required: true
+        description: The enrolment. At most 65,536 bytes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Enrolment'
+      responses:
+        '200':
+          description: The same certificate, to a repeat of an enrolment with the same code and key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '201':
+          description: >-
+            The certificate, the principal's id, and when to renew it. The code is spent, and the principal is now `paired`, `active` or `enrolled`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '400':
+          description: |
+            The body is refused, and each code means what it means on `POST /v1/sales`.
+
+            - `invalid_json`: the body is not a JSON object.
+            - `unknown_field`: the body holds a field this operation does not name, or a server's
+              enrolment sends `AttestationChain`.
+            - `missing_field`: a required field is absent. A device's five words sent with no
+              `SerialNumber`, or with it `null`, are this, naming `SerialNumber`.
+            - `invalid_field`: a field breaks its rule, or, behind a good code, the CSR's signature
+              does not verify or its key is not P-256, which counts an attempt. A `SerialNumber`
+              sent reads the code as a device's five words, so a server's code sent with a
+              `SerialNumber` is this, naming `PairingCode`, before any row is read and with no
+              attempt counted.
+            - `body_unreadable`: the body could not be read to its end.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_json:
+                  value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+                unknown_field:
+                  value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["AttestationChain"]}}
+                missing_field:
+                  value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["CertificateSigningRequest"]}}
+                invalid_field:
+                  value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["CertificateSigningRequest"]}}
+                body_unreadable:
+                  value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+        '403':
+          description: |
+            Refused, and nothing is issued.
+
+            - `code_not_valid`: the code is wrong, unknown, expired or spent, the serial is not the
+              listing's, the principal is not `listed`, or its vendor is suspended, one code for
+              every reason. A code no row holds counts nothing: a device's wrong serial or first
+              word, or a server's wrong first 6 characters, finds no row.
+            - `attestation_failed`: the device's chain fails a check of the chain, its root, its
+              dates, revocation, the extension, the key, the hardware, the challenge or the boot
+              state, or does not parse, or a device on a `live` middleware sent none. A middleware
+              set to mark admits a device whose chain fails only checks it records, and one that
+              sent none, and marks its certificate with those checks, or `chain_missing`
+              (`DeviceAttestation`).
+            - `app_identity_unknown`: the app the chain names is not registered for the vendor and
+              the principal's role, or more than one app shares the key.
+            - `model_not_allowed`: no row of the allowed list admits what the device attests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                code_not_valid:
+                  value: {"Error": {"Code": "code_not_valid", "Message": "The pairing code is not valid.", "Fields": []}}
+                attestation_failed:
+                  value: {"Error": {"Code": "attestation_failed", "Message": "The device's key attestation does not pass.", "Fields": []}}
+                app_identity_unknown:
+                  value: {"Error": {"Code": "app_identity_unknown", "Message": "The app holding the key is not one registered for this device.", "Fields": []}}
+                model_not_allowed:
+                  value: {"Error": {"Code": "model_not_allowed", "Message": "The device is not of a model the allowed list admits.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429':
+          description: >-
+            Sent by the edge in front of a hosted middleware, never by the middleware itself: more enrolments came from your address in a minute than the edge allows, and its body is the edge's, not an `Error`. The code was not read and no attempt is counted, so wait a minute, then send the same request again.
+        '503':
+          description: |
+            No verdict on the code: nothing is written, no attempt is counted, and the code stays
+            live, so retry on the normal backoff with the same code and the same key.
+
+            - `store_unavailable`: the middleware's store did not answer.
+            - `ca_unavailable`: the middleware could not sign the certificate.
+            - `attestation_status_unavailable`: a device's enrolment on a `live` middleware, which
+              holds no attestation status list fresh enough to check the chain for revocation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                store_unavailable:
+                  value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+                ca_unavailable:
+                  value: {"Error": {"Code": "ca_unavailable", "Message": "The certificate authority could not sign. Retry.", "Fields": []}}
+                attestation_status_unavailable:
+                  value: {"Error": {"Code": "attestation_status_unavailable", "Message": "The attestation status list is not current. Retry.", "Fields": []}}
+  /v1/certificates/self:
+    get:
+      tags: [certificates]
+      operationId: readOwnCertificate
+      summary: The daily check of the certificate presented.
+      security:
+        - mutualTLS: []
+      description: >-
+        Any certificate, on itself, once a day: the middleware answers the certificate's `NotAfter`, its `RenewFrom`, day 15 of its life, and `RenewNow`, so a holder's own clock decides nothing. `/docs/api/onboarding-device.md` § 9 says when to renew, and how a refusal of the check is read.
+      responses:
+        '200':
+          description: The certificate's dates, and whether to renew it now.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          $ref: '#/components/responses/NotPermitted'
+        '503':
+          $ref: '#/components/responses/OperatorStoreUnavailable'
+  /v1/certificates/renew:
+    post:
+      tags: [certificates]
+      operationId: renewCertificate
+      summary: Renew the certificate presented, with a new key.
+      security:
+        - mutualTLS: []
+      description: >-
+        Any certificate, from its `RenewFrom`, with a new key: the middleware runs enrolment's checks with the caller's certificate where the code was, and answers as enrolment does. `/docs/api/onboarding-device.md` § 10 says when to use the new certificate and delete the old key, and how long the old one stays good.
+      requestBody:
+        required: true
+        description: The renewal. At most 65,536 bytes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Renewal'
+      responses:
+        '200':
+          description: The same certificate, to a repeat of a renewal with the same key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '201':
+          description: The new certificate, the principal's id, and when to renew it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrolmentIssued'
+        '400':
+          description: |
+            The body is refused, nothing is issued, and each code means what it means on
+            `POST /v1/sales`.
+
+            - `invalid_json`: the body is not a JSON object.
+            - `unknown_field`: the body holds a field this operation does not name, or a server's
+              renewal sends `AttestationChain`.
+            - `missing_field`: a required field is absent.
+            - `invalid_field`: a field breaks its rule, the CSR's signature does not verify or its
+              key is not P-256, or its key is one the principal has used before.
+            - `body_unreadable`: the body could not be read to its end.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_json:
+                  value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+                unknown_field:
+                  value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["AttestationChain"]}}
+                missing_field:
+                  value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["CertificateSigningRequest"]}}
+                invalid_field:
+                  value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["CertificateSigningRequest"]}}
+                body_unreadable:
+                  value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+        '401':
+          $ref: '#/components/responses/Unauthorised'
+        '403':
+          description: |
+            Refused, and nothing is issued: the current certificate stays as it was.
+
+            - `not_permitted`: the principal is not `paired`, `active` or `enrolled`, or its vendor
+              is not `active`, so a suspended vendor's certificate cannot renew.
+            - `certificate_retired`: the certificate presented is retired, or set to retire at the
+              end of an overlap, because a newer one of the identity is in use. Renew on the newer
+              one, or on the holder's newest, stop and tell a person: something else holds a newer
+              certificate of this identity.
+            - `challenge_not_valid`: a device's renewal came when no challenge of this
+              certificate's was live, with a chain or, in the sandbox and on a middleware set to
+              mark, without one; or its chain was made with another. Ask a new challenge, and
+              make a new key with it.
+            - `attestation_failed`, `app_identity_unknown` and `model_not_allowed`: the device's
+              chain is refused as at enrolment. The current certificate stays good until its
+              `NotAfter`, and the middleware writes a `WARNING` naming the device.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_permitted:
+                  value: {"Error": {"Code": "not_permitted", "Message": "The caller is not permitted to do this.", "Fields": []}}
+                certificate_retired:
+                  value: {"Error": {"Code": "certificate_retired", "Message": "The certificate presented is retired: a newer one of this identity is in use.", "Fields": []}}
+                challenge_not_valid:
+                  value: {"Error": {"Code": "challenge_not_valid", "Message": "The key was not made with a live challenge of this certificate's. Ask a new one.", "Fields": []}}
+                attestation_failed:
+                  value: {"Error": {"Code": "attestation_failed", "Message": "The device's key attestation does not pass.", "Fields": []}}
+                app_identity_unknown:
+                  value: {"Error": {"Code": "app_identity_unknown", "Message": "The app holding the key is not one registered for this device.", "Fields": []}}
+                model_not_allowed:
+                  value: {"Error": {"Code": "model_not_allowed", "Message": "The device is not of a model the allowed list admits.", "Fields": []}}
+        '409':
+          description: >-
+            `renewal_not_due`: the certificate is before its `RenewFrom`, and nothing is issued. Keep using it, and renew once the daily check answers `RenewNow` `true`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                renewal_not_due:
+                  value: {"Error": {"Code": "renewal_not_due", "Message": "The certificate is not due for renewal yet: its daily check says from when.", "Fields": []}}
+        '413':
+          $ref: '#/components/responses/OperatorBodyTooLarge'
+        '429':
+          description: >-
+            `renewal_rate`: this identity was issued 5 certificates in the last 24 hours, so the middleware writes a `WARNING`: a second renewer is the best sign of a fork. Keep the current certificate and renew later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                renewal_rate:
+                  value: {"Error": {"Code": "renewal_rate", "Message": "This identity was issued 5 certificates in the last 24 hours. Retry later.", "Fields": []}}
+        '503':
+          description: |
+            No verdict on the certificate: nothing is issued and a challenge is not spent, so retry
+            on the normal backoff with the same key.
+
+            - `store_unavailable`: the middleware's store did not answer.
+            - `ca_unavailable`: the middleware could not sign the certificate.
+            - `attestation_status_unavailable`: a device's renewal on a `live` middleware, which
+              holds no attestation status list fresh enough to check the chain for revocation.
+            - `edge_not_trusted`: behind the load balancer, the request did not come through a
+              trusted edge. It is an edge fault, and the certificate is not in question.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                store_unavailable:
+                  value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+                ca_unavailable:
+                  value: {"Error": {"Code": "ca_unavailable", "Message": "The certificate authority could not sign. Retry.", "Fields": []}}
+                attestation_status_unavailable:
+                  value: {"Error": {"Code": "attestation_status_unavailable", "Message": "The attestation status list is not current. Retry.", "Fields": []}}
+                edge_not_trusted:
+                  value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+components:
+  securitySchemes:
+    sandboxKey:
+      type: http
+      scheme: bearer
+      description: >-
+        A sandbox key, `sbx_` then 43 base64url characters, sent as `Authorization: Bearer`. It works in the sandbox alone, and its scope decides what it reaches: `pos` a register's sales and reads and its vendor's terminal connections, `admin` the Operator API inside its own vendor, `operator` FUNDiMO's routes, and `onboarding` the onboarding routes for every vendor, FUNDiMO's onboarding team's.
+    mutualTLS:
+      type: mutualTLS
+      description: >-
+        A client certificate from the middleware's own CA, presented at the TLS handshake with the issuing certificate beside it, as `CertificateChain` gave them, and never with an `Authorization` header. Its one SAN, a SPIFFE URI, names the environment, the role, `terminal`, `register`, `server` or `operator`, and the id, and a `server` certificate's scope decides what it reaches as a sandbox key's does.
+  parameters:
+    PageSize:
+      name: page_size
+      in: query
+      required: false
+      x-sent-by: vendor
+      description: The most rows a page holds, from 1 to 100. Absent, 50.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    PageAfter:
+      name: page_after
+      in: query
+      required: false
+      x-sent-by: vendor
+      description: >-
+        The `NextPage` of the page before, sent back unchanged, for the page after it. Absent, the first page.
+      schema:
+        type: string
+        minLength: 1
+    VendorIdentification:
+      name: VendorIdentification
+      in: path
+      required: true
+      x-sent-by: vendor
+      description: A vendor, by the id the middleware issued it.
+      schema:
+        type: string
+        pattern: '^ven_[0-9a-f]{32}$'
+    ServerIdentification:
+      name: ServerIdentification
+      in: path
+      required: true
+      x-sent-by: vendor
+      description: A vendor's server, by the id the middleware issued it.
+      schema:
+        type: string
+        pattern: '^srv_[0-9a-f]{32}$'
+    AppIdentification:
+      name: AppIdentification
+      in: path
+      required: true
+      x-sent-by: vendor
+      description: An app identity, by the id the middleware issued it.
+      schema:
+        type: string
+        pattern: '^app_[0-9a-f]{32}$'
+    SignInCredentialIdentification:
+      name: SignInCredentialIdentification
+      in: path
+      required: true
+      x-sent-by: vendor
+      description: A fleet's sign-in credential, by the id the middleware issued it.
+      schema:
+        type: string
+        pattern: '^sic_[0-9a-f]{32}$'
+    StoreIdentification:
+      name: StoreIdentification
+      in: path
+      required: true
+      x-sent-by: vendor
+      description: A merchant store, by the id the middleware issued it.
+      schema:
+        type: string
+        pattern: '^mst_[0-9a-f]{32}$'
+    AliasIdentification:
+      name: AliasIdentification
+      in: path
+      required: true
+      x-sent-by: vendor
+      description: An alias, by the id the middleware issued it.
+      schema:
+        type: string
+        pattern: '^als_[0-9a-f]{32}$'
+    TerminalId:
+      name: POIIdentification
+      in: path
+      required: true
+      x-sent-by: vendor
+      description: A terminal, by the id the middleware issued it, or a seed chose for it.
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9_-]{1,64}$'
+    RegisterIdentification:
+      name: RegisterIdentification
+      in: path
+      required: true
+      x-sent-by: vendor
+      description: A register, by the id the middleware issued it when it was listed.
+      schema:
+        type: string
+        pattern: '^reg_[0-9a-f]{32}$'
+  responses:
+    Unauthorised:
+      description: |
+        The credential is missing or not acceptable, refused before the body is read or a key
+        looked up, so this request did nothing and its refusal says nothing of a sale an earlier
+        send made: if the request retried a sale whose answer was lost, fix the credential and send
+        the sale again with the same `IdempotencyKey` from the same register, never a new one.
+
+        - `certificate_required`: no credential came. A holder with no certificate for the
+          route enrols first, with `POST /v1/enrol`.
+        - `certificate_invalid`: an `Authorization` header of another scheme, a token of no
+          form the middleware issues, two `Authorization` headers, a client certificate beside an
+          `Authorization` header, or a client certificate no row holds.
+        - `certificate_expired`: the client certificate is past its `NotAfter`. A holder that
+          meets it re-enrols with a new code.
+        - `sandbox_key_on_live`: a sandbox key sent to a `live` middleware, which refuses every
+          one before any lookup.
+        - `sandbox_key_invalid`: the sandbox key is malformed, unknown or retired.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            certificate_required:
+              value: {"Error": {"Code": "certificate_required", "Message": "This route needs a credential, and none came.", "Fields": []}}
+            certificate_invalid:
+              value: {"Error": {"Code": "certificate_invalid", "Message": "The credential presented is not acceptable.", "Fields": []}}
+            sandbox_key_on_live:
+              value: {"Error": {"Code": "sandbox_key_on_live", "Message": "A sandbox key is accepted in the sandbox alone.", "Fields": []}}
+            sandbox_key_invalid:
+              value: {"Error": {"Code": "sandbox_key_invalid", "Message": "The sandbox key is malformed, unknown or retired.", "Fields": []}}
+            certificate_expired:
+              value: {"Error": {"Code": "certificate_expired", "Message": "The certificate presented has expired.", "Fields": []}}
+    NotPermitted:
+      description: |
+        Nothing was done.
+
+        - `not_permitted`: the credential is good, and this route refuses it: a credential of a
+          scope or a role the route does not take, `operator` asked for by anyone but the operator,
+          a write by a suspended vendor, a role the vendor does not hold, a move the object's state
+          does not allow, or an act held back from `onboarding`: a terminal's removal, or a code for
+          a device that is not `listed`, has held a certificate or holds a binding. One code answers
+          every reason.
+        - `certificate_retired`: the client certificate presented is retired, because a newer one of
+          the identity is in use. Retry on the newer one, and on the holder's newest, stop and tell
+          a person: something else holds a newer certificate of this identity.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            not_permitted:
+              value: {"Error": {"Code": "not_permitted", "Message": "The caller is not permitted to do this.", "Fields": []}}
+            certificate_retired:
+              value: {"Error": {"Code": "certificate_retired", "Message": "The certificate presented is retired: a newer one of this identity is in use.", "Fields": []}}
+    OperatorNotFound:
+      description: >-
+        `not_found`: no row holds this id, or the caller may not see it. The two answer the same, so a caller learns nothing of another vendor's objects.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            not_found:
+              value: {"Error": {"Code": "not_found", "Message": "Nothing is served at this path.", "Fields": []}}
+    OperatorBodyRefused:
+      description: |
+        The body is refused, and nothing was done.
+
+        - `invalid_json`: the body is not a JSON object.
+        - `unknown_field`: the body holds a field this operation does not name.
+        - `missing_field`: a required field is absent.
+        - `invalid_field`: a field breaks its rule, a required field sent as `null` included.
+        - `body_unreadable`: the body could not be read to its end, such as a chunked body that
+          breaks off. `Error.Fields` is empty.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalid_json:
+              value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+            unknown_field:
+              value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["Note"]}}
+            missing_field:
+              value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["SerialNumber"]}}
+            invalid_field:
+              value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["Scope"]}}
+            body_unreadable:
+              value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+    OperatorCreateBodyRefused:
+      description: 'The body is refused, and nothing was done, as any Operator API body is; a vendor''s `admin` that sends no `IdempotencyKey` is answered `missing_field`, which names it.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalid_json:
+              value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+            unknown_field:
+              value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["Note"]}}
+            missing_field:
+              value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["IdempotencyKey"]}}
+            invalid_field:
+              value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["IdempotencyKey"]}}
+            body_unreadable:
+              value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+    PageQueryRefused:
+      description: >-
+        `invalid_query`: `page_size` is not a whole number from 1 to 100, or `page_after` is not of this list's `NextPage` form, or either is sent empty, with no `=` or twice. `Error.Fields` names each, and nothing was read.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalid_query:
+              value: {"Error": {"Code": "invalid_query", "Message": "A query parameter is malformed, out of its range, or given twice.", "Fields": ["page_after", "page_size"]}}
+    OperatorBodyTooLarge:
+      description: >-
+        `body_too_large`: the body is over 65,536 bytes. Nothing was done, and no part of the body is logged.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    EdgeLengthRequired:
+      description: 'Sent by the edge in front of a hosted middleware, never by the middleware itself, to a `POST` with no body and no `Content-Length` over HTTP/1.1: its body is the edge''s, not an `Error`, and nothing was read. Send the same request again with `Content-Length: 0`.'
+    OperatorWriteRate:
+      description: >-
+        `write_rate`: the vendor's `admin` servers, which share one count, sent `MW_ADMIN_WRITES_PER_MINUTE` writes in the last 60 seconds, 60 unless set, and reads are not counted. Nothing was done: wait the seconds `Retry-After` gives, then send the same request again.
+      headers:
+        Retry-After:
+          description: >-
+            The whole seconds until the vendor's oldest counted write is 60 seconds old, from 1 to 60.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 60
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            write_rate:
+              value: {"Error": {"Code": "write_rate", "Message": "This vendor has sent as many writes as it may in the last minute. Retry after the seconds Retry-After gives.", "Fields": []}}
+    OperatorStoreUnavailable:
+      description: |
+        No verdict on the caller.
+
+        - `store_unavailable`: the middleware's store did not answer, while it looked up the
+          credential or did the work. A write's commit may have landed with its answer lost,
+          so read the object back before doing it again.
+        - `edge_not_trusted`: behind the load balancer, the request did not come through a
+          trusted edge. It is an edge fault, and the caller's certificate is not in
+          question: retry on the normal backoff.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            store_unavailable:
+              value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+            edge_not_trusted:
+              value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+    SignInCredentialBodyRefused:
+      description: |
+        The body of a merchant's key pair is refused, and nothing was written.
+
+        - `adapter_not_taken`: `Adapter` is the other environment's, or the body holds a `Secret`
+          or a `SecretEncoding` where neither is taken. `Error.Fields` is empty, and the same body
+          is refused the same way.
+        - `invalid_json`: the body is not a JSON object.
+        - `unknown_field`: the body holds a field this operation does not name, such as
+          `ApplicationIdentification` or `Profile`, which the fleet's sign-in profile holds.
+        - `missing_field`: a required field is absent, `Secret` or `SecretEncoding` with
+          `signed_value` among them.
+        - `invalid_field`: a field breaks its rule, a required field sent as `null` included, such
+          as a `Secret` that does not decode by its `SecretEncoding` to 1 to 1,024 bytes.
+          `Error.Fields` names the field, and never its value.
+        - `body_unreadable`: the body could not be read to its end, such as a chunked body that
+          breaks off. `Error.Fields` is empty.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            adapter_not_taken:
+              value: {"Error": {"Code": "adapter_not_taken", "Message": "This environment does not take this adapter or Secret.", "Fields": []}}
+            invalid_json:
+              value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+            unknown_field:
+              value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["ApplicationIdentification", "Profile"]}}
+            missing_field:
+              value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["Secret"]}}
+            invalid_field:
+              value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["Secret"]}}
+            body_unreadable:
+              value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+    SignInCredentialCreateBodyRefused:
+      description: 'The body of a fleet''s sign-in credential is refused, and nothing was written, as `PUT` on a credential refuses one; a fleet''s `admin` that sends no `IdempotencyKey` is answered `missing_field`, which names it.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            adapter_not_taken:
+              value: {"Error": {"Code": "adapter_not_taken", "Message": "This environment does not take this adapter or Secret.", "Fields": []}}
+            invalid_json:
+              value: {"Error": {"Code": "invalid_json", "Message": "The body is not a JSON object.", "Fields": []}}
+            unknown_field:
+              value: {"Error": {"Code": "unknown_field", "Message": "The body holds a field the contract does not define.", "Fields": ["ApplicationIdentification", "Profile"]}}
+            missing_field:
+              value: {"Error": {"Code": "missing_field", "Message": "The body lacks a field the contract requires.", "Fields": ["IdempotencyKey", "Secret"]}}
+            invalid_field:
+              value: {"Error": {"Code": "invalid_field", "Message": "A field does not meet its rule in the contract.", "Fields": ["Secret"]}}
+            body_unreadable:
+              value: {"Error": {"Code": "body_unreadable", "Message": "The body could not be read.", "Fields": []}}
+    SignInCredentialSealUnavailable:
+      description: |
+        No verdict on the caller or the body.
+
+        - `kms_unavailable`: the key service did not seal the `Secret`, and nothing was written: it
+          was not reached, did not answer in time, refused, or gave an answer the middleware could
+          not read. Retry on the normal backoff with the same body.
+        - `store_unavailable`: the middleware's store did not answer, while it looked up the
+          caller's credential or did the work. A write's commit may have landed with its answer
+          lost, so send a create's body again under the same `IdempotencyKey`, or read the fleet's
+          credentials, or its store's, back before doing it again.
+        - `edge_not_trusted`: behind the load balancer, the request did not come through a trusted
+          edge. It is an edge fault, and the caller's certificate is not in question: retry on the
+          normal backoff.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            kms_unavailable:
+              value: {"Error": {"Code": "kms_unavailable", "Message": "The key service could not seal the secret. Retry.", "Fields": []}}
+            store_unavailable:
+              value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+            edge_not_trusted:
+              value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+    OperatorCreateStoreUnavailable:
+      description: 'No verdict on the caller. `store_unavailable` means the store did not answer: a create sent under an `IdempotencyKey` is sent again under the same key, which answers `200` with the object if one was made and makes it if not, and one sent with no key, as the operator and `onboarding` may send it, may stand already, so look for it before sending it again; `edge_not_trusted` means the request did not come through a trusted edge, so retry on the normal backoff.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            store_unavailable:
+              value: {"Error": {"Code": "store_unavailable", "Message": "The store is not available. Retry.", "Fields": []}}
+            edge_not_trusted:
+              value: {"Error": {"Code": "edge_not_trusted", "Message": "The request did not come through a trusted edge. Retry.", "Fields": []}}
+  schemas:
+    Error:
+      type: object
+      required: [Error]
+      description: The body of every non-2xx answer the middleware gives. Every field is present.
+      properties:
+        Error:
+          type: object
+          required: [Code, Message, Fields]
+          x-sent-by: mw
+          description: What was refused, and why.
+          properties:
+            Code:
+              type: string
+              x-sent-by: mw
+              description: The reason's code, one per case, named under its answer. Branch on this.
+            Message:
+              type: string
+              x-sent-by: mw
+              description: A fixed sentence per code for a person, holding nothing the request sent.
+            Fields:
+              type: array
+              maxItems: 32
+              items:
+                type: string
+              x-sent-by: mw
+              description: >-
+                The fields the refusal is about, sorted, at most 32, as paths such as `TransactionDetails.SaleItem[0].ProductDescription`, and empty when the refusal is about no field. A name the sender chose is shown as sent only when it has at most 64 characters, only ASCII letters, digits, `_`, `.` and `-`, and at most 2 digits, and as `<unprintable>` otherwise.
+      examples:
+        - {"Error": {"Code": "terminal_offline", "Message": "The terminal is not connected.", "Fields": []}}
+    Health:
+      type: object
+      required: [Status, Version]
+      description: Whether the middleware is serving.
+      properties:
+        Status:
+          type: string
+          x-sent-by: mw
+          description: '`ok`.'
+        Version:
+          type: string
+          x-sent-by: mw
+          description: The release of the middleware answering, not this document's `info.version`.
+      examples:
+        - {"Status": "ok", "Version": "0.0.0"}
+    IdempotencyKey:
+      type: string
+      pattern: '^[A-Za-z0-9._:/-]{8,64}$'
+      description: 'A key the sender chooses for this create, held 24 hours for the caller''s vendor and this route, so a retry after a lost answer makes no second object: a vendor''s `admin` must send it, and the operator and `onboarding` may.'
+    ServerListing:
+      type: object
+      additionalProperties: false
+      required: [Scope]
+      description: What `POST /v1/vendors/{VendorIdentification}/servers` takes.
+      properties:
+        Scope:
+          type: string
+          enum: [pos, admin, operator, onboarding]
+          x-sent-by: vendor
+          description: >-
+            What the server's certificate will reach. Its vendor's roles must cover it, and `operator` and `onboarding` are the operator's alone, on its own vendor.
+        IdempotencyKey:
+          $ref: '#/components/schemas/IdempotencyKey'
+          x-sent-by: vendor
+    AppIdentityRegistration:
+      type: object
+      additionalProperties: false
+      required: [Role, AppPackage, SigningDigest]
+      description: What `POST /v1/vendors/{VendorIdentification}/app-identities` takes.
+      properties:
+        Role:
+          type: string
+          enum: [terminal, register]
+          x-sent-by: vendor
+          description: Whether the app runs on a terminal or on a register.
+        AppPackage:
+          type: string
+          maxLength: 128
+          allOf:
+            - pattern: '^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$'
+            - pattern: '^[^0-9]*([0-9][^0-9]*){0,8}$'
+          x-sent-by: vendor
+          description: The app's Android package, such as `au.com.example.terminal`.
+        SigningDigest:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          x-sent-by: vendor
+          description: The SHA-256 of the app's signing certificate, in lowercase hex.
+        Debug:
+          type: [boolean, 'null']
+          x-sent-by: vendor
+          description: Whether the app is a debug build, `false` unless sent.
+        IdempotencyKey:
+          $ref: '#/components/schemas/IdempotencyKey'
+          x-sent-by: vendor
+    MerchantStoreCreation:
+      type: object
+      additionalProperties: false
+      description: >-
+        What `POST /v1/merchant-stores` takes: from a fleet vendor, its `IdempotencyKey` and, if it has one, its `AcceptorIdentification`. Only the operator and `onboarding` may send `OwnerVendor`, and from anyone else it is an unknown field.
+      properties:
+        OwnerVendor:
+          type: [string, 'null']
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: vendor
+          description: The fleet vendor owning the store, from the operator or `onboarding` alone.
+        AcceptorIdentification:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: vendor
+          description: >-
+            The store's own number at its fleet's payment system, from any caller that may create a store. Absent or `null`: the store holds none.
+        IdempotencyKey:
+          $ref: '#/components/schemas/IdempotencyKey'
+          x-sent-by: vendor
+    MerchantStoreAcceptor:
+      type: object
+      additionalProperties: false
+      required: [AcceptorIdentification]
+      description: What `PUT /v1/merchant-stores/{StoreIdentification}/acceptor` takes.
+      properties:
+        AcceptorIdentification:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: vendor
+          description: The store's own number at its fleet's payment system. `null` clears it.
+    MerchantStoreStateChange:
+      type: object
+      additionalProperties: false
+      required: [Event]
+      description: What `PUT /v1/merchant-stores/{StoreIdentification}/state` takes.
+      properties:
+        Event:
+          type: string
+          enum: [live, suspended, resumed, offboarded]
+          x-sent-by: vendor
+          description: The event to record, not the state to reach.
+    AliasProposal:
+      type: object
+      additionalProperties: false
+      required: [VendorIdentification, MerchantIdentification]
+      description: What `POST /v1/merchant-stores/{StoreIdentification}/aliases` takes.
+      properties:
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: vendor
+          description: The POS vendor the alias names.
+        MerchantIdentification:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+          not:
+            pattern: '^mid_'
+          x-sent-by: vendor
+          description: That vendor's own id for the store, its sales' `MerchantIdentification`.
+    TerminalListing:
+      type: object
+      additionalProperties: false
+      required: [SerialNumber]
+      description: What `POST /v1/merchant-stores/{StoreIdentification}/terminals` takes.
+      properties:
+        SerialNumber:
+          type: string
+          pattern: '^[A-Za-z0-9._-]{1,64}$'
+          x-sent-by: vendor
+          description: The device's serial, as printed on it.
+        IdempotencyKey:
+          $ref: '#/components/schemas/IdempotencyKey'
+          x-sent-by: vendor
+    TerminalStateChange:
+      type: object
+      additionalProperties: false
+      required: [State]
+      description: What `PUT /v1/terminals/{POIIdentification}/state` takes.
+      properties:
+        State:
+          type: string
+          enum: [suspended, paired, removed]
+          x-sent-by: vendor
+          description: The state to reach, `suspended`, `paired`, which is a resume, or `removed`.
+    RegisterListing:
+      type: object
+      additionalProperties: false
+      description: >-
+        What `POST /v1/registers` takes: a device's `SerialNumber`, or none for a server's register, and from the operator or `onboarding` the register's `VendorIdentification`.
+      properties:
+        SerialNumber:
+          type: [string, 'null']
+          pattern: '^[A-Za-z0-9._-]{1,64}$'
+          x-sent-by: vendor
+          description: The device's serial, as printed on it. None lists a server's register.
+        VendorIdentification:
+          type: [string, 'null']
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: vendor
+          description: >-
+            From the operator or `onboarding` alone: the POS vendor the register is listed for, else the caller's vendor. From a vendor's `admin` it is `400 unknown_field`, and a vendor that holds no `pos` role, or that no row holds, is `403 not_permitted`.
+        IdempotencyKey:
+          $ref: '#/components/schemas/IdempotencyKey'
+          x-sent-by: vendor
+    Vendor:
+      type: object
+      required: [VendorIdentification, Roles, State]
+      description: A vendor, as its routes answer it.
+      properties:
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The vendor's id, `ven_` then 32 lowercase hex characters, issued by the middleware.
+        Roles:
+          type: array
+          items:
+            type: string
+            enum: [fleet, pos, operator]
+          x-sent-by: mw
+          description: Its roles. `operator` is the operator's own vendor alone.
+        State:
+          type: string
+          enum: [active, suspended]
+          x-sent-by: mw
+          description: '`active`, or `suspended`, which refuses its writes and its sales.'
+    Actor:
+      type: object
+      required: [VendorIdentification, Scope, ServerIdentification]
+      description: Who made an object, read from the credential that made it. `ServerIdentification` is `null` for a key, and `Scope` `null` for a terminal's or a register's certificate.
+      properties:
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The vendor of the credential.
+        Scope:
+          type: [string, 'null']
+          enum: [pos, admin, operator, onboarding, null]
+          x-sent-by: mw
+          description: What the credential reaches.
+        ServerIdentification:
+          type: [string, 'null']
+          pattern: '^srv_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: Its server, `null` for a key.
+    ServerListed:
+      type: object
+      required: [ServerIdentification, Scope, State, PairingCode]
+      description: A server just listed, and its secret code, shown once. Keep it out of every log.
+      properties:
+        ServerIdentification:
+          type: string
+          pattern: '^srv_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The server's id, `srv_` then 32 lowercase hex characters, issued by the middleware.
+        Scope:
+          type: string
+          enum: [pos, admin, operator, onboarding]
+          x-sent-by: mw
+          description: What its certificate will reach.
+        State:
+          type: string
+          enum: [listed, enrolled, removed]
+          x-sent-by: mw
+          description: '`listed`.'
+        PairingCode:
+          type: string
+          pattern: '^[0-9A-HJKMNP-TV-Z]{4}(-[0-9A-HJKMNP-TV-Z]{4}){3}$'
+          x-sent-by: mw
+          description: 16 characters of Crockford base32, valid 15 minutes, for one use, shown once.
+    Server:
+      type: object
+      required: [ServerIdentification, Scope, State, CreatedBy]
+      description: A vendor's server, as its routes show it.
+      properties:
+        ServerIdentification:
+          type: string
+          pattern: '^srv_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The server's id.
+        Scope:
+          type: string
+          enum: [pos, admin, operator, onboarding]
+          x-sent-by: mw
+          description: What its certificate reaches.
+        State:
+          type: string
+          enum: [listed, enrolled, removed]
+          x-sent-by: mw
+          description: '`listed` until its code is spent, `enrolled` once it holds a certificate, or `removed`.'
+        SpkiDigest:
+          type: [string, 'null']
+          pattern: '^[0-9a-f]{64}$'
+          x-sent-by: mw
+          description: The SHA-256 of its newest certificate's key, in lowercase hex. Absent before any.
+        FirstSeen:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: When its newest certificate was first used, in RFC 3339. Absent before any.
+        CreatedBy:
+          anyOf:
+            - $ref: '#/components/schemas/Actor'
+            - type: 'null'
+          x-sent-by: mw
+          description: Who made it, or `null` where the middleware holds no record of who did.
+    ServerList:
+      type: object
+      required: [Servers, NextPage]
+      description: A page of a vendor's servers.
+      properties:
+        Servers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Server'
+          x-sent-by: mw
+          description: The page's servers, oldest first, removed ones among them.
+        NextPage:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: >-
+            The cursor to the page after this one: send it back unchanged as `page_after`; always present, `null` on the last page.
+    AppIdentity:
+      type: object
+      required: [AppIdentification, Role, AppPackage, SigningDigest, Debug, State, CreatedBy]
+      description: An app identity, as its routes answer it.
+      properties:
+        AppIdentification:
+          type: string
+          pattern: '^app_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: Its id, `app_` then 32 lowercase hex characters, issued by the middleware.
+        Role:
+          type: string
+          enum: [terminal, register]
+          x-sent-by: mw
+          description: Whether the app runs on a terminal or on a register.
+        AppPackage:
+          type: string
+          x-sent-by: mw
+          description: The app's Android package, as registered.
+        SigningDigest:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          x-sent-by: mw
+          description: The SHA-256 of its signing certificate, in lowercase hex.
+        Debug:
+          type: boolean
+          x-sent-by: mw
+          description: Whether it is a debug build.
+        State:
+          type: string
+          enum: [active, retired]
+          x-sent-by: mw
+          description: '`active`, or `retired`.'
+        CreatedBy:
+          anyOf:
+            - $ref: '#/components/schemas/Actor'
+            - type: 'null'
+          x-sent-by: mw
+          description: Who made it, or `null` where the middleware holds no record of who did.
+    AppIdentityList:
+      type: object
+      required: [AppIdentities]
+      description: Every app identity of a vendor, as `GET /v1/vendors/{VendorIdentification}/app-identities` answers.
+      properties:
+        AppIdentities:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppIdentity'
+          x-sent-by: mw
+          description: Each app identity, `active` and `retired`, ordered by `AppIdentification`.
+      examples:
+        - {"AppIdentities": [{"AppIdentification": "app_0123456789abcdef0123456789abcdef", "Role": "terminal", "AppPackage": "au.com.example.terminal", "SigningDigest": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90", "Debug": false, "State": "active", "CreatedBy": null}]}
+    AllowedModel:
+      type: object
+      required: [ModelIdentification, RequireRkp, Attestation, State]
+      description: A row of the allowed list.
+      properties:
+        ModelIdentification:
+          type: string
+          pattern: '^mdl_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: Its id, `mdl_` then 32 lowercase hex characters, issued by the middleware.
+        Brand:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: The brand it names, absent if it names none.
+        Model:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: The model it names, absent if it names none.
+        VerifiedBootKey:
+          type: [string, 'null']
+          pattern: '^[0-9a-f]{64}$'
+          x-sent-by: mw
+          description: The firmware signer's key digest it names, absent if it names none.
+        MinOsPatchLevel:
+          type: [integer, 'null']
+          x-sent-by: mw
+          description: The lowest OS patch level, `YYYYMM`, absent if it sets none.
+        RequireRkp:
+          type: boolean
+          x-sent-by: mw
+          description: Whether it takes only a remotely provisioned key.
+        Attestation:
+          type: string
+          enum: [google, none]
+          x-sent-by: mw
+          description: '`google`, or `none`.'
+        VendorIdentification:
+          type: [string, 'null']
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The one vendor it applies to, absent if it applies to every vendor.
+        State:
+          type: string
+          enum: [active, retired]
+          x-sent-by: mw
+          description: '`active`, or `retired`.'
+    AllowedModelList:
+      type: object
+      required: [AllowedModels]
+      description: The allowed list, as the caller may read it.
+      properties:
+        AllowedModels:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllowedModel'
+          x-sent-by: mw
+          description: Each row.
+    MerchantStore:
+      type: object
+      required: [StoreIdentification, MerchantIdentification, OwnerVendor, State, CreatedBy]
+      description: A merchant store, as its routes answer it.
+      properties:
+        StoreIdentification:
+          type: string
+          pattern: '^mst_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The store's id, `mst_` then 32 lowercase hex characters, issued by the middleware.
+        MerchantIdentification:
+          type: string
+          pattern: '^mid_[0-9A-HJKMNP-TV-Z]{8}$'
+          x-sent-by: mw
+          description: >-
+            The store's own `MerchantIdentification`, `mid_` then 8 Crockford base32 characters, issued by the middleware. A name, not a secret.
+        OwnerVendor:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The fleet vendor that owns the store.
+        State:
+          type: string
+          enum: [onboarding, live, suspended, offboarded]
+          x-sent-by: mw
+          description: The store's state, `onboarding` until it goes live; only `live` takes sales.
+        AcceptorIdentification:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: The store's number at its fleet's payment system, absent where it holds none.
+        CreatedBy:
+          anyOf:
+            - $ref: '#/components/schemas/Actor'
+            - type: 'null'
+          x-sent-by: mw
+          description: Who made it, or `null` where the middleware holds no record of who did.
+    MerchantStoreList:
+      type: object
+      required: [MerchantStores, NextPage]
+      description: A page of the stores the caller may see.
+      properties:
+        MerchantStores:
+          type: array
+          items:
+            $ref: '#/components/schemas/MerchantStore'
+          x-sent-by: mw
+          description: The page's stores, by `StoreIdentification`.
+        NextPage:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: >-
+            The cursor to the page after this one: send it back unchanged as `page_after`; always present, `null` on the last page.
+    Alias:
+      type: object
+      required: [AliasIdentification, VendorIdentification, MerchantIdentification, StoreIdentification, State, CreatedBy]
+      description: A POS vendor's own merchant id for a store, as its routes answer it.
+      properties:
+        AliasIdentification:
+          type: string
+          pattern: '^als_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: Its id, `als_` then 32 lowercase hex characters, issued by the middleware.
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The POS vendor it names.
+        MerchantIdentification:
+          type: string
+          x-sent-by: mw
+          description: That vendor's id for the store.
+        StoreIdentification:
+          type: string
+          pattern: '^mst_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The store.
+        State:
+          type: string
+          enum: [proposed, accepted, rejected, superseded]
+          x-sent-by: mw
+          description: >-
+            `proposed` until the named vendor decides, `accepted`, the one state a sale may name, `rejected`, or `superseded` by a newer accepted id.
+        CreatedBy:
+          anyOf:
+            - $ref: '#/components/schemas/Actor'
+            - type: 'null'
+          x-sent-by: mw
+          description: Who made it, or `null` where the middleware holds no record of who did.
+    AliasList:
+      type: object
+      required: [Aliases, NextPage]
+      description: A page of the open proposals naming the caller's vendor.
+      properties:
+        Aliases:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alias'
+          x-sent-by: mw
+          description: The page's proposals, oldest first.
+        NextPage:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: >-
+            The cursor to the page after this one: send it back unchanged as `page_after`; always present, `null` on the last page.
+    TerminalListed:
+      type: object
+      required: [POIIdentification, SerialNumber, State, PairingCode]
+      description: A terminal just listed or given a fresh code, and its code, shown this once.
+      properties:
+        POIIdentification:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+          x-sent-by: mw
+          description: >-
+            The terminal's id, `poi_` then 32 lowercase hex characters, issued by the middleware. It connects with it, and a sale names it.
+        SerialNumber:
+          type: string
+          x-sent-by: mw
+          description: The device's serial, as listed.
+        State:
+          type: string
+          enum: [listed, paired, suspended, removed]
+          x-sent-by: mw
+          description: '`listed`.'
+        PairingCode:
+          type: string
+          pattern: '^[a-z]{3,6}(\.[a-z]{3,6}){4}$'
+          x-sent-by: mw
+          description: >-
+            A device's code: five different words of `docs/api/words.txt`, joined by dots, valid 15 minutes and for one use, shown this once.
+    Terminal:
+      type: object
+      required: [POIIdentification, SerialNumber, State, CreatedBy]
+      description: A terminal, as its store's listing shows it.
+      properties:
+        POIIdentification:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+          x-sent-by: mw
+          description: The terminal's id.
+        SerialNumber:
+          type: string
+          x-sent-by: mw
+          description: The device's serial.
+        State:
+          type: string
+          enum: [listed, paired, suspended, removed]
+          x-sent-by: mw
+          description: The terminal's state, `listed` until it enrols; only `paired` may connect.
+        NotAfter:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: When its newest certificate expires, in RFC 3339. Absent before any.
+        Binding:
+          anyOf:
+            - $ref: '#/components/schemas/TerminalBinding'
+            - type: 'null'
+          x-sent-by: mw
+          description: The register bound to it, absent when none is.
+        Attestation:
+          anyOf:
+            - $ref: '#/components/schemas/DeviceAttestation'
+            - type: 'null'
+          x-sent-by: mw
+          description: Its newest certificate's attestation mark, absent unless attestation failed.
+        CreatedBy:
+          anyOf:
+            - $ref: '#/components/schemas/Actor'
+            - type: 'null'
+          x-sent-by: mw
+          description: Who made it, or `null` where the middleware holds no record of who did.
+    TerminalBinding:
+      type: object
+      required: [RegisterIdentification, VendorIdentification, CreationDateTime]
+      description: The register bound to a terminal, so a binding its owner never made is visible.
+      properties:
+        RegisterIdentification:
+          type: string
+          pattern: '^reg_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The register.
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The register's vendor.
+        CreationDateTime:
+          type: string
+          x-sent-by: mw
+          description: When the binding was made, in RFC 3339 and UTC.
+    DeviceAttestation:
+      type: object
+      required: [State, FailedChecks, Since]
+      description: >-
+        A device's attestation mark, which is its newest certificate's: the middleware issued that certificate though the device's key attestation failed the checks `FailedChecks` lists.
+      properties:
+        State:
+          type: string
+          anyOf:
+            - enum: [failed]
+            - type: string
+          x-sent-by: mw
+          description: >-
+            `failed`, the one value today: the key attestation failed, and the middleware admitted the device all the same. Read a `State` you do not know as not attested by Google.
+        FailedChecks:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [chain_missing, chain, root, dates, revoked, hardware, boot, app_debug, model]
+          x-sent-by: mw
+          description: |
+            The checks the newest certificate's key attestation failed, at least one, each once, in
+            the order the middleware runs them:
+
+            - `chain_missing`: the device sent no chain, and it stands alone.
+            - `chain`: the chain holds fewer than three certificates, does not end in a self-issued
+              one, or holds one not signed by the next, and `root` comes with it.
+            - `root`: the chain does not end at one of Google's two attestation roots.
+            - `dates`: a certificate of the chain is outside its dates.
+            - `revoked`: a certificate of the chain is revoked or suspended.
+            - `hardware`: the key was not made in the trusted environment or StrongBox, or is not a
+              P-256 key for signing.
+            - `boot`: the bootloader is not locked, or the boot not verified.
+            - `app_debug`: the app is registered for its vendor and role as a debug build alone.
+            - `model`: no row of the allowed list admits what the device attests.
+        Since:
+          type: string
+          x-sent-by: mw
+          description: >-
+            When the device's current unbroken run of failed certificates began, in RFC 3339 and UTC: the `IssuedAt` of the run's first certificate.
+    TerminalList:
+      type: object
+      required: [Terminals, NextPage]
+      description: A page of a store's terminals.
+      properties:
+        Terminals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Terminal'
+          x-sent-by: mw
+          description: The page's terminals, removed ones among them.
+        NextPage:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: >-
+            The cursor to the page after this one: send it back unchanged as `page_after`; always present, `null` on the last page.
+    RegisterListed:
+      type: object
+      required: [RegisterIdentification, VendorIdentification, Kind, State]
+      description: A register just listed or given a fresh code, and a device's code, shown once.
+      properties:
+        RegisterIdentification:
+          type: string
+          pattern: '^reg_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The register's id, issued by the middleware.
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The register's POS vendor, the caller's or the one FUNDiMO named.
+        Kind:
+          type: string
+          enum: [device, server]
+          x-sent-by: mw
+          description: '`device` for an app on a device, `server` for a vendor''s server.'
+        State:
+          type: string
+          enum: [listed, active, removed]
+          x-sent-by: mw
+          description: '`listed` for a device until it enrols, `active` for a server''s register.'
+        SerialNumber:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: A device's serial. Absent for a server's register.
+        PairingCode:
+          type: [string, 'null']
+          pattern: '^[a-z]{3,6}(\.[a-z]{3,6}){4}$'
+          x-sent-by: mw
+          description: >-
+            A device's code: five different words of `docs/api/words.txt`, joined by dots, valid 15 minutes and for one use, shown this once. Absent for a server's register.
+    Register:
+      type: object
+      required: [RegisterIdentification, VendorIdentification, Kind, State, CreatedBy]
+      description: A register, as its routes show it.
+      properties:
+        RegisterIdentification:
+          type: string
+          pattern: '^reg_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The register's id.
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The POS vendor whose register it is.
+        Kind:
+          type: string
+          enum: [device, server]
+          x-sent-by: mw
+          description: '`device` or `server`.'
+        State:
+          type: string
+          enum: [listed, active, removed]
+          x-sent-by: mw
+          description: '`listed`, `active`, the one state that may sell, or `removed`.'
+        SerialNumber:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: A device's serial. Absent for a server's register.
+        StoreIdentification:
+          type: [string, 'null']
+          pattern: '^mst_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The store it sits at, absent until its first binding.
+        NotAfter:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: >-
+            When its newest certificate expires, a retired or expired one among them, in RFC 3339. Absent before any: present, it means the register has held a certificate, so a code for it is a re-pair.
+        Attestation:
+          anyOf:
+            - $ref: '#/components/schemas/DeviceAttestation'
+            - type: 'null'
+          x-sent-by: mw
+          description: >-
+            Its attestation mark, its newest certificate's, absent unless that certificate's key attestation failed, so always absent for a server's register.
+        CreatedBy:
+          anyOf:
+            - $ref: '#/components/schemas/Actor'
+            - type: 'null'
+          x-sent-by: mw
+          description: Who made it, or `null` where the middleware holds no record of who did.
+    RegisterList:
+      type: object
+      required: [Registers]
+      description: The registers the caller may see.
+      properties:
+        Registers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Register'
+          x-sent-by: mw
+          description: Each register, a removed one among them, oldest first.
+    AcceptedVendorsChange:
+      type: object
+      additionalProperties: false
+      required: [AcceptsAnyVendor]
+      description: What `PUT /v1/merchant-stores/{StoreIdentification}/accepted-vendors` takes.
+      properties:
+        AcceptsAnyVendor:
+          type: boolean
+          x-sent-by: vendor
+          description: Whether any onboarded vendor's register is accepted, or `Vendors`' alone.
+        Vendors:
+          type: [array, 'null']
+          maxItems: 64
+          uniqueItems: true
+          items:
+            type: string
+            pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: vendor
+          description: >-
+            The vendors accepted, at most 64, each once, empty unless sent. It replaces the list before it, and a vendor no row holds is `403 not_permitted`.
+    AcceptedVendorsView:
+      type: object
+      required: [AcceptsAnyVendor, Vendors]
+      description: >-
+        Which vendors' registers a store accepts, as `GET /v1/merchant-stores/{StoreIdentification}/accepted-vendors` answers, under the keys `PUT` on that path takes.
+      properties:
+        AcceptsAnyVendor:
+          type: boolean
+          x-sent-by: mw
+          description: Whether any onboarded vendor's register is accepted, or `Vendors`' alone.
+        Vendors:
+          type: array
+          items:
+            type: string
+            pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The vendors named, each once, in byte order, and empty where none were.
+    FleetSignInProfileRequest:
+      type: object
+      additionalProperties: false
+      required: [ApplicationIdentification, Profile]
+      description: >-
+        A fleet's sign-in profile, as `PUT /v1/vendors/{VendorIdentification}/signin-profile` takes it. Both keys are required.
+      properties:
+        ApplicationIdentification:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: vendor
+          description: >-
+            The fleet's application key at its payment system, 1 to 140 printable ASCII characters with no space, or `null` where that system takes none. A fleet may call it an App key or an organisation token.
+        Profile:
+          $ref: '#/components/schemas/SignInProfile'
+          unevaluatedProperties: false
+          x-sent-by: vendor
+          description: How a signed value is made for a terminal at each of the fleet's stores.
+    FleetSignInProfile:
+      type: object
+      required: [VendorIdentification, ApplicationIdentification, Profile, SetAt, ChangedAt]
+      description: >-
+        A fleet's sign-in profile, as `PUT` and `GET` on `/v1/vendors/{VendorIdentification}/signin-profile` answer it. Every key is always present, each value but `VendorIdentification` `null` where no sign-in profile is set.
+      properties:
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The fleet vendor whose sign-in profile it is.
+        ApplicationIdentification:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: The fleet's application key at its payment system, or `null` where it holds none.
+        Profile:
+          anyOf:
+            - $ref: '#/components/schemas/SignInProfile'
+            - type: 'null'
+          x-sent-by: mw
+          description: How a signed value is made, or `null` where none is set.
+        SetAt:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: When it was first set, in RFC 3339 and UTC, or `null` where none is set.
+        ChangedAt:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: When it was last changed, in RFC 3339 and UTC, and `null` until it is.
+    SignInProfile:
+      type: object
+      required: [Algorithm, ChallengeLength, ChallengeEncoding, SignatureEncoding]
+      if:
+        properties:
+          ChallengeEncoding:
+            const: uuid
+        required: [ChallengeEncoding]
+      then:
+        properties:
+          ChallengeLength:
+            const: 16
+      description: >-
+        How a signed value is made, as the fleet's payment system checks it: a challenge of `ChallengeLength` random bytes, written in `ChallengeEncoding`, and its MAC by `Algorithm`, keyed with the secret's bytes and written in `SignatureEncoding`.
+      properties:
+        Algorithm:
+          type: string
+          enum: [HMAC-SHA256, HMAC-SHA384, HMAC-SHA512]
+          x-sent-by: vendor
+          description: The MAC a signed value is, keyed with the secret's bytes.
+        ChallengeLength:
+          type: integer
+          minimum: 16
+          maximum: 64
+          x-sent-by: vendor
+          description: How many random bytes a challenge holds, 16 to 64, and 16 with `uuid`.
+        ChallengeEncoding:
+          type: string
+          enum: [hex, base64url, uuid]
+          x-sent-by: vendor
+          description: >-
+            How a challenge's bytes are written: `hex` in lowercase, `base64url` unpadded, or `uuid`, the 16 bytes as a version 4 UUID's 36-character lowercase text, its version and variant bits set over them. With `uuid`, `ChallengeLength` is 16.
+        SignatureEncoding:
+          type: string
+          enum: [hex, base64, base64url]
+          x-sent-by: vendor
+          description: >-
+            How a signature's bytes are written, `hex` in lowercase, `base64` standard and padded, or `base64url` unpadded.
+    SignInCredentialCreation:
+      type: object
+      additionalProperties: false
+      required: [Adapter, KeyIdentification]
+      if:
+        properties:
+          Adapter:
+            const: signed_value
+        required: [Adapter]
+      then:
+        required: [Secret, SecretEncoding]
+        properties:
+          Secret:
+            type: string
+      else:
+        not:
+          anyOf:
+            - required: [Secret]
+            - required: [SecretEncoding]
+      description: 'What `POST /v1/vendors/{VendorIdentification}/signin-credentials` takes: a merchant''s key pair as `PUT` on a credential takes it, `Secret` and `SecretEncoding` with `signed_value` alone, and its `IdempotencyKey`.'
+      properties:
+        Adapter:
+          type: string
+          enum: [signed_value, sandbox_signed_value]
+          x-sent-by: vendor
+          description: How the credential signs the answer to a terminal's `TerminalLoginNeeded`.
+        KeyIdentification:
+          type: string
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: vendor
+          description: 'The access key id: the public half of the merchant''s key pair at its fleet''s payment system, whose other half is `Secret`.'
+        Secret:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 2048
+          x-sent-by: vendor
+          description: 'The key pair''s secret, written as `SecretEncoding` says, which must decode to 1 to 1,024 bytes, so it is at most 2,048 characters.'
+        SecretEncoding:
+          type: string
+          enum: [text, hex, base64]
+          x-sent-by: vendor
+          description: 'How `Secret` is written: `text`, the string''s UTF-8 bytes; `hex`, pairs of hex digits, either case; or `base64`, standard and padded.'
+        IdempotencyKey:
+          $ref: '#/components/schemas/IdempotencyKey'
+          x-sent-by: vendor
+    SignInCredentialRequest:
+      type: object
+      additionalProperties: false
+      required: [Adapter, KeyIdentification]
+      if:
+        properties:
+          Adapter:
+            const: signed_value
+        required: [Adapter]
+      then:
+        required: [Secret, SecretEncoding]
+        properties:
+          Secret:
+            type: string
+      else:
+        not:
+          anyOf:
+            - required: [Secret]
+            - required: [SecretEncoding]
+      description: >-
+        A merchant's key pair at its fleet's payment system, as `PUT` on a fleet's sign-in credential takes it, and its create beside an `IdempotencyKey`. `Secret` and `SecretEncoding` are required with `signed_value`, and absent with `sandbox_signed_value`.
+      properties:
+        Adapter:
+          type: string
+          enum: [signed_value, sandbox_signed_value]
+          x-sent-by: vendor
+          description: How the credential signs the answer to a terminal's `TerminalLoginNeeded`.
+        KeyIdentification:
+          type: string
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: vendor
+          description: >-
+            The access key id: the public half of the merchant's key pair at its fleet's payment system, whose other half is `Secret`. A fleet may call it an access key id or an API access key.
+        Secret:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 2048
+          x-sent-by: vendor
+          description: >-
+            The key pair's secret, written as `SecretEncoding` says, which must decode to 1 to 1,024 bytes, so it is at most 2,048 characters. Required with `signed_value`, and never sent with `sandbox_signed_value`: a sandbox refuses one, even `null` or empty, `400 adapter_not_taken`.
+        SecretEncoding:
+          type: string
+          enum: [text, hex, base64]
+          x-sent-by: vendor
+          description: >-
+            How `Secret` is written: `text`, the string's UTF-8 bytes; `hex`, pairs of hex digits, either case; or `base64`, standard and padded. Read once, to decode `Secret`, never stored and never answered.
+    SignInCredential:
+      type: object
+      required: [SignInCredentialIdentification, VendorIdentification, Adapter, KeyIdentification, State, CreatedAt, ReplacedAt, RemovedAt, Stores, CreatedBy]
+      description: >-
+        A fleet's sign-in credential, as its routes answer it: a merchant's key pair, less its secret. Every field is always present, `ReplacedAt` and `RemovedAt` `null` until set.
+      properties:
+        SignInCredentialIdentification:
+          type: string
+          pattern: '^sic_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The credential's id, `sic_` then 32 lowercase hex characters, issued by the middleware.
+        VendorIdentification:
+          type: string
+          pattern: '^ven_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The fleet vendor whose credential it is.
+        Adapter:
+          type: string
+          enum: [signed_value, sandbox_signed_value]
+          x-sent-by: mw
+          description: >-
+            How it signs, for a terminal's sign-in, the answer to its `TerminalLoginNeeded`: `signed_value` with the fleet's sealed secret, or `sandbox_signed_value`, a sandbox's stand-in that holds no secret.
+        KeyIdentification:
+          type: string
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: The access key id, the public half of the merchant's key pair, whose secret is never answered.
+        State:
+          type: string
+          enum: [active, removed]
+          x-sent-by: mw
+          description: >-
+            `active`, or `removed`, which erased its sealed secret and ended every store's attachment of it.
+        CreatedAt:
+          type: string
+          x-sent-by: mw
+          description: When it was set, in RFC 3339 and UTC.
+        ReplacedAt:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: When it was last replaced, in RFC 3339 and UTC, and `null` until it is.
+        RemovedAt:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: When it was removed, in RFC 3339 and UTC, and `null` while it is `active`.
+        Stores:
+          type: array
+          items:
+            type: string
+            pattern: '^mst_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: >-
+            The stores it is attached to now, by `StoreIdentification`, in byte order: `[]` where none is, and always once it is removed.
+        CreatedBy:
+          anyOf:
+            - $ref: '#/components/schemas/Actor'
+            - type: 'null'
+          x-sent-by: mw
+          description: Who made it, or `null` where the middleware holds no record of who did.
+    SignInCredentials:
+      type: object
+      required: [SignInCredentials, NextPage]
+      description: >-
+        A page of a fleet's sign-in credentials, as `GET /v1/vendors/{VendorIdentification}/signin-credentials` answers.
+      properties:
+        SignInCredentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/SignInCredential'
+          x-sent-by: mw
+          description: The page's credentials, `removed` included, by `CreatedAt` and then by its id.
+        NextPage:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: >-
+            The cursor to the page after this one: send it back unchanged as `page_after`; always present, `null` on the last page.
+    StoreSignInRequest:
+      type: object
+      additionalProperties: false
+      required: [SignInCredentialIdentification]
+      description: What `PUT /v1/merchant-stores/{StoreIdentification}/signin-credential` takes.
+      properties:
+        SignInCredentialIdentification:
+          type: string
+          pattern: '^sic_[0-9a-f]{32}$'
+          x-sent-by: vendor
+          description: The credential to attach, an `active` one of the store's owner.
+        UserName:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: vendor
+          description: >-
+            The merchant user the store signs in as at its fleet's payment system: 1 to 140 printable ASCII characters with no space. Absent, it keeps the name the store's attachment holds, `null` clears it, and a value sets it.
+    StoreSignIn:
+      type: object
+      required: [StoreIdentification, SignInCredentialIdentification]
+      description: >-
+        A store's sign-in credential, as `PUT` and `GET` on `/v1/merchant-stores/{StoreIdentification}/signin-credential` answer it, and `PUT` on the store's `signin-key`. Where the store holds none, `SignInCredentialIdentification` is `null`, `AcceptorIdentification` is present, and the attachment's other fields are absent.
+      properties:
+        StoreIdentification:
+          type: string
+          pattern: '^mst_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The store.
+        SignInCredentialIdentification:
+          type: [string, 'null']
+          pattern: '^sic_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The credential attached to the store, `null` where none is. Always present.
+        KeyIdentification:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: >-
+            The attached credential's access key id, the public half of the merchant's key pair, not a sandbox key's SHA-256. Absent where none is attached.
+        Adapter:
+          type: [string, 'null']
+          enum: [signed_value, sandbox_signed_value, null]
+          x-sent-by: mw
+          description: The attached credential's `Adapter`. Absent where none is attached.
+        Since:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: When the credential was attached, in RFC 3339 and UTC. Absent where none is.
+        AcceptorIdentification:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: >-
+            The store's own number at its fleet's payment system: `null` where the store holds none. Always present.
+        UserName:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: mw
+          description: >-
+            The attachment's merchant user at the fleet's payment system, `null` where the attachment holds none. Absent where none is attached.
+        LastResult:
+          type: [object, 'null']
+          x-sent-by: mw
+          description: >-
+            The newest report a terminal at the store made of an answer under the credential as it stands, and `null` where there is none. Absent where none is attached.
+          required: [POIIdentification, Response, ResponseReason, At]
+          properties:
+            POIIdentification:
+              type: string
+              pattern: '^[A-Za-z0-9_-]{1,64}$'
+              x-sent-by: mw
+              description: The terminal that reported.
+            Response:
+              type: string
+              enum: [SUCC, FAIL]
+              x-sent-by: mw
+              description: What the terminal reported its fleet's payment system answered.
+            ResponseReason:
+              type: [string, 'null']
+              enum: [not_covered, not_accepted, no_answer, key_unknown, signature_refused, application_unknown, null]
+              x-sent-by: mw
+              description: Why a `FAIL`, and `null` with `SUCC`.
+            At:
+              type: string
+              x-sent-by: mw
+              description: The middleware's clock at the report, in RFC 3339 and UTC.
+    StoreSignInKeyRequest:
+      type: object
+      additionalProperties: false
+      required: [Adapter, KeyIdentification]
+      if:
+        properties:
+          Adapter:
+            const: signed_value
+        required: [Adapter]
+      then:
+        required: [Secret, SecretEncoding]
+        properties:
+          Secret:
+            type: string
+      else:
+        not:
+          anyOf:
+            - required: [Secret]
+            - required: [SecretEncoding]
+      description: What `PUT /v1/merchant-stores/{StoreIdentification}/signin-key` takes.
+      properties:
+        Adapter:
+          type: string
+          enum: [signed_value, sandbox_signed_value]
+          x-sent-by: vendor
+          description: How the key pair signs the answer to a terminal's `TerminalLoginNeeded`.
+        KeyIdentification:
+          type: string
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: vendor
+          description: The access key id, the public half of the merchant's key pair, whose other half is `Secret`.
+        Secret:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 2048
+          x-sent-by: vendor
+          description: The key pair's secret, 1 to 1,024 bytes decoded, required with `signed_value` alone.
+        SecretEncoding:
+          type: string
+          enum: [text, hex, base64]
+          x-sent-by: vendor
+          description: How `Secret` is written, as `text`, `hex` or padded `base64`, and taken with it.
+        UserName:
+          type: [string, 'null']
+          pattern: '^[!-~]{1,140}$'
+          x-sent-by: vendor
+          description: The store's merchant user. Absent, the one held is kept, and `null` clears it.
+    StoreSignInCheckRequest:
+      type: object
+      additionalProperties: false
+      required: [POIIdentification]
+      description: What `POST /v1/merchant-stores/{StoreIdentification}/signin-check` may take, to name a terminal.
+      properties:
+        POIIdentification:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+          x-sent-by: vendor
+          description: A `paired` terminal of the store, to be asked to sign in where nothing stands in the way.
+    StoreSignInCheck:
+      type: object
+      required: [StoreIdentification, Ready, Checks]
+      description: What `POST /v1/merchant-stores/{StoreIdentification}/signin-check` answers.
+      properties:
+        StoreIdentification:
+          type: string
+          pattern: '^mst_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: The store.
+        Ready:
+          type: boolean
+          x-sent-by: mw
+          description: Whether every check but `application_key_held`, `merchant_number_held` and `merchant_user_held` passed.
+        Checks:
+          type: array
+          minItems: 10
+          maxItems: 10
+          items:
+            type: object
+            required: [Check, Passed]
+            properties:
+              Check:
+                type: string
+                enum: [sign_in_on, store_live, profile_set, application_key_held, key_attached, key_opens, merchant_number_held, merchant_user_held, terminal_connected, limits_allow]
+                x-sent-by: mw
+                description: >-
+                  What was checked: sign-in is on; the store is `live` and its owner `active`; the owner's sign-in profile is set, and holds an application key; a credential is attached, and its secret opens; the store's merchant number and user are held; a paired terminal that takes a sign-in is connected, and has an answer left.
+              Passed:
+                type: [boolean, 'null']
+                x-sent-by: mw
+                description: Whether it passed, or `null`, never `false`, where that could not be decided.
+          x-sent-by: mw
+          description: The ten checks, always each once, in the order `Check` lists them.
+        Terminal:
+          type: [object, 'null']
+          required: [POIIdentification, Asked, Reason]
+          x-sent-by: mw
+          description: The terminal the body named, and whether it was asked. Absent where the check named none.
+          properties:
+            POIIdentification:
+              type: string
+              pattern: '^[A-Za-z0-9_-]{1,64}$'
+              x-sent-by: mw
+              description: The terminal named.
+            Asked:
+              type: boolean
+              x-sent-by: mw
+              description: Whether it was sent a `LoginCheck`, which asks it to sign in.
+            Reason:
+              type: [string, 'null']
+              enum: [terminal_cannot_check, terminal_busy, terminal_offline, not_ready, sign_in_limited, null]
+              x-sent-by: mw
+              description: Why it was not asked, the first of these that held, and `null` where it was.
+    CertificateList:
+      type: object
+      required: [Certificates]
+      description: >-
+        The certificates a listing shows, each not past its `NotAfter`, ordered by the id of the principal that holds it, then `IssuedAt`, then `CertificateIdentification`.
+      properties:
+        Certificates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CertificateView'
+          x-sent-by: mw
+          description: Each certificate.
+    CertificateView:
+      type: object
+      required: [CertificateIdentification, Role, SpkiDigest, IssuedAt, NotBefore, NotAfter, RenewFrom, State]
+      oneOf:
+        - required: [POIIdentification]
+        - required: [RegisterIdentification]
+        - required: [ServerIdentification]
+      description: >-
+        A certificate as a listing shows it, and the principal that holds it, by exactly one of its ids: its digests and its dates, and never the certificate itself, a key, a challenge or an attested value.
+      properties:
+        CertificateIdentification:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          x-sent-by: mw
+          description: >-
+            The SHA-256 of the certificate, the DER of the leaf, in lowercase hex: the id each log line of a request that presented it records.
+        Role:
+          type: string
+          enum: [terminal, register, server]
+          x-sent-by: mw
+          description: 'Whose it is: a terminal''s, a register''s on a device, or a vendor''s server''s.'
+        POIIdentification:
+          type: [string, 'null']
+          pattern: '^[A-Za-z0-9_-]{1,64}$'
+          x-sent-by: mw
+          description: A terminal's id, when the certificate is a terminal's.
+        RegisterIdentification:
+          type: [string, 'null']
+          pattern: '^reg_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: A register's id, when the certificate is a register's.
+        ServerIdentification:
+          type: [string, 'null']
+          pattern: '^srv_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: A vendor's server's id, when the certificate is a server's.
+        Scope:
+          type: [string, 'null']
+          enum: [pos, admin, operator, onboarding, null]
+          x-sent-by: mw
+          description: What a server's certificate reaches. Absent on a terminal's and a register's.
+        SpkiDigest:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          x-sent-by: mw
+          description: >-
+            The SHA-256 of the certificate's key, its `subjectPublicKeyInfo`, in lowercase hex, as a server's listing shows it.
+        IssuedAt:
+          type: string
+          x-sent-by: mw
+          description: When the middleware signed it, in RFC 3339 and UTC. `NotBefore` may be earlier.
+        NotBefore:
+          type: string
+          x-sent-by: mw
+          description: Its X.509 `notBefore`, in RFC 3339 and UTC.
+        NotAfter:
+          type: string
+          x-sent-by: mw
+          description: Its X.509 `notAfter`, when it expires, in RFC 3339 and UTC.
+        RenewFrom:
+          type: string
+          x-sent-by: mw
+          description: >-
+            When it may renew, day 15 of its life, in RFC 3339 and UTC: from then `GET /v1/certificates/self` answers `RenewNow` `true` on it.
+        FirstSeen:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: When it was first presented, in RFC 3339 and UTC. Absent if never.
+        RetiredAt:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: >-
+            When it is retired, in RFC 3339 and UTC, which may lie ahead, inside the overlap after a renewal. Absent if it is not retired.
+        State:
+          type: string
+          enum: [unused, current, retired]
+          x-sent-by: mw
+          description: >-
+            Its state, by the middleware's clock read once for the whole answer: `retired` once its `RetiredAt` has come, else `unused` where it was never presented, else `current`.
+        Attestation:
+          anyOf:
+            - $ref: '#/components/schemas/CertificateAttestation'
+            - type: 'null'
+          x-sent-by: mw
+          description: Its attestation mark, absent unless issued on a failed key attestation.
+    CertificateAttestation:
+      type: object
+      required: [State, FailedChecks]
+      description: >-
+        A certificate's attestation mark: the middleware issued it though the device's key attestation failed the checks `FailedChecks` lists, and its `IssuedAt` says when.
+      properties:
+        State:
+          type: string
+          anyOf:
+            - enum: [failed]
+            - type: string
+          x-sent-by: mw
+          description: >-
+            `failed`, the one value today: the key attestation failed, and the middleware issued the certificate all the same.
+        FailedChecks:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [chain_missing, chain, root, dates, revoked, hardware, boot, app_debug, model]
+          x-sent-by: mw
+          description: >-
+            The checks the key attestation failed, at least one, each once, in the order the middleware runs them, each word as `DeviceAttestation`'s `FailedChecks` says it.
+    Enrolment:
+      type: object
+      additionalProperties: false
+      required: [PairingCode, CertificateSigningRequest]
+      description: >-
+        What `POST /v1/enrol` takes. A device sends its `SerialNumber` and, on `live`, its `AttestationChain`, and a server sends neither.
+      properties:
+        PairingCode:
+          type: string
+          maxLength: 64
+          pattern: '^[0-9A-Za-z .-]{1,64}$'
+          x-sent-by: vendor
+          description: >-
+            The code as its listing showed it, at most 64 characters, read by the `SerialNumber` beside it. With a `SerialNumber` that is not `null`, a device's five different words of `docs/api/words.txt`, in any case, with one or more dots, spaces or hyphens between two words; with none, absent or `null`, a server's 16 characters in Crockford base32, spaces and hyphens dropped, either case read, and `I` and `L` read as `1` and `O` as `0`.
+        CertificateSigningRequest:
+          type: string
+          maxLength: 4096
+          x-sent-by: vendor
+          description: >-
+            A PKCS 10 request in PEM, one `CERTIFICATE REQUEST` block, for a P-256 key the principal never used. The middleware reads its public key and nothing else, and never logs it.
+        SerialNumber:
+          type: [string, 'null']
+          pattern: '^[A-Za-z0-9._-]{1,64}$'
+          x-sent-by: vendor
+          description: Optional. A device's serial, as its listing names it.
+        AttestationChain:
+          type: [string, 'null']
+          maxLength: 49152
+          x-sent-by: vendor
+          description: >-
+            A device's Android Key Attestation chain for the key of the CSR, as `KeyStore` gives it, in PEM, leaf first. Required of a device on a `live` middleware, and checked when a sandbox is offered one.
+    Renewal:
+      type: object
+      additionalProperties: false
+      required: [CertificateSigningRequest]
+      description: What renewal takes. A device on `live` sends `AttestationChain`; a server none.
+      properties:
+        CertificateSigningRequest:
+          type: string
+          maxLength: 4096
+          x-sent-by: vendor
+          description: >-
+            A PKCS 10 request in PEM, one `CERTIFICATE REQUEST` block, for a new P-256 key the principal has never used. The middleware reads its public key and nothing else.
+        AttestationChain:
+          type: [string, 'null']
+          maxLength: 49152
+          x-sent-by: vendor
+          description: >-
+            A device's Android Key Attestation chain for the new key, made with the challenge of `POST /v1/certificates/challenge`, in PEM, leaf first.
+    EnrolmentIssued:
+      type: object
+      required: [CertificateChain, SpiffeId, NotAfter, RenewFrom]
+      oneOf:
+        - required: [POIIdentification]
+        - required: [RegisterIdentification]
+        - required: [ServerIdentification]
+      description: >-
+        A certificate just issued, by enrolment or renewal, and the principal it names, by exactly one of its ids. A certificate is public.
+      properties:
+        CertificateChain:
+          type: string
+          x-sent-by: mw
+          description: The certificate then its issuer's, PEM. Present both at the TLS handshake.
+        POIIdentification:
+          type: [string, 'null']
+          x-sent-by: mw
+          description: A terminal's id, when the certificate is a terminal's.
+        RegisterIdentification:
+          type: [string, 'null']
+          pattern: '^reg_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: A register's id, when the certificate is a register's.
+        ServerIdentification:
+          type: [string, 'null']
+          pattern: '^srv_[0-9a-f]{32}$'
+          x-sent-by: mw
+          description: A vendor's server's id, when the certificate is a server's.
+        SpiffeId:
+          type: string
+          x-sent-by: mw
+          description: >-
+            The certificate's one SAN, `spiffe://`, the middleware's trust domain, then the environment, the role and the id, each after a `/`.
+        NotAfter:
+          type: string
+          x-sent-by: mw
+          description: When the certificate expires, in RFC 3339.
+        RenewFrom:
+          type: string
+          x-sent-by: mw
+          description: When it may renew, day 15 of its life, in RFC 3339.
+    CertificateStatus:
+      type: object
+      required: [NotAfter, RenewFrom, RenewNow]
+      description: The certificate presented, as its daily check reads it.
+      properties:
+        NotAfter:
+          type: string
+          x-sent-by: mw
+          description: When it expires, in RFC 3339.
+        RenewFrom:
+          type: string
+          x-sent-by: mw
+          description: When it may renew, day 15 of its life, in RFC 3339.
+        RenewNow:
+          type: boolean
+          x-sent-by: mw
+          description: Whether to renew it now, by the middleware's clock.

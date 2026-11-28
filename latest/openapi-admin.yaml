@@ -1,6 +1,6 @@
 openapi: '3.1.0'
 info:
-  title: 'Middleware v1.0.0: what a back office calls'
+  title: 'Middleware v1.1.0: what a back office calls'
   version: '1.0.0'
   summary: The relay between a point of sale, a payment terminal and FUNDiMO.
   description: |-

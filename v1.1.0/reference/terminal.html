@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>API reference for a terminal, v1.1.0</title>
+<link rel="stylesheet" href="../theme/fonts.css">
+<!-- The book's theme, Light or Dark: the one the reader chose in the book, which mdBook keeps in
+     localStorage as light or coal (or, from before the site had two, rust, navy or ayu), else the
+     one the reader's system asks for. Scalar is held in the same mode, and this page's own top
+     line takes it from the class set here. The page draws itself again when that theme changes:
+     a theme picked in the book around this page's frame, or, with none picked, the system's. -->
+<script>
+(function () {
+  var saved = '';
+  try { saved = (localStorage.getItem('mdbook-theme') || '').replace(/"/g, ''); } catch (e) { }
+  var dark = { coal: 1, navy: 1, ayu: 1 }, light = { light: 1, rust: 1 };
+  var system = window.matchMedia('(prefers-color-scheme: dark)');
+  window.mwColorMode = dark[saved] ? 'dark' : light[saved] ? 'light'
+    : system.matches ? 'dark' : 'light';
+  document.documentElement.className = 'mw-' + window.mwColorMode;
+  window.addEventListener('storage', function (event) {
+    if (event.key === 'mdbook-theme' || event.key === null) { location.reload(); }
+  });
+  system.addEventListener('change', function () {
+    if (!dark[saved] && !light[saved]) { location.reload(); }
+  });
+})();
+</script>
+<!-- The site's look, as far as Scalar 1.76.4's own theming takes it: its documented CSS variables
+     (documentation/themes.md and configuration.md at the commit that released it, 66ba1d7), set
+     here outside Scalar's cascade layers, so each wins over its default theme, for its light mode
+     and its dark. Its text in DM Sans, withDefaultFonts off; its ground, ink, panels, hairlines
+     and accent the site's; its buttons ink, teal under the pointer; its corners square. Its
+     sidebar's variables are set on .t-doc__sidebar, the class 1.76.4 gives its sidebar, as its
+     own starter theme (packages/themes/src/presets/custom-theme-starter.css) sets them; the docs'
+     .sidebar names no element of 1.76.4. Each method's colour is Scalar's own hue made dark enough
+     to be read on the light ground, 4.7:1 or more, and light enough on the dark, 6.6:1 or more.
+     Its headings stay in DM Sans and its code
+     in the system's monospace: no variable of Scalar's sets a display face, and mdBook's Source
+     Code Pro is named by a hash this page cannot know. -->
+<style>
+  :root {
+    --scalar-font: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --scalar-font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --scalar-radius: 0px;
+  }
+  .light-mode {
+    --scalar-background-1: #f5f4f0;
+    --scalar-background-2: #ffffff;
+    --scalar-background-3: #e8e6e1;
+    --scalar-background-accent: rgba(14, 122, 114, 0.08);
+    --scalar-border-color: #d3d0c9;
+    --scalar-color-1: #0a0a0a;
+    --scalar-color-2: #444444;
+    --scalar-color-3: #555555;
+    --scalar-color-accent: #0e7a72;
+    --scalar-link-color: #0e7a72;
+    --scalar-link-color-hover: #0a5f59;
+    --scalar-button-1: #0a0a0a;
+    --scalar-button-1-hover: #0e7a72;
+    --scalar-button-1-color: #f5f4f0;
+    --scalar-color-green: #1d6b44;
+    --scalar-color-red: #a12f2f;
+    --scalar-color-yellow: #7a5a0c;
+    --scalar-color-blue: #255c7c;
+    --scalar-color-orange: #8a4b0c;
+    --scalar-color-purple: #5b3a8c;
+    --scalar-color-query: #0e7a72;
+  }
+  .light-mode .t-doc__sidebar {
+    --scalar-sidebar-background-1: #f5f4f0;
+    --scalar-sidebar-border-color: #bbbbbb;
+    --scalar-sidebar-color-1: #0a0a0a;
+    --scalar-sidebar-color-2: #444444;
+    --scalar-sidebar-color-active: #0e7a72;
+    --scalar-sidebar-item-hover-background: #ffffff;
+    --scalar-sidebar-item-hover-color: #0a0a0a;
+    --scalar-sidebar-item-active-background: #e8f7ed;
+    --scalar-sidebar-search-background: #ffffff;
+    --scalar-sidebar-search-border-color: #555555;
+    --scalar-sidebar-search-color: #555555;
+  }
+  .dark-mode {
+    --scalar-background-1: #121211;
+    --scalar-background-2: #1c1c1a;
+    --scalar-background-3: #2a2a27;
+    --scalar-background-accent: rgba(47, 179, 166, 0.14);
+    --scalar-border-color: #3d3c38;
+    --scalar-color-1: #f5f4f0;
+    --scalar-color-2: #c4c1ba;
+    --scalar-color-3: #a9a69f;
+    --scalar-color-accent: #2fb3a6;
+    --scalar-link-color: #2fb3a6;
+    --scalar-link-color-hover: #6fd6cb;
+    --scalar-button-1: #f5f4f0;
+    --scalar-button-1-hover: #2fb3a6;
+    --scalar-button-1-color: #121211;
+    --scalar-color-green: #6fcf97;
+    --scalar-color-red: #f08080;
+    --scalar-color-yellow: #e8c35a;
+    --scalar-color-blue: #7cb8e0;
+    --scalar-color-orange: #f0a060;
+    --scalar-color-purple: #c3a6f0;
+    --scalar-color-query: #2fb3a6;
+  }
+  .dark-mode .t-doc__sidebar {
+    --scalar-sidebar-background-1: #121211;
+    --scalar-sidebar-border-color: #57554f;
+    --scalar-sidebar-color-1: #f5f4f0;
+    --scalar-sidebar-color-2: #c4c1ba;
+    --scalar-sidebar-color-active: #2fb3a6;
+    --scalar-sidebar-item-hover-background: #1c1c1a;
+    --scalar-sidebar-item-hover-color: #f5f4f0;
+    --scalar-sidebar-item-active-background: #1d332e;
+    --scalar-sidebar-search-background: #1c1c1a;
+    --scalar-sidebar-search-border-color: #a9a69f;
+    --scalar-sidebar-search-color: #a9a69f;
+  }
+  body { margin: 0; background: #f5f4f0; }
+  .mw-top {
+    margin: 0;
+    padding: 0.5rem 1rem;
+    font: 0.8125rem/1.5 "DM Sans", system-ui, sans-serif;
+    color: #444444;
+    background: #f5f4f0;
+    border-bottom: 1px solid #0a0a0a;
+  }
+  .mw-top a { color: #0e7a72; text-underline-offset: 0.18em; }
+  .mw-top a:hover { color: #0a5f59; }
+  html.mw-dark { color-scheme: dark; }
+  html.mw-dark body { background: #121211; }
+  html.mw-dark .mw-top { color: #c4c1ba; background: #121211; border-bottom-color: #f5f4f0; }
+  html.mw-dark .mw-top a { color: #2fb3a6; }
+  html.mw-dark .mw-top a:hover { color: #6fd6cb; }
+</style>
+</head>
+<body>
+<!-- The template of each reference page: docs/site/build.sh writes it as
+     <rel>/reference/pos.html, terminal.html and admin.html. It loads the view, Scalar and the
+     fonts from the site itself and nothing from another host. Its way back is the page the view's
+     VIEW_BACK names from <rel>/: a reader's path, or for a back office the page framing its
+     reference. -->
+<p class="mw-top">
+<a href="../terminal/index.html" target="_top">Back to your path</a> · API reference for a terminal, v1.1.0
+</p>
+<div id="app"></div>
+<script src="openapi-terminal.js"></script>
+<script src="../../assets/scalar/1.76.4/standalone.js"></script>
+<!-- Every switch that would reach one of Scalar's hosts is off. withDefaultFonts would load
+     fonts from fonts.scalar.com. agent would send the document to Scalar's AI agent, and mcp
+     offers Scalar's MCP services. The developer tools share and deploy to Scalar. The client
+     button and the test-request button would send requests from the reader's browser to the
+     sandbox across origins, through Scalar's proxy, proxy.scalar.com. telemetry is read by
+     nothing in Scalar 1.76.4 and is off for a release that reads it. hideModels: no reference
+     shows its models (Thomas, 20-Nov-2026: "let's not publish reference models"); a reader reads
+     each schema inside its operation, and a terminal its frames in the terminal contract.
+     forceDarkModeState and hideDarkModeToggle: Scalar takes the book's theme, mwColorMode, set
+     at the top of this page, and offers no toggle of its own. -->
+<script>
+Scalar.createApiReference("#app", {
+  content: window.MW_OPENAPI,
+  withDefaultFonts: false,
+  telemetry: false,
+  agent: { disabled: true },
+  mcp: { disabled: true },
+  showDeveloperTools: "never",
+  hideClientButton: true,
+  hideTestRequestButton: true,
+  hideModels: true,
+  forceDarkModeState: window.mwColorMode,
+  hideDarkModeToggle: true
+});
+</script>
+</body>
+</html>

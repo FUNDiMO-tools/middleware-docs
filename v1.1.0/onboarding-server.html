@@ -1,0 +1,800 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Onboarding a server - FUNDiMO middleware API</title>
+
+
+        <!-- Custom HTML head -->
+        <meta name="robots" content="noindex">
+        <link rel="stylesheet" href="theme/fonts.css">
+        <script>
+            (function () {
+                var nearer = { rust: 'light', navy: 'coal', ayu: 'coal' };
+                function remap() {
+                    try {
+                        var saved = (localStorage.getItem('mdbook-theme') || '').replace(/"/g, '');
+                        if (nearer[saved]) { localStorage.setItem('mdbook-theme', nearer[saved]); }
+                    } catch (e) { }
+                }
+                remap();
+                window.addEventListener('storage', remap);
+                window.addEventListener('pageshow', remap);
+                document.addEventListener('DOMContentLoaded', function () {
+                    var dark = document.getElementById('mdbook-theme-coal');
+                    if (dark) { dark.textContent = 'Dark'; }
+                    Object.keys(nearer).forEach(function (name) {
+                        var button = document.getElementById('mdbook-theme-' + name);
+                        if (button) { button.parentNode.remove(); }
+                    });
+                });
+            })();
+        </script>
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/site-acfedb15.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "coal";
+            window.path_to_searchindex_js = "searchindex-02345290.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-3d95a7df.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div class="mw-brand">
+                    <a class="mw-wordmark" href="https://fundimo.com.au/"><img class="mw-on-light" src="theme/fundimo.png" alt="FUNDiMO" width="1142" height="277"><img class="mw-on-dark" src="theme/fundimo-on-dark.png" alt="FUNDiMO" width="1200" height="290"></a>
+                    <span class="mw-product">Middleware API</span>
+                </div>
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">FUNDiMO middleware API</h1>
+
+                    <div class="right-buttons">
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <p class="mw-release">Release v1.1.0, 28-Nov-2026 · <a href="../versions.html">all releases</a></p>
+
+<h1 id="middleware-onboarding-a-server"><a class="header" href="#middleware-onboarding-a-server">Middleware: onboarding a server</a></h1>
+<p>Last changed in v1.0.0.</p>
+<p>This is the walk for a vendor whose POS, or whose back office, runs on its own server and calls
+the middleware host to host. It goes from the listing that gives the server its code to a certificate
+the server renews by itself, with code to paste at each step. You can build the server’s side
+from this document alone. An agent reads the same bytes through <code>llms.txt</code>, and through the
+sandbox’s MCP server as <code>mw://onboarding/server</code>.</p>
+<p>A live server proves who it is with a client certificate from the middleware’s own CA. Its key is made
+by the vendor, kept in the vendor’s own custody, and never sent to the middleware: the middleware signs a
+certificate for its public key once the server spends a pairing code its listing gave. A server
+has no attestation, so the code is all that ties its first certificate to the vendor, and
+whoever spends the code first holds the identity. The certificate lasts 30 days and renews from
+day 15 with a new key.</p>
+<p>Read it beside <a href="openapi-pos.yaml"><code>docs/api/openapi-pos.yaml</code></a>, which holds the schema of every route under <code>/v1/</code>
+named here but three, the routes an <code>admin</code> server calls on its registers among them. Those
+three list, read and remove a vendor’s servers, and are in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>,
+which <a href="back-office.html"><code>/docs/api/back-office.md</code></a> walks. A vendor writing an app
+for a SUNMI device reads <a href="onboarding-device.html"><code>docs/api/onboarding-device.md</code></a> instead, and linking a register to a
+terminal at the counter is <a href="linking.html"><code>docs/api/linking.md</code></a>. Nothing here runs on a device, so none of the
+device walk’s bench items applies to a server.</p>
+<h2 id="in-short"><a class="header" href="#in-short">In short</a></h2>
+<ol>
+<li>The operator, or the vendor’s own <code>admin</code> server, lists the server with the scope its
+certificate will reach, and the middleware answers once with a pairing code (step 1).</li>
+<li>The server makes a P-256 key that stays in the vendor’s custody (step 2) and a CSR for it
+(step 3), and spends the code at <code>POST /v1/enrol</code> (step 4).</li>
+<li>It keeps the <code>CertificateChain</code> the middleware answers with beside the key, and presents both at
+the TLS handshake of every call after (step 5).</li>
+<li>A <code>pos</code> server names the register it acts for in <code>Mw-Register</code> on each call for a
+register (step 6), and an <code>admin</code> server lists those registers (step 7).</li>
+<li>Once a day it asks <code>GET /v1/certificates/self</code> (step 8). When <code>RenewNow</code> is <code>true</code>, one
+instance renews with a new key, and the new certificate is installed on every instance
+inside the overlap (step 9).</li>
+<li>After a refusal it does what the holder’s table says, and never deletes its key (step 10).</li>
+</ol>
+<h2 id="in-the-sandbox"><a class="header" href="#in-the-sandbox">In the sandbox</a></h2>
+<p>Changed in v1.0.0.</p>
+<p>The same file is served in the sandbox, where four things differ.</p>
+<ul>
+<li>You ask for a code yourself. The <code>201</code> of <code>POST /sandbox/v1/keys</code> holds <code>Enrolment</code>, a <code>pos</code>
+server’s code for your world, and <code>RegisterIdentification</code>, the register your world came with
+(step 7). <code>POST /sandbox/v1/codes</code> gives another under your tester’s key (step 1), and with
+<code>{"Role":"admin"}</code> an <code>admin</code> server’s. Both routes are served by the sandbox’s own process,
+<code>mw-sandbox</code>, and a <code>live</code> middleware has neither. An <code>admin</code> server’s certificate reaches the
+Operator API routes of <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a> inside your world,
+<code>POST /v1/vendors/{VendorIdentification}/servers</code> and <code>POST /v1/registers</code> among them, and
+every other caller is answered <code>404</code> at them (<a href="back-office.html"><code>/docs/api/back-office.md</code></a>, Trying it in the
+sandbox).</li>
+<li>Nothing a sandbox signs is a record, and a sandbox certificate is refused on <code>live</code>.</li>
+<li>Enrolment needs a sandbox with an issuing certificate. A sandbox run without one answers
+<code>POST /v1/enrol</code> with <code>503 ca_unavailable</code>.</li>
+<li>A code can make a certificate due at once: <code>POST /sandbox/v1/codes</code> with
+<code>{"Role":"server","Due":true}</code> gives a code whose certificate is issued 16 days back, so
+<code>RenewNow</code> is <code>true</code> from its first daily check, and renewal, the overlap and their refusals
+can be tried the same day (<a href="sandbox.html"><code>docs/api/sandbox.md</code></a>, 4. The POS journey).</li>
+</ul>
+<h2 id="what-you-need"><a class="header" href="#what-you-need">What you need</a></h2>
+<ul>
+<li>OpenSSL 3 or later, for the key and the CSR. Any tool that makes a P-256 key and a PKCS 10
+request will do, and the commands here are OpenSSL’s.</li>
+<li><code>curl</code> built on OpenSSL, and <code>jq</code>, for the calls here. In the server itself, any HTTP client
+that can present a client certificate: step 5 gives one in Rust and one in Java.</li>
+<li>The middleware’s base URL, one of those <a href="environments.html"><code>/docs/api/environments.md</code></a> names, kept in a setting.
+The commands here read it from <code>$MW</code>, and the sandbox’s from <code>$SANDBOX</code>.</li>
+</ul>
+<pre><code class="language-sh"># The middleware's base URL: /docs/api/environments.md names each environment's. A name under
+# `.invalid` never resolves: put the real one here.
+MW=https://mw.invalid
+</code></pre>
+<p>Every body the middleware takes or gives is one JSON object in UTF-8, and every refusal it gives
+has the body <code>{ "Error": { "Code": "...", "Message": "...", "Fields": [] } }</code>. On enrolment, the
+edge in front of a hosted middleware may also refuse, with a <code>429</code> of its own whose body is not
+an <code>Error</code> (step 4, When enrolment is refused). Where a table here says the
+normal backoff, wait 1 second, double the wait after each failure up to 30 seconds, and add a
+little randomness.</p>
+<h2 id="1-the-listing-and-the-code"><a class="header" href="#1-the-listing-and-the-code">1. The listing and the code</a></h2>
+<p>Changed in v1.0.0.</p>
+<p>Every server starts with one human act. On <code>live</code>, the operator lists a vendor’s first server,
+and the vendor’s own <code>admin</code> server may list more, with
+<code>POST /v1/vendors/{VendorIdentification}/servers</code> and the <code>Scope</code> its certificate will reach
+(in <a href="openapi-admin.yaml"><code>/docs/api/openapi-admin.yaml</code></a>):</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>Scope</code></th><th>What its certificate reaches</th></tr>
+</thead>
+<tbody>
+<tr><td><code>pos</code></td><td>Sales, their reads and the link routes, each for a register the call names in <code>Mw-Register</code> (step 6)</td></tr>
+<tr><td><code>admin</code></td><td>The Operator API inside its own vendor: its registers (step 7), its servers and its app identities, and for a fleet vendor its stores and terminals</td></tr>
+<tr><td><code>operator</code></td><td>The operator’s alone</td></tr>
+</tbody>
+</table>
+</div>
+<p>Each listed server is its own identity, with its own code, key and certificate, so a vendor
+that sells and lists its own registers holds a <code>pos</code> server and an <code>admin</code> server. Here the
+vendor’s <code>admin</code> server lists a <code>pos</code> one, presenting its own key and chain, <code>admin.key</code> and
+<code>admin-chain.pem</code>, made and issued as steps 2 to 4 show, and a key of its own for the listing,
+<code>IdempotencyKey</code>:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/vendors/ven_.../servers" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"server-0001-a","Scope":"pos"}'
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "ServerIdentification": "srv_...", "Scope": "pos", "State": "listed", "PairingCode": "XXXX-XXXX-XXXX-XXXX" }
+</code></pre>
+<p><code>ServerIdentification</code> is the server’s id. <code>PairingCode</code> is 16 characters of Crockford base32 in
+four groups of 4, valid 15 minutes and for one use, and shown this once. A device’s code is five
+words of <a href="words.txt"><code>docs/api/words.txt</code></a> instead, and a server’s stays these 16 characters
+(<a href="onboarding-device.html"><code>docs/api/onboarding-device.md</code></a>, step 2). The code is a secret: whoever listed the server gives
+it to whoever runs the server, by a path no one else reads, and it is kept out of every log, the
+server’s own among them. A code that lapses unspent is not renewed:
+remove the listed server with
+<code>DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}</code>, and list a new one.</p>
+<p>An <code>admin</code> server must send <code>IdempotencyKey</code>, 8 to 64 ASCII letters, digits, <code>.</code>, <code>_</code>, <code>:</code>, <code>/</code>
+and <code>-</code> that it chooses, one for each server it lists. A listing sent again under it after a lost
+answer is answered <code>200</code> with the server the first made, and never lists a second, which would
+hold one of its scope’s two places (below). That answer holds no <code>PairingCode</code>, which is shown
+once: remove that server, and list a new one under a new key. <a href="back-office.html"><code>/docs/api/back-office.md</code></a>,
+Retrying a create, gives the rule whole.</p>
+<p>A vendor holds at most two servers of one scope that are not removed, and a third is
+<code>409 too_many_keys</code>. So a server moves to a new identity with no gap: list the second, enrol
+it, move every call to it, then remove the first.</p>
+<p>In the sandbox the listing is done for you. The <code>201</code> of <code>POST /sandbox/v1/keys</code> holds
+<code>Enrolment</code>, a <code>pos</code> server’s code for your world, good 15 minutes. After that,
+<code>POST /sandbox/v1/codes</code> gives a fresh one, under your tester’s key:</p>
+<pre><code class="language-sh">curl -s -X POST "$SANDBOX/sandbox/v1/codes" \
+  -H 'Authorization: Bearer sbx_...' \
+  -H 'Content-Type: application/json' \
+  -d '{"Role":"server"}'
+</code></pre>
+<p>The answer is <code>201</code>, with <code>PairingCode</code> and <code>Next</code>. A server sends no serial, so enrol with that
+code alone, within 15 minutes. The code lists a <code>pos</code> server on your world’s vendor, or is a
+fresh code for one already listed and not yet enrolled, and disturbs nothing else in your world.
+Past 6 codes an hour the route answers <code>429 sandbox_rate</code>.</p>
+<h2 id="2-the-key-in-your-own-custody"><a class="header" href="#2-the-key-in-your-own-custody">2. The key, in your own custody</a></h2>
+<p>The server’s key is P-256, made by you and kept by you. The middleware never sees it, and nothing is
+given to you to embed. The middleware takes a P-256 key alone: a CSR for any other key is refused
+<code>400 invalid_field</code>. Make a new key for each enrolment and each renewal, because a key this
+server has used before is refused at renewal.</p>
+<pre><code class="language-sh">umask 077
+openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 -out server.key
+</code></pre>
+<p>Keep the SHA-256 of its public key beside it. It is what the middleware shows as the server’s
+<code>SpkiDigest</code> once the key holds a certificate, so you can tell your own enrolment from someone
+else’s (step 4):</p>
+<pre><code class="language-sh">openssl pkey -in server.key -pubout -outform DER | sha256sum
+</code></pre>
+<p>The key is the server’s identity. A key on a server’s disk can be copied, and a copy renews
+exactly as you can, so a copy outlives any one certificate’s 30 days. Keep the file readable by
+the server’s own user alone, or in a secret store or a hardware module where your TLS stack can
+sign through one, out of every image and log, and on no more hosts than run the server. The
+surest sign of a copy is that one of the two holders is refused <code>403 certificate_retired</code> within
+an hour of the other’s renewal (step 10, and A copied key, below).</p>
+<h2 id="3-the-csr"><a class="header" href="#3-the-csr">3. The CSR</a></h2>
+<p>The middleware reads one thing from the CSR: its public key. It checks the CSR’s own signature and that
+the key is P-256, and writes every name in the certificate itself, so the subject says nothing
+and holds no one’s name. The CSR is never logged: the middleware’s log holds its key’s SHA-256 alone.</p>
+<pre><code class="language-sh">openssl req -new -key server.key -subj '/CN=server' -sha256 -out server.csr
+</code></pre>
+<p>A CSR whose signature does not verify, or whose key is not P-256, is refused
+<code>400 invalid_field</code>, with <code>Fields</code> naming <code>CertificateSigningRequest</code>.</p>
+<h2 id="4-enrol-post-v1enrol"><a class="header" href="#4-enrol-post-v1enrol">4. Enrol: <code>POST /v1/enrol</code></a></h2>
+<p>Changed in v1.0.0.</p>
+<p>With the code and the CSR, the server enrols. The call carries no credential, because the code
+is the credential, so it presents no certificate and sends no <code>Authorization</code> header.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Holds</th></tr>
+</thead>
+<tbody>
+<tr><td><code>PairingCode</code></td><td>The code, as the listing showed it. Spaces and hyphens are dropped, and either case is read</td></tr>
+<tr><td><code>CertificateSigningRequest</code></td><td>The CSR, PEM (step 3)</td></tr>
+</tbody>
+</table>
+</div>
+<p>A server sends nothing else. <code>SerialNumber</code> and <code>AttestationChain</code> are a device’s. A
+<code>SerialNumber</code> that is not <code>null</code> reads the code as a device’s five words, which a server’s 16
+characters are not, so the body is refused <code>400 invalid_field</code> naming <code>PairingCode</code>, before the
+code is looked up. An <code>AttestationChain</code> from a server is refused <code>400 unknown_field</code>.</p>
+<pre><code class="language-bash"># The code is a secret: read it, so it stays out of the shell's history.
+read -r -s -p 'Pairing code: ' CODE; echo
+status=$(jq -n --arg code "$CODE" --rawfile csr server.csr \
+    '{PairingCode: $code, CertificateSigningRequest: $csr}' \
+  | curl -s -X POST "$MW/v1/enrol" \
+      -H 'Content-Type: application/json' \
+      --data-binary @- \
+      -o enrolled.json -w '%{http_code}')
+case "$status" in
+  200|201) jq -r .CertificateChain enrolled.json &gt; chain.pem ;;
+  *) echo "not enrolled: HTTP $status, Error.Code in enrolled.json" &gt;&amp;2 ;;
+esac
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "CertificateChain": "-----BEGIN CERTIFICATE-----\n...", "ServerIdentification": "srv_...", "SpiffeId": "spiffe://.../live/server/srv_...", "NotAfter": "...", "RenewFrom": "..." }
+</code></pre>
+<p><code>CertificateChain</code> is two certificates, PEM: the server’s own, then the issuing certificate.
+Keep it beside the key, in <code>chain.pem</code>: a certificate is public, and this one belongs to that
+key alone. The server is now <code>enrolled</code>. <code>NotAfter</code> is when the certificate ends, 30 days on,
+and <code>RenewFrom</code> is day 15.</p>
+<p><code>SpiffeId</code> is the certificate’s URI. Its host is the trust domain of the deployment that issued
+it, which need not be the address you call, and its first segment is the environment, <code>live</code> or
+<code>sandbox</code>. In the hosted sandbox its host is staging’s trust domain, the host of staging’s base
+URL (<a href="environments.html"><code>/docs/api/environments.md</code></a>), and its first segment <code>sandbox</code>.</p>
+<p>If an answer is lost, send the same body again inside the code’s 15 minutes: the same code and
+the same key answer <code>200</code> with the certificate already issued. The same code with another key
+is <code>403 code_not_valid</code>, so never make a new key to repeat a call that got no answer.</p>
+<p><strong>An intercepted code is the one that wins.</strong> A server has no attestation, so whoever spends a
+code first holds the identity, and the real server is then refused <code>403 code_not_valid</code>. So
+treat <code>code_not_valid</code> on a fresh code, one sent as listed and inside its 15 minutes, as an
+alarm. Read the vendor’s servers, and compare each row’s <code>SpkiDigest</code> with your key’s (step 2):</p>
+<pre><code class="language-sh">curl -s "$MW/v1/vendors/ven_.../servers?page_size=100" --cert admin-chain.pem --key admin.key \
+  | jq '.NextPage, (.Servers[] | {ServerIdentification, Scope, State, SpkiDigest, FirstSeen})'
+</code></pre>
+<p>The list is read a page at a time, so read every page: while <code>NextPage</code>, the first line printed, is
+not <code>null</code>, send it back as <code>page_after</code>.</p>
+<p>A row <code>enrolled</code> with an <code>SpkiDigest</code> that is not your key’s was spent by someone else. Remove
+it with <code>DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}</code>, which
+retires its certificate at once, list a new server, and find how the code left your hands before
+you hand over the next. A vendor with no <code>admin</code> server asks the operator to read the row.</p>
+<h3 id="when-enrolment-is-refused"><a class="header" href="#when-enrolment-is-refused">When enrolment is refused</a></h3>
+<p>Changed in v1.0.0.</p>
+<p>A refusal once the code is found counts an attempt against it, unless the code is already spent
+or burned, and five attempts burn it, so fix what a refusal names before you try again. A <code>503</code>
+counts nothing and leaves the code unspent, and the edge’s <code>429</code> never reaches the middleware, so
+it counts nothing either.</p>
+<p>Of <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> and <code>invalid_field</code>, the first class that
+fails answers alone, with <code>Fields</code> naming every field of it, sorted.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status</th><th><code>Error.Code</code></th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>400</code></td><td><code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code></td><td>The body is not a JSON object, holds a field the route does not name, or lacks one, and <code>Fields</code> names each. A server’s body holding <code>AttestationChain</code> is <code>unknown_field</code></td><td>A bug in the caller: fix it. Retrying will not help</td></tr>
+<tr><td><code>400</code></td><td><code>invalid_field</code></td><td>A field breaks its rule, and <code>Fields</code> names it. For <code>CertificateSigningRequest</code>: its signature does not verify, or its key is not P-256. For <code>PairingCode</code>: it is not 16 characters, or the body holds a <code>SerialNumber</code>, which reads the code as a device’s five words</td><td>For the CSR, make a new P-256 key and a CSR from it (steps 2 and 3), and enrol again inside the 15 minutes. For the code, send it as listed, with no <code>SerialNumber</code></td></tr>
+<tr><td><code>403</code></td><td><code>code_not_valid</code></td><td>The code is wrong, unknown, expired, spent or burned, the server is not <code>listed</code>, or its vendor is suspended. One answer for every reason, so the route tells a stranger nothing</td><td>On a fresh code, an alarm: read every page of <code>GET /v1/vendors/{VendorIdentification}/servers</code>, where a row whose <code>SpkiDigest</code> is not your key’s was spent by someone else. Otherwise check the code as listed, then ask for a new listing</td></tr>
+<tr><td><code>429</code></td><td>None: the body is the edge’s own, not an <code>Error</code></td><td>Sent by the edge in front of a hosted middleware, never by the middleware itself: more enrolments came from this address in a minute than the edge allows. The code was not read, and no attempt is counted against it</td><td>Wait a minute, then try again with the same body. Do not read the body as an <code>Error</code></td></tr>
+<tr><td><code>503</code></td><td><code>ca_unavailable</code></td><td>The middleware could not sign</td><td>Back off and try again with the same body. The code is not spent</td></tr>
+<tr><td><code>503</code></td><td><code>store_unavailable</code></td><td>The middleware’s store did not answer</td><td>Back off and try again with the same body</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="5-present-the-certificate-on-every-call"><a class="header" href="#5-present-the-certificate-on-every-call">5. Present the certificate on every call</a></h2>
+<p>Every call after enrolment presents the certificate at the TLS handshake: the key, and the whole
+chain the <code>201</code> gave, the server’s certificate with the issuing certificate beside it. The middleware
+reads who is calling from that alone. Send no <code>Authorization</code> header on a call that presents a
+certificate: the two together are refused <code>401 certificate_invalid</code>.</p>
+<p>With <code>curl</code> built on OpenSSL, <code>--cert</code> names the chain and <code>--key</code> the key, and every
+certificate in the chain’s file is sent:</p>
+<pre><code class="language-sh">curl -s "$MW/v1/certificates/self" --cert chain.pem --key server.key
+</code></pre>
+<p>In Rust, with <code>reqwest</code> 0.13 and its default features, which take <code>rustls</code>, the key and the
+chain go into one <code>Identity</code>:</p>
+<pre><code class="language-rust">// Cargo.toml: reqwest = "0.13", tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+use std::error::Error;
+
+/// A client presenting `key` with `chain`, the `CertificateChain` the middleware issued for it, both
+/// PEM. Build a new one for a new certificate: a client keeps its connections, and each stands
+/// on the certificate it was opened with.
+fn client(key: &amp;[u8], chain: &amp;[u8]) -&gt; Result&lt;reqwest::Client, reqwest::Error&gt; {
+    let mut pem = key.to_vec();
+    pem.extend_from_slice(chain);
+    let identity = reqwest::Identity::from_pem(&amp;pem)?;
+    reqwest::Client::builder().identity(identity).build()
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn Error&gt;&gt; {
+    // The middleware's base URL, from the setting `MW`: one of those `/docs/api/environments.md`
+    // names, and never written into code.
+    let mw = std::env::var("MW").map_err(|error| {
+        format!("MW: {error}. /docs/api/environments.md names each environment's base URL")
+    })?;
+    let client = client(&amp;std::fs::read("server.key")?, &amp;std::fs::read("chain.pem")?)?;
+    let answer = client
+        .get(format!("{mw}/v1/certificates/self"))
+        .send()
+        .await?;
+    println!("{} {}", answer.status(), answer.text().await?);
+    Ok(())
+}</code></pre>
+<p><code>Identity::from_pem</code> reads a key in PKCS 8, which <code>openssl genpkey</code> writes, or in SEC1, and
+the certificates beside it. It refuses a file that also holds a block of another kind it
+knows, such as a <code>PUBLIC KEY</code>, a <code>CERTIFICATE REQUEST</code> or an <code>X509 CRL</code>, and passes over a
+block whose label it does not know, such as the <code>EC PARAMETERS</code> some tools write beside a key.
+Give it the key and the chain and nothing else.</p>
+<p>In Java, the key and the chain go into a PKCS 12 file, and a <code>KeyManagerFactory</code> gives the key
+to the <code>SSLContext</code> of the JDK’s own <code>HttpClient</code>. Make the file once for each certificate,
+with a password of your own in <code>P12_PASSWORD</code>:</p>
+<pre><code class="language-sh">openssl pkcs12 -export -inkey server.key -in chain.pem -out server.p12 -passout env:P12_PASSWORD
+</code></pre>
+<pre><code class="language-java">import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyStore;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+
+public final class MwClient {
+    /**
+     * A client presenting the key and the chain in the PKCS 12 file at {@code p12}. Build a new
+     * one for a new certificate: a client keeps its connections, and each stands on the
+     * certificate it was opened with.
+     */
+    static HttpClient client(Path p12, char[] password) throws Exception {
+        KeyStore keys = KeyStore.getInstance("PKCS12");
+        try (InputStream in = Files.newInputStream(p12)) {
+            keys.load(in, password);
+        }
+        KeyManagerFactory managers =
+                KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        managers.init(keys, password);
+        SSLContext tls = SSLContext.getInstance("TLS");
+        tls.init(managers.getKeyManagers(), null, null);
+        return HttpClient.newBuilder().sslContext(tls).build();
+    }
+
+    public static void main(String[] args) throws Exception {
+        // The middleware's base URL, from the setting MW: one of those
+        // /docs/api/environments.md names, and never written into code.
+        String mw = System.getenv("MW");
+        if (mw == null) {
+            throw new IllegalStateException(
+                    "MW is not set: /docs/api/environments.md names each environment's base URL");
+        }
+        char[] password = System.getenv("P12_PASSWORD").toCharArray();
+        HttpClient client = client(Path.of("server.p12"), password);
+        HttpRequest self =
+                HttpRequest.newBuilder(URI.create(mw + "/v1/certificates/self")).build();
+        HttpResponse&lt;String&gt; answer = client.send(self, HttpResponse.BodyHandlers.ofString());
+        System.out.println(answer.statusCode() + " " + answer.body());
+    }
+}
+</code></pre>
+<p>Build one client for each certificate, and use it for every call while that certificate is in
+use. Never change which key one client presents: a client keeps its connections and its TLS
+sessions, and a resumed session stands on the certificate of the handshake it resumes, so a new
+certificate goes with a new client (step 9).</p>
+<h2 id="6-name-the-register-mw-register"><a class="header" href="#6-name-the-register-mw-register">6. Name the register: <code>Mw-Register</code></a></h2>
+<p>A <code>pos</code> server’s certificate names its vendor, not a register. So each call a <code>pos</code> server makes
+for a register names that register in the request header <code>Mw-Register</code>, by its
+<code>RegisterIdentification</code> (step 7), exactly once. The routes that need one are a register’s:</p>
+<ul>
+<li><code>POST /v1/sales</code> and <code>GET /v1/sales/{TransactionReference}</code>.</li>
+<li><code>POST /v1/links</code>, <code>GET /v1/links/{LinkIdentification}</code>,
+<code>POST /v1/links/{LinkIdentification}/word</code>, <code>DELETE /v1/links/{POIIdentification}</code> and
+<code>GET /v1/register/terminals</code> (<a href="linking.html"><code>docs/api/linking.md</code></a>).</li>
+</ul>
+<pre><code class="language-sh">curl -s "$MW/v1/register/terminals" \
+  --cert chain.pem --key server.key \
+  -H 'Mw-Register: reg_...'
+</code></pre>
+<p>On those routes, a <code>Mw-Register</code> absent, sent twice, naming a register that is not this
+vendor’s, or naming a register of <code>Kind</code> <code>device</code> is refused <code>403 not_permitted</code>. A device’s
+register holds its own certificate, so a server cannot speak for one. An <code>admin</code> server names
+no register, and the certificate routes take none.</p>
+<p>A sale is its register’s own: its <code>IdempotencyKey</code> is unique within the register, and a read
+finds only the register’s own sales. So a retry of a sale names the same register as the first
+send did, or it makes a second sale. Give each till its own register, and never send two tills’
+sales under one.</p>
+<h2 id="7-list-a-servers-register-post-v1registers"><a class="header" href="#7-list-a-servers-register-post-v1registers">7. List a server’s register: <code>POST /v1/registers</code></a></h2>
+<p>Changed in v1.0.0.</p>
+<p>A register is one till of the POS, and a <code>pos</code> server acts for each of its vendor’s registers. A
+POS vendor’s <code>admin</code> lists each one with <code>POST /v1/registers</code> and a body holding its key alone,
+here on the <code>admin</code> server’s certificate:</p>
+<pre><code class="language-sh">curl -s -X POST "$MW/v1/registers" \
+  --cert admin-chain.pem --key admin.key \
+  -H 'Content-Type: application/json' \
+  -d '{"IdempotencyKey":"till-0001-a"}'
+</code></pre>
+<p>The answer is <code>201</code>:</p>
+<pre><code class="language-json">{ "RegisterIdentification": "reg_...", "Kind": "server", "State": "active" }
+</code></pre>
+<p><code>RegisterIdentification</code> is the register’s id, the one <code>Mw-Register</code> names
+(step 6). A server’s register needs no code: it starts <code>active</code>, and holds no certificate of its
+own, because the <code>pos</code> server speaks for it. It sits at no store and reaches no terminal until
+it links to one at the counter (<a href="linking.html"><code>docs/api/linking.md</code></a>). A body naming a <code>SerialNumber</code> lists a
+device’s register instead, which enrols as a device does (<a href="onboarding-device.html"><code>docs/api/onboarding-device.md</code></a>).</p>
+<p>The key, <code>IdempotencyKey</code>, is the <code>admin</code> server’s own, one for each register, and it must send
+one: a listing sent again under it after a lost answer is answered <code>200</code> with the register the
+first made, and never lists a second register for one till (<a href="back-office.html"><code>/docs/api/back-office.md</code></a>, Retrying
+a create).</p>
+<p><code>GET /v1/registers</code> shows each of the vendor’s registers with its kind, its state and the
+store it sits at. <code>DELETE /v1/registers/{RegisterIdentification}</code> removes one, and ends
+each of its bindings.</p>
+<p>In the sandbox your world’s <code>admin</code> server lists a register of its own in the same way, on its
+certificate, and every other caller is answered <code>404</code> at this route. The register your world came
+with is the <code>RegisterIdentification</code> that <code>POST /sandbox/v1/keys</code> answered, a server’s register
+already bound to your world’s terminals, and your <code>pos</code> server names it in <code>Mw-Register</code>. It is
+read-only: its removal is <code>409 sandbox_read_only</code>.</p>
+<h2 id="8-the-daily-check-get-v1certificatesself"><a class="header" href="#8-the-daily-check-get-v1certificatesself">8. The daily check: <code>GET /v1/certificates/self</code></a></h2>
+<p>Once a day the server sends <code>GET /v1/certificates/self</code>, on its own certificate. The middleware answers
+when the certificate ends, and whether to renew:</p>
+<pre><code class="language-json">{ "NotAfter": "...", "RenewFrom": "...", "RenewNow": true }
+</code></pre>
+<p>Renew when <code>RenewNow</code> is <code>true</code>, and not before. The middleware decides, so the server’s clock does not
+matter. <code>RenewNow</code> reads <code>true</code> only on the newest certificate of the identity in use, from
+<code>RenewFrom</code> on, and <code>false</code> on a certificate that is retired.</p>
+<pre><code class="language-sh">curl -s "$MW/v1/certificates/self" --cert chain.pem --key server.key | jq -r .RenewNow
+</code></pre>
+<p>Any instance may run the check, and only the one that renews acts on <code>RenewNow</code> (step 9). A
+refusal of the check is read by the holder’s table (step 10).</p>
+<h2 id="9-renew-with-one-renewer-per-identity"><a class="header" href="#9-renew-with-one-renewer-per-identity">9. Renew, with one renewer per identity</a></h2>
+<p>Changed in v0.5.0.</p>
+<p>A certificate renews from day 15, always with a new key, on the server’s own certificate. A
+server skips the challenge a device asks first: <code>POST /v1/certificates/challenge</code> is a device’s,
+and a server asking it is refused <code>403 not_permitted</code>. In the sandbox, a certificate enrolled on a
+code asked with <code>"Due": true</code> is due at once (In the sandbox, above).</p>
+<ol>
+<li>Make a new P-256 key (step 2) and a CSR for it (step 3).</li>
+<li>Send <code>POST /v1/certificates/renew</code> with <code>CertificateSigningRequest</code> alone, on the current
+certificate. A server sends no <code>AttestationChain</code>, which is refused <code>400 unknown_field</code>. The
+<code>201</code> is enrolment’s. If an answer is lost, send the same body again: a CSR whose key the middleware
+last issued for, and whose certificate is not yet used, answers <code>200</code> with that certificate.</li>
+<li>Install the new key and chain on every instance that presents this identity, and use them
+from each instance’s next connection, on a new client (step 5).</li>
+<li>Once a call on the new certificate has been answered, it is current. Only then delete the
+old key.</li>
+</ol>
+<p>The old certificate stays good until the new one is first used, by any instance, and for an
+hour after by default, <code>MW_CERT_OVERLAP_SECS</code>. That hour is the overlap. Past it, a call on the old
+certificate is refused <code>403 certificate_retired</code>. So every instance moves to the new certificate
+inside the overlap, and one that has not is refused, and reads that refusal by the holder’s
+table (step 10).</p>
+<p><strong>One renewer per identity.</strong> A vendor running several instances of a server on one identity
+lets one instance renew, and installs the new certificate on all of them inside the overlap. If
+two instances renew, the second CSR retires the certificate the first was issued, where no one
+has used it yet, and the middleware warns the operator, as the sign of a copied key. Where it has been
+used, the second is refused <code>403 certificate_retired</code>. Past 5 certificates
+for one identity in 24 hours, the middleware refuses <code>429 renewal_rate</code>. So name the renewer by
+configuration, not by a race, and have the others read the new key and chain from where it puts
+them, well inside the hour.</p>
+<p>The renewer’s daily run:</p>
+<pre><code class="language-bash">#!/bin/bash
+# The renewer's daily run, on one instance of this identity and on no other.
+set -euo pipefail
+umask 077
+
+renew_now=$(curl -sf "$MW/v1/certificates/self" --cert chain.pem --key server.key \
+  | jq -r .RenewNow)
+[ "$renew_now" = true ] || exit 0
+
+# A renewal that got no answer is sent again with the same key, and the middleware answers with what
+# it issued.
+if [ ! -f next.key ]; then
+  openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 -out next.key
+  openssl req -new -key next.key -subj '/CN=server' -sha256 -out next.csr
+fi
+status=$(jq -n --rawfile csr next.csr '{CertificateSigningRequest: $csr}' \
+  | curl -s -X POST "$MW/v1/certificates/renew" \
+      --cert chain.pem --key server.key \
+      -H 'Content-Type: application/json' \
+      --data-binary @- \
+      -o renewed.json -w '%{http_code}')
+case "$status" in
+  200|201) jq -r .CertificateChain renewed.json &gt; next-chain.pem ;;
+  *) echo "not renewed: HTTP $status, Error.Code in renewed.json" &gt;&amp;2; exit 1 ;;
+esac
+# Put next.key and next-chain.pem where every instance of this identity reads them.
+</code></pre>
+<p>Each instance, once the new key and chain have reached it:</p>
+<pre><code class="language-bash">#!/bin/bash
+# The first use of the new certificate. The old key goes only once the middleware answers on the new.
+set -euo pipefail
+if curl -sf "$MW/v1/certificates/self" --cert next-chain.pem --key next.key &gt; /dev/null; then
+  mv next-chain.pem chain.pem
+  mv next.key server.key
+  rm -f next.csr renewed.json
+  # Build the server's HTTP client again from server.key and chain.pem (step 5).
+fi
+</code></pre>
+<p>If the first call on the new certificate gets no answer, go on with the old one, which is good
+until then, and try the new one again later.</p>
+<h3 id="when-renewal-is-refused"><a class="header" href="#when-renewal-is-refused">When renewal is refused</a></h3>
+<p>Changed in v0.3.0.</p>
+<p>A refusal of a renewal leaves the current certificate as it was.</p>
+<p>Of <code>invalid_json</code>, <code>unknown_field</code>, <code>missing_field</code> and <code>invalid_field</code>, the first class that
+fails answers alone, with <code>Fields</code> naming every field of it, sorted.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Status</th><th><code>Error.Code</code></th><th>When</th><th>What to do</th></tr>
+</thead>
+<tbody>
+<tr><td><code>409</code></td><td><code>renewal_not_due</code></td><td>Before <code>RenewFrom</code></td><td>Wait: renew when the daily check’s <code>RenewNow</code> is <code>true</code></td></tr>
+<tr><td><code>400</code></td><td><code>invalid_field</code></td><td>The CSR’s signature does not verify, its key is not P-256, or its key was used before</td><td>Make a new P-256 key and a CSR from it, and send that</td></tr>
+<tr><td><code>400</code></td><td><code>unknown_field</code></td><td>The body holds <code>AttestationChain</code>, which is a device’s</td><td>Send <code>CertificateSigningRequest</code> alone</td></tr>
+<tr><td><code>429</code></td><td><code>renewal_rate</code></td><td>5 certificates for this identity in 24 hours</td><td>Back off, and try again tomorrow. A second renewer, or a copy of the key, is the likeliest cause: find it</td></tr>
+<tr><td><code>403</code></td><td><code>not_permitted</code></td><td>The server is removed, or its vendor is not <code>active</code></td><td>Back off to one hour. The certificate was good and the row refused it</td></tr>
+<tr><td><code>403</code></td><td><code>certificate_retired</code></td><td>The certificate presented is retired</td><td>Renew on the newer certificate if this instance holds one. On its newest, stop and tell a person: something else holds a newer certificate of this identity</td></tr>
+<tr><td><code>401</code></td><td><code>certificate_expired</code></td><td>The certificate is past its <code>NotAfter</code></td><td>It cannot renew: the server needs a new code, by a new listing (step 1)</td></tr>
+<tr><td><code>503</code></td><td><code>ca_unavailable</code>, <code>store_unavailable</code>, <code>edge_not_trusted</code></td><td>The middleware could not sign, its store did not answer, or the request did not come through a trusted edge</td><td>Back off and try again with the same body</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="10-what-a-holder-of-a-dead-certificate-does"><a class="header" href="#10-what-a-holder-of-a-dead-certificate-does">10. What a holder of a dead certificate does</a></h2>
+<p>A server holding a certificate is its holder, and so is each instance presenting it. A refusal
+at the TLS handshake, or of a call, is read by this table, which is <a href="terminal.html"><code>docs/api/terminal.md</code></a>’s for
+a server.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>What the server sees</th><th>What it does next</th></tr>
+</thead>
+<tbody>
+<tr><td>A close, a reset, a timeout, or any failure with no TLS alert</td><td>The normal backoff. It says nothing about a certificate</td></tr>
+<tr><td>A TLS alert naming the certificate: <code>certificate_expired</code>, <code>bad_certificate</code>, <code>certificate_unknown</code>, <code>unknown_ca</code> or <code>decrypt_error</code>. Only where the middleware ends TLS itself</td><td>Back off an hour. After three, an hour apart, tell a person the server needs a new code, by a new listing (step 1), and keep trying hourly</td></tr>
+<tr><td><code>401 certificate_expired</code> or <code>401 certificate_invalid</code></td><td>Back off an hour. After three, an hour apart, tell a person the server needs a new code, and keep trying hourly. <code>certificate_invalid</code> is also a certificate sent with an <code>Authorization</code> header: send the certificate alone</td></tr>
+<tr><td><code>401 certificate_required</code></td><td>A client’s own bug, or a route it has no certificate for: enrol first</td></tr>
+<tr><td><code>403 certificate_retired</code>, holding a newer certificate than the one presented</td><td>An instance the renewal reached late. Drop that connection and retry on the newer one, with the same idempotency key where the request carried one</td></tr>
+<tr><td><code>403 certificate_retired</code> on its newest certificate, with no newer one where the renewer puts it</td><td>Stop, keep any outcome, and tell a person: another holder of this identity holds a newer certificate, a second renewer or a copy of the key</td></tr>
+<tr><td><code>403 not_permitted</code></td><td>Back off to one hour, keeping any outcome. The certificate was good and the row refused it: the server was removed, its vendor suspended, or on a register’s route its <code>Mw-Register</code> names no register of the vendor’s own</td></tr>
+<tr><td><code>429</code>, <code>503</code>, <code>edge_not_trusted</code> among them</td><td>The normal backoff. <code>503 edge_not_trusted</code> is an edge fault, and the server’s certificate is not in question</td></tr>
+</tbody>
+</table>
+</div>
+<p>A TLS alert comes only where the middleware ends TLS itself. Behind the middleware’s load balancer no
+handshake fails on a client certificate, and the refusal comes as a <code>401</code> or a <code>403</code> instead.</p>
+<p><strong>A server never deletes its key or its certificate on a refusal, any of those above.</strong> A
+server can recover from a mistake of the middleware’s by a fix on the middleware’s side, and a key deleted
+cannot be recovered. A server holding a certificate makes a new key only to renew, or when a
+person brings a new code, and deletes an old key only once a call on the certificate that
+follows it has been answered. A server decides none of this by its own clock.</p>
+<h2 id="a-copied-key"><a class="header" href="#a-copied-key">A copied key</a></h2>
+<p>Changed in v1.0.0.</p>
+<p>Three things say that someone else holds this identity’s key or spent its code:
+<code>403 certificate_retired</code> on a newest certificate, a <code>429 renewal_rate</code> no renewer of yours
+caused, and an <code>SpkiDigest</code> you do not know on any page of
+<code>GET /v1/vendors/{VendorIdentification}/servers</code>. Only one holder can stay. The operator, or the
+vendor’s own <code>admin</code>, removes the server with
+<code>DELETE /v1/vendors/{VendorIdentification}/servers/{ServerIdentification}</code>, which retires every
+certificate of it, the copy’s with yours. Then list a new server (step 1), enrol it with a new
+key, and find how the key left your custody before the new one takes its place.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="environments.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="onboarding-device.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="environments.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="onboarding-device.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-09f2665d.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
